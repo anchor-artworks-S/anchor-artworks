@@ -594,55 +594,80 @@ function HomePage({ works, isLoading, isLoadingJournal, journalPosts, onNavigate
         </div>
       </section>
 
-      {/* INFORMATION (note posts) */}
+      {/* INFORMATION (note / note PRO promo cards) */}
       <section className="py-20 px-6 max-w-[1200px] mx-auto">
         <div className="text-center mb-12">
           <h2 className="text-2xl md:text-3xl font-display font-bold tracking-tight">INFORMATION</h2>
         </div>
-        {isLoadingJournal ? (
-          <div className="flex justify-center py-16">
-            <div className="w-6 h-6 border-2 border-black/10 border-t-black rounded-full animate-spin" />
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            {journalPosts.map((post, idx) => (
-              <motion.a
-                key={idx}
-                href={post.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                initial={{ opacity: 0, y: 15 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: idx * 0.08 }}
-                className="group flex flex-col border border-black/8 hover:border-black/20 transition-colors"
-              >
-                <div className="aspect-[16/9] overflow-hidden bg-gray-100 relative">
-                  <div className="absolute top-3 left-3 z-10 bg-black text-white px-2 py-1">
-                    <span className="text-[9px] font-bold tracking-widest uppercase">no·te</span>
-                  </div>
-                  <img
-                    src={post.image || `https://picsum.photos/seed/note-${idx}/800/450`}
-                    alt={post.title}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
-                    referrerPolicy="no-referrer"
-                  />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          {[
+            {
+              type: 'note' as const,
+              desc: 'noteはクリエイターが文章や画像、音声、動画を投稿して、ユーザーがそのコンテンツを楽しんで応援できるメディアプラットフォームです。だれもが創作を楽しんで続けられるよう、安心できる雰囲気や、多様性を大切にしています。',
+              url: 'https://note.com/anchor_art_works',
+              image: 'https://images.unsplash.com/photo-1611162616475-46b635cb6868?q=80&w=1000',
+            },
+            {
+              type: 'note_pro' as const,
+              desc: '法人向け情報発信プラットフォーム。多くのひとが集まるnoteの街でメディアをかんたんにつくり、情報を届けることができます。届ける仕組みと充実したサポートで、企業がポジティブなユーザーとつながって関係を深めるお手伝いをします。',
+              url: 'https://note.jp/n/n4fe51c391a36',
+              image: 'https://images.unsplash.com/photo-1593642632559-0c6d3fc62b89?q=80&w=1000',
+            },
+            {
+              type: 'note' as const,
+              desc: 'noteはクリエイターが文章や画像、音声、動画を投稿して、ユーザーがそのコンテンツを楽しんで応援できるメディアプラットフォームです。だれもが創作を楽しんで続けられるよう、安心できる雰囲気や、多様性を大切にしています。',
+              url: 'https://note.com/anchor_art_works',
+              image: 'https://images.unsplash.com/photo-1611162616475-46b635cb6868?q=80&w=1000',
+            },
+            {
+              type: 'note_pro' as const,
+              desc: '法人向け情報発信プラットフォーム。多くのひとが集まるnoteの街でメディアをかんたんにつくり、情報を届けることができます。届ける仕組みと充実したサポートで、企業がポジティブなユーザーとつながって関係を深めるお手伝いをします。',
+              url: 'https://note.jp/n/n4fe51c391a36',
+              image: 'https://images.unsplash.com/photo-1593642632559-0c6d3fc62b89?q=80&w=1000',
+            },
+          ].map((card, idx) => (
+            <motion.a
+              key={idx}
+              href={card.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              initial={{ opacity: 0, y: 15 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: idx * 0.08 }}
+              className="group flex flex-col border border-black/8 hover:border-black/20 transition-colors"
+            >
+              <div className="aspect-[16/9] overflow-hidden bg-gray-100 relative">
+                <div className="absolute top-4 left-4 z-10 bg-white px-3 py-1.5 shadow-sm">
+                  <span className="font-bold text-base leading-none flex items-baseline gap-0.5">
+                    <span className="text-black">no</span>
+                    <span className="text-emerald-500 text-lg leading-none">+</span>
+                    <span className="text-black">e</span>
+                    {card.type === 'note_pro' && (
+                      <span className="ml-1.5 text-[10px] text-black/70 font-bold tracking-wider">PRO</span>
+                    )}
+                  </span>
                 </div>
-                <div className="p-5 space-y-2 flex-1 flex flex-col">
-                  <p className="text-[10px] text-black/40 font-bold">{post.date}</p>
-                  <h3 className="text-sm font-bold leading-snug group-hover:text-black/60 transition-colors line-clamp-2 flex-1">
-                    {post.title}
-                  </h3>
-                  <p className="text-[11px] text-black/50 line-clamp-2 leading-relaxed">{post.excerpt}</p>
-                  <div className="pt-2 flex items-center gap-1 text-[10px] font-bold text-black/50 group-hover:text-black transition-colors">
-                    <span>noteについて</span>
-                    <ChevronRight size={11} />
-                  </div>
+                <img
+                  src={card.image}
+                  alt={card.type === 'note' ? 'note' : 'note PRO'}
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                  referrerPolicy="no-referrer"
+                />
+              </div>
+              <div className="p-6 space-y-4 flex-1 flex flex-col">
+                <p className="text-[11px] text-black/65 leading-relaxed flex-1">
+                  {card.desc}
+                </p>
+                <div className="pt-2">
+                  <span className="inline-flex items-center justify-center px-6 py-2.5 border border-black/15 text-[10px] font-bold uppercase tracking-widest text-black group-hover:bg-black group-hover:text-white transition-all">
+                    {card.type === 'note' ? 'noteについて' : 'note proについて'}
+                  </span>
                 </div>
-              </motion.a>
-            ))}
-          </div>
-        )}
+              </div>
+            </motion.a>
+          ))}
+        </div>
       </section>
     </div>
   );
@@ -879,7 +904,7 @@ function AboutPage({ onNavigateToContact }: { onNavigateToContact: () => void })
       </section>
 
       {/* Company Profile */}
-      <section className="py-20 px-6 bg-white">
+      <section className="py-20 px-6 bg-gray-100">
         <div className="max-w-[900px] mx-auto space-y-10">
           <h2 className="text-2xl md:text-3xl font-display font-bold text-center tracking-tight">COMPANY PROFILE</h2>
           <div className="grid md:grid-cols-2 gap-x-16 gap-y-5 text-sm">

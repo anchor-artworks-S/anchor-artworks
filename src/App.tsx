@@ -827,20 +827,25 @@ function AboutPage({ onNavigateToContact }: { onNavigateToContact: () => void })
 
   return (
     <div className="bg-white">
-      {/* Hero: LET'S TALK. */}
-      <section className="pt-28 pb-16 px-6 text-center">
+      {/* Hero: TRUST IN MOTION. */}
+      <section className="pt-28 pb-16 px-6">
         <motion.div
           initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
-          className="max-w-3xl mx-auto space-y-6"
+          className="max-w-4xl mx-auto space-y-10"
         >
-          <div className="relative inline-block">
-            <h1 className="text-6xl md:text-8xl font-display font-bold tracking-tighter relative z-10">LET'S TALK.</h1>
-            <div className="absolute bottom-1 left-0 w-full h-5 bg-brand -z-0 opacity-80" />
+          <div className="text-center">
+            <h1 className="text-6xl md:text-8xl font-display font-bold tracking-tighter leading-[0.95]">
+              TRUST<br />IN MOTION.
+            </h1>
+            <div className="flex items-center gap-4 mt-5">
+              <span className="text-[10px] font-bold tracking-[0.3em] uppercase text-black/50 whitespace-nowrap">WHO WE ARE</span>
+              <div className="h-2 bg-brand flex-1" />
+            </div>
           </div>
-          <div className="space-y-6">
-            <p className="text-xl md:text-3xl font-display font-bold tracking-tight leading-snug max-w-2xl mx-auto">
+          <div className="text-center space-y-6">
+            <p className="text-xl md:text-3xl font-display font-bold tracking-tight leading-snug">
               脳内の解像度を、そのままの速度で。<br />
               思考が止まる前に、イメージは動き出す。
             </p>
@@ -878,27 +883,45 @@ function AboutPage({ onNavigateToContact }: { onNavigateToContact: () => void })
         </div>
       </section>
 
-      {/* Team: 3-column on black */}
+      {/* Team: 6 members on black */}
       <section className="bg-black text-white py-20 px-6 md:px-12">
-        <div className="max-w-[1100px] mx-auto grid grid-cols-1 md:grid-cols-3 gap-10">
+        <div className="max-w-[1100px] mx-auto grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-10 md:gap-y-16">
           {[
             {
               role: "Editor / Motion Grapher",
               name: "勝田　友亮",
               enName: "YUSUKE KATSUDA",
-              bio: "1989年4月7日生まれ。PRムービーやイベント映像、企業のブランドムービー、VPなどモーショングラフィックスを主軸に制作。クライアントの要望に柔軟に応えるロジカル思考な映像表現が得意。"
+              bio: "1989年4月7日生まれ。PRムービー、イベント映像、企業ブランドムービー、VPなどモーショングラフィックスを主軸に制作。複雑な情報構造を視覚的に整理し、直感的に伝わる動きへと再構築する設計力が強み。クライアントの要望に柔軟に応えるロジカル思考と、視覚的なリズムを両立した映像表現で、ブランドの世界観を多面的に支える。"
             },
             {
               role: "Editor / Motion Grapher",
               name: "矢戸　光一",
               enName: "KOICHI YATO",
-              bio: "2003年1月1日生まれ。PRムービーやイベント映像などモーショングラフィックスを主軸に制作。eスポーツの選手を目指していた経験から集中力が高く、細かな作業が得意。"
+              bio: "2003年1月1日生まれ。PRムービー、イベント映像、ゲーム関連コンテンツなどモーショングラフィックスを主軸に制作。eスポーツのプロ選手を目指していた経験から培われた、高い集中力と緻密な観察眼が武器。0.1秒単位での編集精度と、視聴者の注意を逃さないリズム設計に強みを持ち、次世代のクリエイティブを牽引する。"
             },
             {
               role: "Producer / Director",
               name: "目　学",
               enName: "MANABU SAKKA",
-              bio: "1983年10月2日生まれ。映像専門学校を卒業後、テレビ業界へ就職。その後広告業界へ転身。業界で培った豊富な実績にもとづく確かな力で良質な映像をプロデュース。"
+              bio: "1983年10月2日生まれ。映像専門学校卒業後、テレビ業界に就職。報道・バラエティ・ドキュメンタリーなど多様な現場で経験を積み、その後広告業界へ転身。テレビ品質の制作工程と、広告に求められるスピード感を融合させたプロデュース力で、Anchor Art Worksの映像品質を担保する責任者を務める。"
+            },
+            {
+              role: "SNS / Short Video Editor",
+              name: "名前差し替え予定",
+              enName: "NAMAE SASIKAEYOTEI",
+              bio: "SNS運用とショート動画制作に特化した視点を持つエディター。TikTok、Instagram Reels、YouTube Shortsなど主要プラットフォームの仕様とユーザー行動を深く理解し、各メディア特性に最適化したコンテンツ設計を行う。トレンドを瞬時にキャッチするテンポ感と、データに基づく継続的な改善で、ブランドのSNS発信を成果に直結させる。"
+            },
+            {
+              role: "Designer",
+              name: "名前差し替え予定",
+              enName: "NAMAE SASIKAEYOTEI",
+              bio: "視覚的な美しさと情報構造の整理を両立させるデザイナー。映像内のタイポグラフィ、レイアウト、グラフィック要素、カラーパレットまで、ブランドの世界観を支える視覚要素を緻密に設計する。グラフィックデザインの原則を映像表現に応用し、静と動の調和したビジュアル言語を構築。ブランドアイデンティティを深める繊細なデザインを提供する。"
+            },
+            {
+              role: "Marketing Specialist",
+              name: "沖田　紘亮",
+              enName: "KOUSUKE OKITA",
+              bio: "テレビ局、総合広告代理店を経て独立。AI時代のマーケティング戦略とデータ分析を基盤に、コンテンツの価値最大化を担うスペシャリスト。行動経済学や市場構造を踏まえた戦略設計により、ターゲットへの最適なリーチと継続的な成果創出を実現。映像制作の前段階となる課題設定からKPI設計、効果測定までを支援する。"
             }
           ].map((member, idx) => (
             <motion.div

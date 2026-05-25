@@ -459,12 +459,29 @@ function HomePage({ works, isLoading, isLoadingJournal, journalPosts, onNavigate
   return (
     <div className="bg-white">
       {/* Hero */}
-      <section className="bg-brand min-h-[80vh] flex flex-col items-center justify-center text-center px-6 py-24">
+      <section className="relative bg-brand min-h-[80vh] flex flex-col items-center justify-center text-center px-6 py-24 overflow-hidden">
+        {/* Background Video */}
+        <video
+          autoPlay
+          loop
+          muted
+          playsInline
+          preload="metadata"
+          poster="/video/hero-poster.jpg"
+          className="absolute inset-0 w-full h-full object-cover z-0"
+          aria-hidden="true"
+        >
+          <source src="/video/hero.mp4" type="video/mp4" />
+        </video>
+
+        {/* Pink overlay (brand tint) */}
+        <div className="absolute inset-0 bg-brand/40 z-10" aria-hidden="true" />
+
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.8 }}
-          className="flex flex-col items-center gap-6 max-w-2xl mx-auto"
+          className="relative z-20 flex flex-col items-center gap-6 max-w-2xl mx-auto"
         >
           <img src="/logo.png" alt="Anchor Art Works" className="h-28 md:h-36 w-auto object-contain" />
           <div className="space-y-4">

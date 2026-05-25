@@ -942,17 +942,27 @@ function AboutPage({ onNavigateToContact }: { onNavigateToContact: () => void })
         </div>
       </section>
 
-      {/* Clients */}
-      <section className="py-16 px-6 bg-white border-t border-black/5">
-        <div className="max-w-[1100px] mx-auto space-y-12">
+      {/* Clients - infinite horizontal scroll */}
+      <section className="py-16 bg-white border-t border-black/5">
+        <div className="max-w-[1100px] mx-auto px-6 mb-12">
           <h2 className="text-2xl md:text-3xl font-display font-bold text-center tracking-tight uppercase">CLIENTS</h2>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 items-center">
-            {clients.map((client, idx) => (
-              <div key={idx} className="flex items-center justify-center h-14">
+        </div>
+        <div className="relative overflow-hidden">
+          {/* Edge fade masks */}
+          <div className="absolute left-0 top-0 bottom-0 w-20 md:w-32 bg-gradient-to-r from-white to-transparent z-10 pointer-events-none" />
+          <div className="absolute right-0 top-0 bottom-0 w-20 md:w-32 bg-gradient-to-l from-white to-transparent z-10 pointer-events-none" />
+
+          <motion.div
+            className="flex items-center w-fit"
+            animate={{ x: ['0%', '-50%'] }}
+            transition={{ duration: 35, ease: 'linear', repeat: Infinity }}
+          >
+            {[...clients, ...clients].map((client, idx) => (
+              <div key={idx} className="flex-shrink-0 flex items-center justify-center h-14 px-10 md:px-14">
                 <ClientLogo client={client} />
               </div>
             ))}
-          </div>
+          </motion.div>
         </div>
       </section>
 

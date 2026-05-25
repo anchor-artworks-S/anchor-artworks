@@ -467,13 +467,13 @@ function HomePage({ works, isLoading, isLoadingJournal, journalPosts, onNavigate
           className="flex flex-col items-center gap-6 max-w-2xl mx-auto"
         >
           <img src="/logo.png" alt="Anchor Art Works" className="h-28 md:h-36 w-auto object-contain" />
-          <div className="space-y-3">
-            <h1 className="text-3xl md:text-5xl font-display font-bold tracking-tight">
-              カチを、カタチに。
+          <div className="space-y-4">
+            <h1 className="text-3xl md:text-5xl font-display font-bold tracking-tight leading-tight">
+              CG・映像制作を、<br />思考の速度で。
             </h1>
             <p className="text-sm md:text-base text-black/70 leading-relaxed">
-              ブランドの伝え方を再設計、<br />
-              映像とデザインで企業の価値を伝わる形に。
+              企画からCG・編集まで。豊富なアイデアを、最速でカタチに。<br />
+              Anchor Art Worksは、スピードとクオリティを両立するクリエイティブパートナーです。
             </p>
           </div>
           <motion.button
@@ -703,10 +703,8 @@ function WorksPage({ works, isLoading, onSelectWork, onNavigateToContact }: {
             <h1 className="text-6xl md:text-8xl font-display font-bold tracking-tighter relative z-10">WORKS</h1>
             <div className="absolute bottom-1 left-0 w-full h-5 bg-brand -z-0 opacity-80" />
           </div>
-          <p className="text-black/70 text-sm md:text-base leading-relaxed max-w-2xl mx-auto">
-            企業やプロジェクト、商品やイベントの価値を、伝わるカタチに。<br />
-            課題の整理からコンセプト設計、アウトプットまでを一貫し、<br />
-            スピードと完成度を両立したクリエイティブをAnchor Art Worksは提供しています。
+          <p className="text-xl md:text-3xl font-display font-bold tracking-tight leading-snug max-w-2xl mx-auto">
+            「やりたい」の直後に、カタチがある。
           </p>
         </motion.div>
       </section>
@@ -824,12 +822,16 @@ function AboutPage({ onNavigateToContact }: { onNavigateToContact: () => void })
             <h1 className="text-6xl md:text-8xl font-display font-bold tracking-tighter relative z-10">LET'S TALK.</h1>
             <div className="absolute bottom-1 left-0 w-full h-5 bg-brand -z-0 opacity-80" />
           </div>
-          <p className="text-black/70 text-sm md:text-base leading-relaxed max-w-2xl mx-auto">
-            私たちは企業の価値を"伝わるカタチ"に設計するクリエイティブチームです。<br />
-            課題の整理からコンセプト設計、映像・デザインのアウトプットまでを一貫して行い、ブランドの伝え方を再構築します。<br />
-            スピードと精度を両立しながら、本質的な価値をわかりやすく、そして魅力的に届けることを大切にしています。<br />
-            ひとつひとつのプロジェクトに丁寧に向き合い、継続的な価値創出につなげていきます。
-          </p>
+          <div className="space-y-6">
+            <p className="text-xl md:text-3xl font-display font-bold tracking-tight leading-snug max-w-2xl mx-auto">
+              脳内の解像度を、そのままの速度で。<br />
+              思考が止まる前に、イメージは動き出す。
+            </p>
+            <p className="text-black/70 text-sm md:text-base leading-relaxed max-w-2xl mx-auto">
+              CG、モーショングラフィック、映像編集。<br />
+              企画段階のラフな発想から実制作まで、スピードと品質を両立しながら伴走します。
+            </p>
+          </div>
         </motion.div>
       </section>
 
@@ -1253,14 +1255,14 @@ function CTASection({ onNavigate }: { onNavigate: () => void }) {
             <p className="text-black/40 font-bold tracking-[0.3em] text-[11px] uppercase">PLEASE CONSULT</p>
             <img src="/logo.png" alt="Anchor Art Works" className="h-16 md:h-24 w-auto mx-auto object-contain" />
           </div>
-          <p className="text-sm text-black/75 leading-relaxed">
-            私たちは課題の整理からコンセプト設計、<br />
-            アウトプットまでを一貫して支援しています。<br />
-            まだ具体的でなくても構いません。<br />
-            「何から始めればいいかわからない」という段階でも大丈夫です。<br />
-            スピードと精度を大切にしながら、最適な進め方をご提案します。<br />
-            <span className="text-lg md:text-xl font-bold mt-3 block text-black">まずはお気軽にご相談ください。</span>
-          </p>
+          <div className="space-y-3">
+            <h2 className="text-3xl md:text-5xl font-display font-bold tracking-tight text-black leading-tight">
+              ひらめきを、待たせない
+            </h2>
+            <p className="text-base md:text-xl text-black/70 font-medium leading-relaxed">
+              思考の速度で、カタチにする。
+            </p>
+          </div>
           <button
             onClick={onNavigate}
             className="px-12 py-3.5 bg-black text-white font-bold text-[11px] uppercase tracking-[0.2em] hover:opacity-90 transition-all flex items-center gap-3 mx-auto group"

@@ -709,20 +709,25 @@ function WorksPage({ works, isLoading, onSelectWork, onNavigateToContact }: {
   return (
     <div className="pb-20 bg-white">
       {/* Header */}
-      <section className="pt-28 pb-12 text-center px-6">
+      <section className="pt-28 pb-12 px-6">
         <motion.div
           initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
-          className="max-w-3xl mx-auto space-y-6"
+          className="max-w-4xl mx-auto space-y-10"
         >
-          <div className="relative inline-block">
-            <h1 className="text-6xl md:text-8xl font-display font-bold tracking-tighter relative z-10">WORKS</h1>
-            <div className="absolute bottom-1 left-0 w-full h-5 bg-brand -z-0 opacity-80" />
+          <div className="text-center">
+            <h1 className="text-6xl md:text-8xl font-display font-bold tracking-tighter leading-[0.95]">WORKS</h1>
+            <div className="flex items-center gap-4 mt-5">
+              <span className="text-[10px] font-bold tracking-[0.3em] uppercase text-black/50 whitespace-nowrap">OUR LIBRARY</span>
+              <div className="h-2 bg-brand flex-1" />
+            </div>
           </div>
-          <p className="text-xl md:text-3xl font-display font-bold tracking-tight leading-snug max-w-2xl mx-auto">
-            「やりたい」の直後に、カタチがある。
-          </p>
+          <div className="text-center">
+            <p className="text-xl md:text-3xl font-display font-bold tracking-tight leading-snug">
+              「やりたい」の直後に、カタチがある。
+            </p>
+          </div>
         </motion.div>
       </section>
 
@@ -1020,21 +1025,26 @@ function ContactPage({ works, onNavigateToPrivacy }: { works: Work[]; onNavigate
   return (
     <div className="bg-white pb-0">
       {/* Header */}
-      <section className="pt-28 pb-12 px-6 text-center">
+      <section className="pt-28 pb-12 px-6">
         <motion.div
           initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
-          className="max-w-3xl mx-auto space-y-6"
+          className="max-w-4xl mx-auto space-y-10"
         >
-          <div className="relative inline-block">
-            <h1 className="text-6xl md:text-8xl font-display font-bold tracking-tighter relative z-10">LET'S TALK.</h1>
-            <div className="absolute bottom-1 left-0 w-full h-5 bg-brand -z-0 opacity-80" />
+          <div className="text-center">
+            <h1 className="text-6xl md:text-8xl font-display font-bold tracking-tighter leading-[0.95]">LET'S TALK.</h1>
+            <div className="flex items-center gap-4 mt-5">
+              <span className="text-[10px] font-bold tracking-[0.3em] uppercase text-black/50 whitespace-nowrap">GET IN TOUCH</span>
+              <div className="h-2 bg-brand flex-1" />
+            </div>
           </div>
-          <p className="text-black/70 text-sm leading-relaxed max-w-xl mx-auto">
-            伝え方に迷ったら、まずはご相談ください。課題の整理から制作まで一貫して対応します。<br />
-            アイデアがまとまっていなくても大丈夫です。スピードとクオリティを大切に、最適な形をご提案します。
-          </p>
+          <div className="text-center">
+            <p className="text-black/70 text-sm leading-relaxed max-w-xl mx-auto">
+              伝え方に迷ったら、まずはご相談ください。課題の整理から制作まで一貫して対応します。<br />
+              アイデアがまとまっていなくても大丈夫です。スピードとクオリティを大切に、最適な形をご提案します。
+            </p>
+          </div>
         </motion.div>
       </section>
 

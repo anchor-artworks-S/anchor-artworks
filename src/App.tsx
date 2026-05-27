@@ -9,10 +9,10 @@ import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { GoogleGenAI } from "@google/genai";
 import Papa from "papaparse";
-import { 
-  ExternalLink, 
-  X, 
-  Play, 
+import {
+  ExternalLink,
+  X,
+  Play,
   TrendingUp,
   ArrowRight,
   Send,
@@ -20,6 +20,7 @@ import {
   ChevronRight,
   Menu,
   ChevronDown,
+  Plus,
 } from "lucide-react";
 
 // --- Types ---
@@ -678,9 +679,55 @@ function HomePage({ works, isLoading, isLoadingJournal, journalPosts, onNavigate
         </motion.div>
       </section>
 
+      {/* SHOWREEL */}
+      <section className="bg-black text-white py-20 px-6">
+        <div className="max-w-[1400px] mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+            className="text-center mb-10 space-y-3"
+          >
+            <div className="flex items-center justify-center gap-4 max-w-md mx-auto">
+              <span className="text-[10px] font-bold tracking-[0.3em] uppercase text-white/40 whitespace-nowrap">SHOWREEL</span>
+              <div className="h-px bg-brand flex-1" />
+            </div>
+            <h2 className="text-3xl md:text-5xl font-display font-bold text-brand tracking-tight">
+              思考の速度を、映像で。
+            </h2>
+            <p className="text-white/60 text-sm md:text-base max-w-xl mx-auto leading-relaxed">
+              Anchor Art Worksの世界観を、約60秒に凝縮。
+            </p>
+          </motion.div>
+          <motion.div
+            initial={{ opacity: 0, scale: 0.97 }}
+            whileInView={{ opacity: 1, scale: 1 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.8, ease: 'easeOut' }}
+            className="relative aspect-video w-full bg-black border border-white/10 overflow-hidden"
+          >
+            <iframe
+              src="https://player.vimeo.com/video/819715322?autoplay=1&loop=1&muted=1&background=1&title=0&byline=0&portrait=0&dnt=1"
+              className="absolute inset-0 w-full h-full"
+              allow="autoplay; fullscreen; picture-in-picture"
+              allowFullScreen
+              loading="lazy"
+              title="Anchor Art Works Showreel"
+            />
+          </motion.div>
+        </div>
+      </section>
+
       {/* Selected Works */}
       <section className="py-20 px-6 max-w-[1200px] mx-auto">
-        <h2 className="text-2xl md:text-3xl font-display font-bold tracking-tight text-center mb-12">SELECTED WORKS.</h2>
+        <motion.h2
+          initial={{ opacity: 0, y: 15 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6 }}
+          className="text-2xl md:text-3xl font-display font-bold tracking-tight text-center mb-12"
+        >SELECTED WORKS.</motion.h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
           {isLoading ? (
             Array(3).fill(0).map((_, i) => (
@@ -748,13 +795,19 @@ function HomePage({ works, isLoading, isLoadingJournal, journalPosts, onNavigate
       {/* Strengths */}
       <section className="bg-black text-white py-24 px-6">
         <div className="max-w-[900px] mx-auto space-y-16">
-          <div className="text-center space-y-3">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+            className="text-center space-y-3"
+          >
             <h2 className="text-3xl md:text-4xl font-display font-bold text-brand">OUR STRENGTHS.</h2>
             <p className="text-white/50 text-sm leading-relaxed">
               社内一貫体制により、戦略設計から最終的なアウトプットまで、<br />
               ブレのないクオリティを提供します。
             </p>
-          </div>
+          </motion.div>
           <div className="border border-white/20 divide-y divide-white/20">
             {[
               {
@@ -796,11 +849,20 @@ function HomePage({ works, isLoading, isLoadingJournal, journalPosts, onNavigate
         </div>
       </section>
 
+      {/* FAQ */}
+      <FAQSection />
+
       {/* INFORMATION — Dynamic note RSS posts (with static promo cards as fallback) */}
       <section className="py-20 px-6 max-w-[1200px] mx-auto">
-        <div className="text-center mb-12">
+        <motion.div
+          initial={{ opacity: 0, y: 15 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6 }}
+          className="text-center mb-12"
+        >
           <h2 className="text-2xl md:text-3xl font-display font-bold tracking-tight">INFORMATION</h2>
-        </div>
+        </motion.div>
         {journalPosts.length > 0 ? (
           // Dynamic: latest posts from note RSS
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -1585,6 +1647,103 @@ Your mission is to provide professional consultation about the company's service
         </div>
       </div>
     </div>
+  );
+}
+
+// ─────────────────────────────────────────
+// FAQ SECTION (HOME)
+// ─────────────────────────────────────────
+const FAQ_ITEMS = [
+  {
+    q: "制作期間はどのくらいですか？",
+    a: "案件規模により2週間から3ヶ月程度が目安です。緊急対応も可能ですので、まずはご相談ください。スピードを重視する案件には、社内一貫体制ならではの最短納期でお応えします。"
+  },
+  {
+    q: "予算が決まっていなくても相談できますか？",
+    a: "もちろんです。ご予算とご要望を踏まえ、最適な構成・規模をご提案します。「何から始めればいいかわからない」段階でも、課題の整理からサポートします。"
+  },
+  {
+    q: "SNS用ショート動画にも対応していますか？",
+    a: "TikTok、Instagram Reels、YouTube Shorts など、各プラットフォームに最適化されたショート動画制作に特化したメンバーが在籍しています。長尺映像との連動運用や、複数バリエーション展開も得意です。"
+  },
+  {
+    q: "CGや3Dアニメーションの相談は可能ですか？",
+    a: "可能です。3DCG・2DCG、モーショングラフィックスを社内で制作する体制を持っています。製品3Dモデルからのレンダリング、キャラクターアニメーション、テクニカルビジュアライゼーションまで対応可能です。"
+  },
+  {
+    q: "テレビCMやブランドムービーの制作実績はありますか？",
+    a: "はい、テレビ局や広告代理店出身のプロデューサー・ディレクターが在籍しており、放送基準の品質を担保した制作が可能です。共同印刷（TOMOWEL）、MIXI、LINE Digital Frontier などの実績があります。"
+  },
+  {
+    q: "マーケティング戦略から相談できますか？",
+    a: "はい、テレビ局・総合広告代理店出身のマーケティングスペシャリストが、課題設定、ターゲット定義、KPI設計、配信戦略、効果測定までトータルでサポートします。映像とマーケティングを統合した提案が可能です。"
+  },
+];
+
+function FAQSection() {
+  const [openIdx, setOpenIdx] = useState<number | null>(null);
+  return (
+    <section className="py-20 px-6 max-w-[900px] mx-auto">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true }}
+        transition={{ duration: 0.6 }}
+        className="text-center mb-12 space-y-3"
+      >
+        <div className="flex items-center justify-center gap-4 max-w-md mx-auto">
+          <span className="text-[10px] font-bold tracking-[0.3em] uppercase text-black/40 whitespace-nowrap">FAQ</span>
+          <div className="h-px bg-brand flex-1" />
+        </div>
+        <h2 className="text-2xl md:text-3xl font-display font-bold tracking-tight">よくあるご質問</h2>
+      </motion.div>
+      <div className="divide-y divide-black/10 border-t border-b border-black/10">
+        {FAQ_ITEMS.map((item, idx) => {
+          const isOpen = openIdx === idx;
+          return (
+            <motion.div
+              key={idx}
+              initial={{ opacity: 0, y: 10 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: idx * 0.05, duration: 0.4 }}
+            >
+              <button
+                onClick={() => setOpenIdx(isOpen ? null : idx)}
+                className="w-full flex items-center justify-between gap-6 py-6 text-left hover:bg-black/[0.02] transition-colors px-2"
+                aria-expanded={isOpen}
+              >
+                <span className="text-sm md:text-base font-bold text-black/80 leading-snug flex-1">
+                  Q. {item.q}
+                </span>
+                <motion.span
+                  animate={{ rotate: isOpen ? 45 : 0 }}
+                  transition={{ duration: 0.2 }}
+                  className="shrink-0 w-7 h-7 rounded-full bg-brand flex items-center justify-center text-black"
+                >
+                  <Plus size={14} />
+                </motion.span>
+              </button>
+              <AnimatePresence initial={false}>
+                {isOpen && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: 'auto', opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{ duration: 0.3, ease: 'easeOut' }}
+                    className="overflow-hidden"
+                  >
+                    <p className="text-sm text-black/65 leading-relaxed px-2 pb-6">
+                      {item.a}
+                    </p>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </motion.div>
+          );
+        })}
+      </div>
+    </section>
   );
 }
 

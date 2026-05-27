@@ -294,32 +294,27 @@ export default function App() {
               skipEmptyLines: true,
               complete: (results) => {
                 const map = new Map<string, Partial<Work>>();
-                const norm = (row: any, key: string) => {
-                  // Find key tolerantly (handle trailing/leading spaces)
-                  const found = Object.keys(row).find(k => k.trim() === key.trim());
-                  return found ? String(row[found] ?? '').trim() : '';
-                };
                 (results.data as any[]).forEach((row, rowIdx) => {
-                  // Multi-form lookup: try with "X列:" prefix variants and plain key
-                  const lookup = (...keys: string[]) => {
-                    for (const k of keys) {
-                      const v = norm(row, k);
-                      if (v) return v;
-                    }
-                    return '';
+                  // Partial-match lookup: find header containing keyword (case-insensitive)
+                  // → ヘッダ行に補足文を追記しても、キーワード部分が残っていればOK
+                  // 例: "G列:is_selected\nSELECTED WORKSの掲載（3つ）" でも "is_selected" を検出
+                  const lookup = (keyword: string) => {
+                    const lc = keyword.toLowerCase();
+                    const found = Object.keys(row).find(k => k.toLowerCase().includes(lc));
+                    return found ? String(row[found] ?? '').trim() : '';
                   };
-                  const vimeoId = lookup('A列: vimeoId', 'A列:vimeoId', 'vimeoId');
+                  const vimeoId = lookup('vimeoid');
                   if (!vimeoId) return;
-                  const titleOverride = lookup('B列: title', 'B列:title', 'title');
-                  const productionNote = lookup('C列: production_note', 'C列:production_note', 'production_note');
-                  const strategy = lookup('D列: strategy', 'D列:strategy', 'strategy');
-                  const evidenceUrl = lookup('E列: evidence_url', 'E列:evidence_url', 'evidence_url');
-                  const category = (lookup('F列: category', 'F列:category', 'category') || 'OTHER').toUpperCase();
-                  const isSelected = /^true$/i.test(lookup('G列: is_selected', 'G列:is_selected', 'is_selected'));
-                  const displayOrderStr = lookup('H列: display_order', 'H列:display_order', 'display_order');
+                  const titleOverride = lookup('title');
+                  const productionNote = lookup('production_note');
+                  const strategy = lookup('strategy');
+                  const evidenceUrl = lookup('evidence_url');
+                  const category = (lookup('category') || 'OTHER').toUpperCase();
+                  const isSelected = /^true$/i.test(lookup('is_selected'));
+                  const displayOrderStr = lookup('display_order');
                   const displayOrder = displayOrderStr ? Number(displayOrderStr) : undefined;
-                  const clientName = lookup('I列: client_name', 'I列:client_name', 'client_name');
-                  const publishedStr = lookup('J列: is_published', 'J列:is_published', 'is_published');
+                  const clientName = lookup('client_name');
+                  const publishedStr = lookup('is_published');
                   const isPublished = publishedStr === '' ? true : /^true$/i.test(publishedStr);
 
                   map.set(vimeoId, {
@@ -653,8 +648,9 @@ function HomePage({ works, isLoading, isLoadingJournal, journalPosts, onNavigate
           ) : (
             (() => {
               const selected = works.filter(w => w.isSelected);
+              // Sheet 行順で上位3本を表示（display_order 列は使わない）
               const featured = selected.length > 0
-                ? [...selected].sort((a, b) => (a.displayOrder ?? Infinity) - (b.displayOrder ?? Infinity)).slice(0, 3)
+                ? [...selected].sort((a, b) => (a.sheetRowIndex ?? Infinity) - (b.sheetRowIndex ?? Infinity)).slice(0, 3)
                 : works.slice(0, 3);
               return featured.map((work, idx) => (
               <motion.div

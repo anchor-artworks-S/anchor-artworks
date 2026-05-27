@@ -724,6 +724,56 @@ function HomePage({ works, isLoading, isLoadingJournal, journalPosts, onNavigate
         </div>
       </section>
 
+      {/* Selected Works */}
+      <section className="py-20 px-6 max-w-[1200px] mx-auto">
+        <motion.h2
+          initial={{ opacity: 0, y: 15 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6 }}
+          className="text-2xl md:text-3xl font-display font-bold tracking-tight text-center mb-12"
+        >SELECTED WORKS.</motion.h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
+          {isLoading ? (
+            Array(3).fill(0).map((_, i) => (
+              <div key={i} className="space-y-3">
+                <div className="aspect-video bg-black/5 animate-pulse" />
+                <div className="h-3 w-3/4 bg-black/5 animate-pulse mx-auto" />
+              </div>
+            ))
+          ) : (
+            (() => {
+              const selected = works.filter(w => w.isSelected);
+              const featured = selected.length > 0
+                ? [...selected].sort((a, b) => {
+                    const da = a.displayOrder ?? Infinity;
+                    const db = b.displayOrder ?? Infinity;
+                    if (da !== db) return da - db;
+                    return (a.sheetRowIndex ?? Infinity) - (b.sheetRowIndex ?? Infinity);
+                  }).slice(0, 3)
+                : works.slice(0, 3);
+              return featured.map((work, idx) => (
+                <SelectedWorkCard
+                  key={work.id}
+                  work={work}
+                  idx={idx}
+                  onClick={() => onSelectWork(work)}
+                />
+              ));
+            })()
+          )}
+        </div>
+        <div className="flex justify-center">
+          <button
+            onClick={onNavigateToWorks}
+            className="px-10 py-3 bg-black text-white font-bold text-[10px] uppercase tracking-widest hover:bg-black/80 transition-all flex items-center gap-3 group"
+          >
+            <span>EXPLORE ALL LIBRARY</span>
+            <ArrowRight size={13} className="group-hover:translate-x-1 transition-transform" />
+          </button>
+        </div>
+      </section>
+
       {/* WE DELIVER — Brand promise */}
       <section className="bg-brand py-24 md:py-32 px-6">
         <div className="max-w-[900px] mx-auto text-center">
@@ -768,90 +818,25 @@ function HomePage({ works, isLoading, isLoadingJournal, journalPosts, onNavigate
             急ぎ案件も、解像度を落とさない。
           </motion.p>
 
-          {/* Footnote bar — small credibility markers */}
+          {/* Footnote bar — larger credibility markers */}
           <motion.div
             initial={{ opacity: 0 }}
             whileInView={{ opacity: 1 }}
             viewport={{ once: true }}
             transition={{ duration: 0.5, delay: 0.4 }}
-            className="mt-16 pt-8 border-t border-black/15"
+            className="mt-16 pt-10 border-t border-black/15"
           >
-            <div className="flex flex-wrap items-baseline justify-center gap-x-6 md:gap-x-10 gap-y-3 text-xs md:text-sm text-black/60">
-              <span><span className="font-display font-bold text-xl text-black">500+</span> <span className="font-medium tracking-widest uppercase text-[10px] ml-1">Projects</span></span>
-              <span className="hidden md:inline text-black/30">●</span>
-              <span className="font-bold tracking-widest uppercase text-[10px] text-black/70">ワンストップ制作</span>
-              <span className="hidden md:inline text-black/30">●</span>
-              <span className="font-bold tracking-widest uppercase text-[10px] text-black/70">最短対応</span>
+            <div className="flex flex-wrap items-baseline justify-center gap-x-8 md:gap-x-14 gap-y-4">
+              <span className="flex items-baseline gap-2">
+                <span className="font-display font-bold text-3xl md:text-4xl text-black tracking-tight">500+</span>
+                <span className="font-bold tracking-widest uppercase text-xs md:text-sm text-black/60">Projects</span>
+              </span>
+              <span className="hidden md:inline-block w-2 h-2 rounded-full bg-black/25" />
+              <span className="font-bold tracking-widest uppercase text-xs md:text-sm text-black/70">ワンストップ制作</span>
+              <span className="hidden md:inline-block w-2 h-2 rounded-full bg-black/25" />
+              <span className="font-bold tracking-widest uppercase text-xs md:text-sm text-black/70">最短対応</span>
             </div>
           </motion.div>
-        </div>
-      </section>
-
-      {/* Selected Works */}
-      <section className="py-20 px-6 max-w-[1200px] mx-auto">
-        <motion.h2
-          initial={{ opacity: 0, y: 15 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6 }}
-          className="text-2xl md:text-3xl font-display font-bold tracking-tight text-center mb-12"
-        >SELECTED WORKS.</motion.h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
-          {isLoading ? (
-            Array(3).fill(0).map((_, i) => (
-              <div key={i} className="space-y-3">
-                <div className="aspect-video bg-black/5 animate-pulse" />
-                <div className="h-3 w-3/4 bg-black/5 animate-pulse mx-auto" />
-              </div>
-            ))
-          ) : (
-            (() => {
-              const selected = works.filter(w => w.isSelected);
-              // SELECTED WORKS の順序: H列 display_order の数値順
-              // 同じ数字 / 空欄は Sheet 行順でフォールバック
-              const featured = selected.length > 0
-                ? [...selected].sort((a, b) => {
-                    const da = a.displayOrder ?? Infinity;
-                    const db = b.displayOrder ?? Infinity;
-                    if (da !== db) return da - db;
-                    return (a.sheetRowIndex ?? Infinity) - (b.sheetRowIndex ?? Infinity);
-                  }).slice(0, 3)
-                : works.slice(0, 3);
-              return featured.map((work, idx) => (
-              <motion.div
-                key={work.id}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: idx * 0.1 }}
-                className="group cursor-pointer text-center space-y-3"
-                onClick={() => onSelectWork(work)}
-              >
-                <div className="aspect-video overflow-hidden">
-                  <img
-                    src={work.thumbnail}
-                    alt={work.title}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
-                    referrerPolicy="no-referrer"
-                  />
-                </div>
-                <p className="text-[11px] font-bold text-black/70">
-                  『{work.title}』ブランド映像
-                </p>
-                <p className="text-[10px] text-black/40">{work.clientName ? `Client_${work.clientName}` : 'Client_共同印刷 株式会社'}</p>
-              </motion.div>
-              ));
-            })()
-          )}
-        </div>
-        <div className="flex justify-center">
-          <button
-            onClick={onNavigateToWorks}
-            className="px-10 py-3 bg-black text-white font-bold text-[10px] uppercase tracking-widest hover:bg-black/80 transition-all flex items-center gap-3 group"
-          >
-            <span>EXPLORE ALL LIBRARY</span>
-            <ArrowRight size={13} className="group-hover:translate-x-1 transition-transform" />
-          </button>
         </div>
       </section>
 
@@ -1819,6 +1804,83 @@ Your mission is to provide professional consultation about the company's service
         </div>
       </div>
     </div>
+  );
+}
+
+// ─────────────────────────────────────────
+// SELECTED WORK CARD (HOME) — with Netflix-style hover preview
+// ─────────────────────────────────────────
+function SelectedWorkCard({ work, idx, onClick }: {
+  work: Work;
+  idx: number;
+  onClick: () => void;
+}) {
+  const [isHovered, setIsHovered] = useState(false);
+  const [showPreview, setShowPreview] = useState(false);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const handleEnter = () => {
+    setIsHovered(true);
+    if (timerRef.current) clearTimeout(timerRef.current);
+    timerRef.current = setTimeout(() => setShowPreview(true), 700);
+  };
+
+  const handleLeave = () => {
+    setIsHovered(false);
+    setShowPreview(false);
+    if (timerRef.current) {
+      clearTimeout(timerRef.current);
+      timerRef.current = null;
+    }
+  };
+
+  useEffect(() => () => {
+    if (timerRef.current) clearTimeout(timerRef.current);
+  }, []);
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 40, scale: 0.95 }}
+      whileInView={{ opacity: 1, y: 0, scale: 1 }}
+      viewport={{ once: true }}
+      transition={{ delay: idx * 0.15, duration: 0.7, ease: 'easeOut' }}
+      className="group cursor-pointer text-center space-y-3"
+      onClick={onClick}
+      onMouseEnter={handleEnter}
+      onMouseLeave={handleLeave}
+    >
+      <div className="aspect-video overflow-hidden relative bg-black">
+        <img
+          src={work.thumbnail}
+          alt={work.title}
+          className={`absolute inset-0 w-full h-full object-cover transition-all duration-500 group-hover:scale-105 ${
+            showPreview ? 'opacity-0' : 'opacity-100'
+          }`}
+          referrerPolicy="no-referrer"
+        />
+        {showPreview && work.vimeoId && (
+          <iframe
+            src={`https://player.vimeo.com/video/${work.vimeoId}?autoplay=1&loop=1&muted=1&background=1&dnt=1`}
+            className="absolute inset-0 w-full h-full"
+            allow="autoplay; fullscreen; picture-in-picture"
+            loading="lazy"
+            title={work.title}
+          />
+        )}
+        {/* Hover overlay + Play icon (shows during hover, before iframe kicks in) */}
+        <div className={`absolute inset-0 bg-black/40 flex items-center justify-center transition-opacity duration-300 pointer-events-none ${
+          isHovered && !showPreview ? 'opacity-100' : 'opacity-0'
+        }`}>
+          <div className="w-14 h-14 md:w-16 md:h-16 rounded-full bg-white/95 flex items-center justify-center shadow-lg">
+            <Play size={20} className="fill-black text-black ml-1" />
+          </div>
+        </div>
+      </div>
+      <p className="text-[11px] font-bold text-black/70">
+        『{work.title}』ブランド映像
+      </p>
+      <p className="text-[10px] text-black/40">{work.clientName ? `Client_${work.clientName}` : 'Client_共同印刷 株式会社'}</p>
+    </motion.div>
   );
 }
 

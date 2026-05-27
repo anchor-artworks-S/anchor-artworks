@@ -519,6 +519,7 @@ export default function App() {
   return (
     <div className="min-h-screen flex flex-col bg-white text-black font-sans selection:bg-black selection:text-white">
       <CustomCursor />
+      <FloatingCTA onClick={() => setCurrentPage('contact')} hidden={currentPage === 'contact'} />
       {/* Header */}
       <header className={`fixed top-0 w-full z-50 transition-all duration-300 ${isScrolled ? 'bg-black/95 backdrop-blur-md border-b border-white/5 h-20' : 'bg-black h-20'}`}>
         <div className="max-w-[1400px] mx-auto px-6 md:px-10 h-full flex items-center justify-between">
@@ -1068,9 +1069,6 @@ function WorksPage({ works, isLoading, onSelectWork, onNavigateToContact }: {
         </section>
       )}
 
-      <div className="mt-24 px-6 max-w-[1200px] mx-auto">
-        <CTASection onNavigate={onNavigateToContact} />
-      </div>
     </div>
   );
 }
@@ -1296,9 +1294,6 @@ function AboutPage({ onNavigateToContact }: { onNavigateToContact: () => void })
         </div>
       </section>
 
-      <div className="px-6 pb-20 max-w-[1200px] mx-auto">
-        <CTASection onNavigate={onNavigateToContact} />
-      </div>
     </div>
   );
 }
@@ -1344,6 +1339,10 @@ function ContactPage({ works, onNavigateToPrivacy }: { works: Work[]; onNavigate
           <div className="text-center space-y-6">
             <p className="text-2xl md:text-4xl font-display font-bold tracking-tight leading-tight">
               LET'S TALK.
+            </p>
+            <p className="text-lg md:text-2xl font-display font-bold tracking-tight leading-snug">
+              ひらめきを、待たせない。<br />
+              <span className="text-black/60 text-sm md:text-base font-medium">思考の速度で、カタチにする。</span>
             </p>
             <p className="text-black/70 text-sm md:text-base leading-relaxed max-w-xl mx-auto">
               伝え方に迷ったら、まずはご相談ください。課題の整理から制作まで一貫して対応します。<br />
@@ -1678,6 +1677,30 @@ function SelectedWorkCard({ work, idx, onClick }: SelectedWorkCardProps) {
       </p>
       <p className="text-[10px] text-black/40">{work.clientName ? `Client_${work.clientName}` : 'Client_共同印刷 株式会社'}</p>
     </motion.div>
+  );
+}
+
+// ─────────────────────────────────────────
+// FLOATING CTA — right-edge vertical label, designer style
+// ─────────────────────────────────────────
+function FloatingCTA({ onClick, hidden }: { onClick: () => void; hidden: boolean }) {
+  if (hidden) return null;
+  return (
+    <button
+      onClick={onClick}
+      className="hidden md:flex fixed right-0 top-1/2 -translate-y-1/2 z-40 bg-brand text-black px-3 py-8 hover:bg-black hover:text-white transition-all duration-300 shadow-lg group items-center"
+      aria-label="START A PROJECT"
+    >
+      <div className="flex flex-col items-center gap-3">
+        <span
+          className="text-[11px] font-bold tracking-[0.35em] uppercase"
+          style={{ writingMode: 'vertical-rl', textOrientation: 'mixed' }}
+        >
+          START A PROJECT
+        </span>
+        <ArrowRight size={14} className="rotate-90 group-hover:translate-y-1 transition-transform" />
+      </div>
+    </button>
   );
 }
 
@@ -2251,9 +2274,6 @@ function WhatWeDoPage({ onNavigateToContact }: { onNavigateToContact: () => void
       <FAQSection />
 
       {/* CTA */}
-      <div className="px-6 pb-20 max-w-[1200px] mx-auto">
-        <CTASection onNavigate={onNavigateToContact} />
-      </div>
     </div>
   );
 }
@@ -2421,9 +2441,6 @@ function JournalPage({ journalPosts, isLoadingJournal, onNavigateToContact }: {
       </section>
 
       {/* CTA */}
-      <div className="px-6 pb-20 max-w-[1200px] mx-auto">
-        <CTASection onNavigate={onNavigateToContact} />
-      </div>
     </div>
   );
 }

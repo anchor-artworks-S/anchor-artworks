@@ -5,14 +5,14 @@
 
 /// <reference types="vite/client" />
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, Fragment } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { GoogleGenAI } from "@google/genai";
 import Papa from "papaparse";
-import { 
-  ExternalLink, 
-  X, 
-  Play, 
+import {
+  ExternalLink,
+  X,
+  Play,
   TrendingUp,
   ArrowRight,
   Send,
@@ -20,10 +20,14 @@ import {
   ChevronRight,
   Menu,
   ChevronDown,
+  Plus,
+  Mail,
+  Video,
+  BookOpen,
 } from "lucide-react";
 
 // --- Types ---
-type Page = 'home' | 'works' | 'about' | 'contact' | 'privacy';
+type Page = 'home' | 'works' | 'whatwedo' | 'about' | 'journal' | 'contact' | 'privacy';
 
 interface NotePost {
   title: string;
@@ -47,7 +51,19 @@ interface Work {
   e_id_link: string;
   vimeoId?: string;
   stats?: { views: string; likes: string; };
+  viewCount?: number;
+  // Sheet metadata (Aisle framework + operational columns)
+  isSelected?: boolean;
+  displayOrder?: number;
+  clientName?: string;
+  isPublished?: boolean;
+  uploadedAt?: string;
+  // Sheet row index — implicit display order (Sheet 行順 = 掲載順)
+  sheetRowIndex?: number;
 }
+
+// Category sort order
+const CATEGORY_ORDER = ['GAME', 'EVENT', 'PR', 'GRAPHIC', 'COAPORATE', 'OTHER'];
 
 interface Message {
   role: 'user' | 'assistant';
@@ -173,11 +189,48 @@ const FALLBACK_WORKS_DATA: Work[] = [
   },
 ];
 
+// Derive page from URL path
+function pathToPage(pathname: string): Page {
+  const p = pathname.toLowerCase();
+  if (p.startsWith('/works')) return 'works';
+  if (p.startsWith('/whatwedo')) return 'whatwedo';
+  if (p.startsWith('/about')) return 'about';
+  if (p.startsWith('/journal')) return 'journal';
+  if (p.startsWith('/contact')) return 'contact';
+  if (p.startsWith('/privacy')) return 'privacy';
+  return 'home';
+}
+
+function pageToPath(page: Page): string {
+  return page === 'home' ? '/' : `/${page}`;
+}
+
 export default function App() {
-  const [currentPage, setCurrentPage] = useState<Page>('home');
+  const [currentPage, _setCurrentPage] = useState<Page>(() =>
+    typeof window !== 'undefined' ? pathToPage(window.location.pathname) : 'home'
+  );
+
+  // Wrapper: update state AND URL (via History API, no page reload)
+  const setCurrentPage = (page: Page) => {
+    _setCurrentPage(page);
+    if (typeof window !== 'undefined') {
+      const newPath = pageToPath(page);
+      if (window.location.pathname !== newPath) {
+        window.history.pushState({}, '', newPath);
+      }
+    }
+  };
+
+  // Sync state when user uses browser back/forward
+  useEffect(() => {
+    const onPopState = () => _setCurrentPage(pathToPage(window.location.pathname));
+    window.addEventListener('popstate', onPopState);
+    return () => window.removeEventListener('popstate', onPopState);
+  }, []);
+
   const [selectedWork, setSelectedWork] = useState<Work | null>(null);
   const [works, setWorks] = useState<Work[]>(FALLBACK_WORKS_DATA);
-  const [journalPosts, setJournalPosts] = useState<NotePost[]>(NOTE_POSTS);
+  const [journalPosts, setJournalPosts] = useState<NotePost[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingJournal, setIsLoadingJournal] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
@@ -190,124 +243,264 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    const loadWorks = async () => {
-      setIsLoading(true);
-      const sheetUrl = import.meta.env.VITE_WORKS_SHEET_URL;
-      const vimeoToken = import.meta.env.VITE_VIMEO_ACCESS_TOKEN;
-      let finalWorks: Work[] = [];
-
-      if (vimeoToken) {
-        try {
-          const vimeoWorks = await fetchAllVimeoVideos(vimeoToken);
-          if (vimeoWorks.length > 0) finalWorks = vimeoWorks;
-        } catch (error) {
-          console.error("Vimeo fetch error:", error);
-        }
-      }
-
-      if (finalWorks.length === 0) {
-        if (sheetUrl) {
-          try {
-            const response = await fetch(sheetUrl);
-            const csvText = await response.text();
-            Papa.parse(csvText, {
-              header: true,
-              skipEmptyLines: true,
-              complete: (results) => {
-                if (results.data && results.data.length > 0) {
-                  const sheetWorks: Work[] = (results.data as any[]).map((row, idx) => ({
-                    id: row['A列: vimeoId'] || row.vimeoId || `work-${idx}`,
-                    title: row['B列: title (A-02)'] || row.title || "Untitled Work",
-                    category: row.category || "Works",
-                    tags: row.tags ? row.tags.split(',').map((t: string) => t.trim()) : [],
-                    thumbnail: row.thumbnail || `https://picsum.photos/seed/${idx}/1920/1080`,
-                    videoPreview: row.videoPreview || "",
-                    vimeoId: row['A列: vimeoId'] || row.vimeoId || "",
-                    m07_solution: row['D列: strategy (M-07)'] || row.m07_solution || "",
-                    a01_intent: row['C列: production_note (A-01)'] || row.a01_intent || "",
-                    m03_results: row.m03_results ? row.m03_results.split('|').map((t: string) => t.trim()) : [],
-                    e_id_link: row['E列: evidence_url (E-ID)'] || row.e_id_link || "",
-                    stats: { views: "---", likes: "---" }
-                  })).filter(w => w.vimeoId || w.title);
-                  setWorks(sheetWorks);
-                }
-                setIsLoading(false);
-              }
-            });
-            return;
-          } catch (e) {
-            finalWorks = FALLBACK_WORKS_DATA;
-          }
-        } else {
-          finalWorks = FALLBACK_WORKS_DATA;
-        }
-      }
-      setWorks(finalWorks);
-      setIsLoading(false);
-    };
-
+    // Fetch all Vimeo videos (up to 300, paginated 100 each)
     const fetchAllVimeoVideos = async (token: string): Promise<Work[]> => {
       try {
         let allVideos: any[] = [];
         for (let page = 1; page <= 3; page++) {
-          const response = await fetch(`https://api.vimeo.com/me/videos?per_page=100&page=${page}&fields=uri,name,pictures.base_link,description,stats,metadata`, {
+          const response = await fetch(`https://api.vimeo.com/me/videos?per_page=100&page=${page}&fields=uri,name,pictures.base_link,description,stats,metadata,created_time`, {
             headers: { 'Authorization': `Bearer ${token}` }
           });
           if (!response.ok) break;
           const data = await response.json();
           if (data.data && data.data.length > 0) allVideos = [...allVideos, ...data.data];
-          if (!data.paging.next) break;
+          if (!data.paging || !data.paging.next) break;
         }
-        return allVideos.map((v) => ({
-          id: v.uri.split('/').pop() || Math.random().toString(),
-          title: v.name || "Untitled",
-          category: "Works",
-          tags: [],
-          thumbnail: v.pictures.base_link || "",
-          videoPreview: "",
-          vimeoId: v.uri.split('/').pop() || "",
-          m07_solution: v.description || "",
-          a01_intent: "",
-          m03_results: [],
-          e_id_link: "",
-          stats: {
-            views: v.stats.plays?.toLocaleString() || "0",
-            likes: v.metadata.connections.likes.total?.toLocaleString() || "0"
-          }
-        }));
+        return allVideos.map((v) => {
+          const vimeoId = v.uri.split('/').pop() || Math.random().toString();
+          const plays = Number(v.stats?.plays) || 0;
+          return {
+            id: vimeoId,
+            title: v.name || "Untitled",
+            category: "OTHER",
+            tags: [],
+            thumbnail: v.pictures?.base_link || "",
+            videoPreview: "",
+            vimeoId,
+            m07_solution: v.description || "",
+            a01_intent: "",
+            m03_results: [],
+            e_id_link: "",
+            uploadedAt: v.created_time || "",
+            isPublished: true,
+            isSelected: false,
+            displayOrder: undefined,
+            clientName: "",
+            viewCount: plays,
+            stats: {
+              views: plays.toLocaleString(),
+              likes: v.metadata?.connections?.likes?.total?.toLocaleString() || "0"
+            }
+          };
+        });
       } catch (error) {
+        console.error("Vimeo fetch error:", error);
         return [];
       }
+    };
+
+    // Fetch Sheet metadata, return map: vimeoId -> partial Work
+    const fetchSheetMetadata = (sheetUrl: string): Promise<Map<string, Partial<Work>>> => {
+      return new Promise((resolve) => {
+        fetch(sheetUrl)
+          .then(r => r.text())
+          .then(csvText => {
+            Papa.parse(csvText, {
+              header: true,
+              skipEmptyLines: true,
+              complete: (results) => {
+                const map = new Map<string, Partial<Work>>();
+                (results.data as any[]).forEach((row, rowIdx) => {
+                  // Partial-match lookup: find header containing keyword (case-insensitive)
+                  // → ヘッダ行に補足文を追記しても、キーワード部分が残っていればOK
+                  // 例: "G列:is_selected\nSELECTED WORKSの掲載（3つ）" でも "is_selected" を検出
+                  const lookup = (keyword: string) => {
+                    const lc = keyword.toLowerCase();
+                    const found = Object.keys(row).find(k => k.toLowerCase().includes(lc));
+                    return found ? String(row[found] ?? '').trim() : '';
+                  };
+                  const vimeoId = lookup('vimeoid');
+                  if (!vimeoId) return;
+                  const titleOverride = lookup('title');
+                  const productionNote = lookup('production_note');
+                  const strategy = lookup('strategy');
+                  const evidenceUrl = lookup('evidence_url');
+                  const category = (lookup('category') || 'OTHER').toUpperCase();
+                  const isSelected = /^true$/i.test(lookup('is_selected'));
+                  const displayOrderStr = lookup('display_order');
+                  const displayOrder = displayOrderStr ? Number(displayOrderStr) : undefined;
+                  const clientName = lookup('client_name');
+                  const publishedStr = lookup('is_published');
+                  const isPublished = publishedStr === '' ? true : /^true$/i.test(publishedStr);
+
+                  map.set(vimeoId, {
+                    ...(titleOverride && { title: titleOverride }),
+                    category: CATEGORY_ORDER.includes(category) ? category : 'OTHER',
+                    isSelected,
+                    displayOrder,
+                    clientName,
+                    isPublished,
+                    sheetRowIndex: rowIdx,
+                    ...(productionNote && { a01_intent: productionNote }),
+                    ...(strategy && { m07_solution: strategy }),
+                    ...(evidenceUrl && { e_id_link: evidenceUrl }),
+                  });
+                });
+                resolve(map);
+              },
+              error: () => resolve(new Map()),
+            });
+          })
+          .catch(() => resolve(new Map()));
+      });
+    };
+
+    const loadWorks = async () => {
+      setIsLoading(true);
+      const sheetUrl = import.meta.env.VITE_WORKS_SHEET_URL;
+      const vimeoToken = import.meta.env.VITE_VIMEO_ACCESS_TOKEN;
+
+      // 1. Fetch Vimeo (base) + Sheet (metadata) in parallel
+      const [vimeoWorks, sheetMap] = await Promise.all([
+        vimeoToken ? fetchAllVimeoVideos(vimeoToken) : Promise.resolve([] as Work[]),
+        sheetUrl ? fetchSheetMetadata(sheetUrl) : Promise.resolve(new Map<string, Partial<Work>>()),
+      ]);
+
+      // 2. If both empty, use hardcoded fallback
+      if (vimeoWorks.length === 0 && sheetMap.size === 0) {
+        setWorks(FALLBACK_WORKS_DATA);
+        setIsLoading(false);
+        return;
+      }
+
+      // 3. Merge: Vimeo base + Sheet metadata overlay by vimeoId
+      let merged: Work[] = vimeoWorks.map(v => {
+        const meta = sheetMap.get(v.vimeoId || '') || {};
+        return { ...v, ...meta };
+      });
+
+      // 4. If Sheet has rows for vimeoIds NOT in Vimeo response, include those too (with placeholder)
+      sheetMap.forEach((meta, vimeoId) => {
+        if (!merged.find(w => w.vimeoId === vimeoId)) {
+          merged.push({
+            id: vimeoId,
+            title: meta.title || 'Untitled',
+            category: meta.category || 'OTHER',
+            tags: [],
+            thumbnail: `https://vumbnail.com/${vimeoId}.jpg`,
+            videoPreview: '',
+            vimeoId,
+            m07_solution: meta.m07_solution || '',
+            a01_intent: meta.a01_intent || '',
+            m03_results: [],
+            e_id_link: meta.e_id_link || '',
+            isSelected: meta.isSelected,
+            displayOrder: meta.displayOrder,
+            clientName: meta.clientName,
+            isPublished: meta.isPublished,
+          });
+        }
+      });
+
+      // 5. Filter out is_published === false
+      merged = merged.filter(w => w.isPublished !== false);
+
+      // 6. Sort: CATEGORY_ORDER → Sheet row index (掲載順) → uploadedAt desc (fallback)
+      merged.sort((a, b) => {
+        const ca = CATEGORY_ORDER.indexOf(a.category || 'OTHER');
+        const cb = CATEGORY_ORDER.indexOf(b.category || 'OTHER');
+        if (ca !== cb) return (ca === -1 ? 999 : ca) - (cb === -1 ? 999 : cb);
+        // Within category: Sheet 行順を最優先（小さい行Indexが先）
+        const ra = a.sheetRowIndex ?? Infinity;
+        const rb = b.sheetRowIndex ?? Infinity;
+        if (ra !== rb) return ra - rb;
+        // Sheet に無い動画は Vimeo アップロード日 新しい順
+        return (b.uploadedAt || '').localeCompare(a.uploadedAt || '');
+      });
+
+      setWorks(merged);
+      setIsLoading(false);
     };
 
     loadWorks();
   }, []);
 
   useEffect(() => {
-    const fetchNoteRSS = async () => {
-      setIsLoadingJournal(true);
+    const MAX_POSTS = 50;
+
+    // Fetch pinned posts from Sheet (if URL env var exists)
+    const fetchNotePins = async (): Promise<NotePost[]> => {
+      const pinsUrl = import.meta.env.VITE_NOTE_PINS_SHEET_URL;
+      if (!pinsUrl) return [];
       try {
-        const response = await fetch(`https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(NOTE_RSS_URL)}`);
-        if (!response.ok) throw new Error("Note RSS fetch failed");
-        const data = await response.json();
-        if (data.items && data.items.length > 0) {
-          const fetchedPosts: NotePost[] = data.items.map((item: any) => ({
-            title: item.title,
-            date: new Date(item.pubDate).toLocaleDateString('ja-JP').replace(/\//g, '.'),
-            excerpt: item.description.replace(/<[^>]*>?/gm, '').substring(0, 100) + "...",
-            url: item.link,
-            tags: item.categories || [],
-            image: item.thumbnail || item.enclosure?.link
-          }));
-          setJournalPosts(fetchedPosts.slice(0, 4));
-        }
+        const response = await fetch(pinsUrl);
+        if (!response.ok) return [];
+        const csvText = await response.text();
+        return new Promise((resolve) => {
+          Papa.parse(csvText, {
+            header: true,
+            skipEmptyLines: true,
+            complete: (results) => {
+              const pins: { post: NotePost; order: number }[] = [];
+              (results.data as any[]).forEach((row) => {
+                // Partial-match lookup, same pattern as Works sheet
+                const lookup = (kw: string) => {
+                  const lc = kw.toLowerCase();
+                  const found = Object.keys(row).find(k => k.toLowerCase().includes(lc));
+                  return found ? String(row[found] ?? '').trim() : '';
+                };
+                const title = lookup('title');
+                const url = lookup('url');
+                if (!title || !url) return;
+                const orderStr = lookup('display_order');
+                const order = orderStr ? Number(orderStr) : Infinity;
+                pins.push({
+                  post: {
+                    title,
+                    url,
+                    excerpt: lookup('excerpt'),
+                    date: lookup('date'),
+                    tags: [],
+                    image: lookup('thumbnail') || undefined,
+                  },
+                  order,
+                });
+              });
+              pins.sort((a, b) => a.order - b.order);
+              resolve(pins.map(p => p.post));
+            },
+            error: () => resolve([]),
+          });
+        });
       } catch (e) {
-        setJournalPosts(NOTE_POSTS);
-      } finally {
-        setIsLoadingJournal(false);
+        console.warn("Note pins fetch failed:", e);
+        return [];
       }
     };
-    fetchNoteRSS();
+
+    // Fetch dynamic posts from note RSS
+    const fetchNoteRss = async (): Promise<NotePost[]> => {
+      try {
+        const response = await fetch(`https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(NOTE_RSS_URL)}`);
+        if (!response.ok) return [];
+        const data = await response.json();
+        if (!data.items || data.items.length === 0) return [];
+        return data.items.map((item: any) => ({
+          title: item.title,
+          date: new Date(item.pubDate).toLocaleDateString('ja-JP').replace(/\//g, '.'),
+          excerpt: (item.description || '').replace(/<[^>]*>?/gm, '').substring(0, 100) + "...",
+          url: item.link,
+          tags: item.categories || [],
+          image: item.thumbnail || item.enclosure?.link,
+        }));
+      } catch (e) {
+        console.warn("Note RSS fetch failed:", e);
+        return [];
+      }
+    };
+
+    const loadNotePosts = async () => {
+      setIsLoadingJournal(true);
+      const [pins, rss] = await Promise.all([fetchNotePins(), fetchNoteRss()]);
+      // Combine: pins first, then RSS posts (excluding URLs already in pins)
+      const pinUrls = new Set(pins.map(p => p.url));
+      const remaining = rss.filter(p => !pinUrls.has(p.url));
+      const combined = [...pins, ...remaining].slice(0, MAX_POSTS);
+      setJournalPosts(combined);
+      setIsLoadingJournal(false);
+    };
+
+    loadNotePosts();
   }, []);
 
   useEffect(() => {
@@ -317,34 +510,38 @@ export default function App() {
   const navLinks = [
     { id: 'home', label: 'Home' },
     { id: 'works', label: 'Works' },
+    { id: 'whatwedo', label: 'What We Do' },
     { id: 'about', label: 'About' },
+    { id: 'journal', label: 'Journal' },
     { id: 'contact', label: 'Contact' },
   ];
 
   return (
-    <div className="min-h-screen bg-white text-black font-sans selection:bg-black selection:text-white">
+    <div className="min-h-screen flex flex-col bg-white text-black font-sans selection:bg-black selection:text-white">
+      <CustomCursor />
+      <FloatingCTA onClick={() => setCurrentPage('contact')} hidden={currentPage === 'contact'} />
       {/* Header */}
-      <header className={`fixed top-0 w-full z-50 transition-all duration-300 ${isScrolled ? 'bg-white/90 backdrop-blur-md border-b border-black/5 h-16' : 'bg-white h-16'}`}>
+      <header className={`fixed top-0 w-full z-50 transition-all duration-300 ${isScrolled ? 'bg-black/95 backdrop-blur-md border-b border-white/5 h-20' : 'bg-black h-20'}`}>
         <div className="max-w-[1400px] mx-auto px-6 md:px-10 h-full flex items-center justify-between">
-          {/* Logo */}
+          {/* Logo (AAW + Anchor Art Works 一体型) */}
           <button
             onClick={() => { setCurrentPage('home'); setIsMobileMenuOpen(false); }}
-            className="flex items-center gap-2 hover:opacity-80 transition-opacity"
+            className="hover:opacity-80 transition-opacity"
+            aria-label="Anchor Art Works"
           >
-            <img src="/logo.png" alt="AAW" style={{ height: 28 }} className="w-auto object-contain" />
-            <span className="font-display font-semibold text-sm tracking-wide hidden sm:block">Anchor Art Works</span>
+            <img src="/aaw_logo_full.png" alt="Anchor Art Works" className="h-12 w-auto object-contain" />
           </button>
 
           {/* Desktop Nav */}
-          <nav className="hidden md:flex items-center gap-10 text-[11px] font-bold uppercase tracking-[0.18em]">
+          <nav className="hidden md:flex items-center gap-6 lg:gap-8 text-[11px] font-bold uppercase tracking-[0.18em]">
             {navLinks.map((link) => (
               <button
                 key={link.id}
                 onClick={() => setCurrentPage(link.id as Page)}
                 className={`relative py-1 transition-colors ${
                   currentPage === link.id
-                    ? "text-black border-b border-black"
-                    : "text-black/50 hover:text-black"
+                    ? "text-white border-b border-white"
+                    : "text-white/50 hover:text-white"
                 }`}
               >
                 {link.label}
@@ -353,7 +550,7 @@ export default function App() {
           </nav>
 
           {/* Mobile toggle */}
-          <button className="md:hidden p-2 text-black" onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}>
+          <button className="md:hidden p-2 text-white" onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}>
             {isMobileMenuOpen ? <X size={22} /> : <Menu size={22} />}
           </button>
         </div>
@@ -365,15 +562,15 @@ export default function App() {
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
-              className="absolute top-16 left-0 w-full bg-white border-b border-black/5 shadow-lg md:hidden"
+              className="absolute top-20 left-0 w-full bg-black border-b border-white/5 shadow-lg md:hidden"
             >
               <nav className="flex flex-col p-6 space-y-1">
                 {navLinks.map((link) => (
                   <button
                     key={link.id}
                     onClick={() => { setCurrentPage(link.id as Page); setIsMobileMenuOpen(false); }}
-                    className={`text-xs font-bold uppercase tracking-widest text-left py-4 border-b border-black/5 ${
-                      currentPage === link.id ? "text-black" : "text-black/40"
+                    className={`text-xs font-bold uppercase tracking-widest text-left py-4 border-b border-white/5 ${
+                      currentPage === link.id ? "text-white" : "text-white/40"
                     }`}
                   >
                     {link.label}
@@ -385,7 +582,7 @@ export default function App() {
         </AnimatePresence>
       </header>
 
-      <main className="pt-0">
+      <main className="flex-1 pt-0">
         <AnimatePresence mode="wait">
           {currentPage === 'home' && (
             <motion.div key="home" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.3 }}>
@@ -396,6 +593,7 @@ export default function App() {
                 journalPosts={journalPosts}
                 onNavigateToWorks={() => setCurrentPage('works')}
                 onNavigateToContact={() => setCurrentPage('contact')}
+                onSelectWork={setSelectedWork}
               />
             </motion.div>
           )}
@@ -404,9 +602,19 @@ export default function App() {
               <WorksPage works={works} isLoading={isLoading} onSelectWork={setSelectedWork} onNavigateToContact={() => setCurrentPage('contact')} />
             </motion.div>
           )}
+          {currentPage === 'whatwedo' && (
+            <motion.div key="whatwedo" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.3 }}>
+              <WhatWeDoPage onNavigateToContact={() => setCurrentPage('contact')} />
+            </motion.div>
+          )}
           {currentPage === 'about' && (
             <motion.div key="about" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.3 }}>
               <AboutPage onNavigateToContact={() => setCurrentPage('contact')} />
+            </motion.div>
+          )}
+          {currentPage === 'journal' && (
+            <motion.div key="journal" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.3 }}>
+              <JournalPage journalPosts={journalPosts} isLoadingJournal={isLoadingJournal} onNavigateToContact={() => setCurrentPage('contact')} />
             </motion.div>
           )}
           {currentPage === 'contact' && (
@@ -428,16 +636,79 @@ export default function App() {
         )}
       </AnimatePresence>
 
-      <footer className="bg-black text-white py-8 px-6 md:px-10">
-        <div className="max-w-[1400px] mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
-          <button
-            onClick={() => setCurrentPage('privacy')}
-            className="text-[10px] uppercase font-bold tracking-widest text-white/40 hover:text-white transition-colors"
-          >
-            Privacy Policy
-          </button>
-          <div className="text-white/40 text-[10px] uppercase font-bold tracking-widest">
-            © Anchor Art Works Co. Ltd.
+      <footer className="bg-brand text-black">
+        <div className="max-w-[1400px] mx-auto px-6 md:px-10 py-14 md:py-16">
+          {/* Sitemap */}
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-x-6 gap-y-8 mb-12">
+            {[
+              { id: 'home', label: 'Home', desc: 'はじまり' },
+              { id: 'works', label: 'Works', desc: '映像で語る、これまでの実績' },
+              { id: 'whatwedo', label: 'What We Do', desc: '私たちが提供できる領域' },
+              { id: 'about', label: 'About', desc: 'チーム・代表・カルチャー' },
+              { id: 'journal', label: 'Journal', desc: 'いま考えていること' },
+              { id: 'contact', label: 'Contact', desc: '相談・打ち合わせへ' },
+            ].map((item) => (
+              <button
+                key={item.id}
+                onClick={() => setCurrentPage(item.id as Page)}
+                className="text-left group"
+              >
+                <div className="text-base md:text-lg font-display font-bold tracking-tight text-black group-hover:opacity-60 transition-opacity">
+                  {item.label}
+                </div>
+                <div className="text-[11px] text-black/55 mt-2 leading-relaxed">{item.desc}</div>
+              </button>
+            ))}
+          </div>
+
+          {/* Social / Contact links */}
+          <div className="pt-8 border-t border-black/15 mb-6">
+            <div className="flex flex-wrap items-center justify-center md:justify-start gap-x-6 gap-y-3">
+              <span className="text-[10px] font-bold tracking-[0.3em] uppercase text-black/40">FOLLOW &amp; CONTACT</span>
+              <div className="flex items-center gap-4">
+                <a
+                  href="https://note.com/anchor_art_works"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-widest text-black/70 hover:text-black transition-colors"
+                  aria-label="note"
+                >
+                  <BookOpen size={14} />
+                  <span>note</span>
+                </a>
+                <a
+                  href="https://vimeo.com/user27201919"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-widest text-black/70 hover:text-black transition-colors"
+                  aria-label="Vimeo"
+                >
+                  <Video size={14} />
+                  <span>Vimeo</span>
+                </a>
+                <a
+                  href="mailto:info@anchor-japan.com"
+                  className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-widest text-black/70 hover:text-black transition-colors"
+                  aria-label="Email"
+                >
+                  <Mail size={14} />
+                  <span>Email</span>
+                </a>
+              </div>
+            </div>
+          </div>
+
+          {/* Bottom row */}
+          <div className="pt-4 flex flex-col md:flex-row justify-between items-center gap-3">
+            <button
+              onClick={() => setCurrentPage('privacy')}
+              className="text-[10px] uppercase font-bold tracking-widest text-black/60 hover:text-black transition-colors"
+            >
+              Privacy Policy
+            </button>
+            <div className="text-black/60 text-[10px] uppercase font-bold tracking-widest">
+              © Anchor Art Works Co. Ltd.
+            </div>
           </div>
         </div>
       </footer>
@@ -448,50 +719,101 @@ export default function App() {
 // ─────────────────────────────────────────
 // HOME PAGE
 // ─────────────────────────────────────────
-function HomePage({ works, isLoading, isLoadingJournal, journalPosts, onNavigateToWorks, onNavigateToContact }: {
+function HomePage({ works, isLoading, isLoadingJournal, journalPosts, onNavigateToWorks, onNavigateToContact, onSelectWork }: {
   works: Work[];
   isLoading: boolean;
   isLoadingJournal: boolean;
   journalPosts: NotePost[];
   onNavigateToWorks: () => void;
   onNavigateToContact: () => void;
+  onSelectWork: (work: Work) => void;
 }) {
   return (
     <div className="bg-white">
       {/* Hero */}
-      <section className="bg-brand min-h-[80vh] flex flex-col items-center justify-center text-center px-6 py-24">
+      <section className="bg-brand min-h-[42vh] md:min-h-[55vh] flex flex-col items-center justify-center text-center px-6 pt-24 pb-10">
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.8 }}
           className="flex flex-col items-center gap-6 max-w-2xl mx-auto"
         >
-          <img src="/logo.png" alt="Anchor Art Works" className="h-28 md:h-36 w-auto object-contain" />
-          <div className="space-y-3">
-            <h1 className="text-3xl md:text-5xl font-display font-bold tracking-tight">
-              カチを、カタチに。
+          <div className="space-y-6">
+            <h1 className="text-4xl md:text-7xl font-display font-bold tracking-tight leading-[1.05]">
+              CG・映像制作を、<br />思考の速度で。
             </h1>
             <p className="text-sm md:text-base text-black/70 leading-relaxed">
-              ブランドの伝え方を再設計、<br />
-              映像とデザインで企業の価値を伝わる形に。
+              企画からCG・編集まで。豊富なアイデアを、最速でカタチに。<br />
+              Anchor Art Worksは、スピードとクオリティを両立するクリエイティブパートナーです。
             </p>
           </div>
-          <motion.button
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.4 }}
-            onClick={onNavigateToWorks}
-            className="mt-4 px-10 py-3 bg-black text-white font-bold text-[11px] uppercase tracking-widest hover:bg-black/80 transition-all flex items-center gap-3 group"
-          >
-            <span>VIEW WORKS</span>
-            <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
-          </motion.button>
         </motion.div>
+      </section>
+
+      {/* SHOWREEL */}
+      <section className="bg-black text-white py-20 px-6">
+        <div className="max-w-[1400px] mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+            className="text-center mb-10 space-y-3"
+          >
+            <div className="flex items-center justify-center gap-4 max-w-md mx-auto">
+              <span className="text-[10px] font-bold tracking-[0.3em] uppercase text-white/40 whitespace-nowrap">SHOWREEL</span>
+              <div className="h-px bg-brand flex-1" />
+            </div>
+            <h2 className="text-3xl md:text-5xl font-display font-bold text-brand tracking-tight">
+              アイデアが、動き出す。
+            </h2>
+            <p className="text-white/60 text-sm md:text-base max-w-xl mx-auto leading-relaxed">
+              Anchor Art Worksのクリエイティブを、約60秒で。
+            </p>
+          </motion.div>
+          <motion.div
+            initial={{ opacity: 0, scale: 0.97 }}
+            whileInView={{ opacity: 1, scale: 1 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.8, ease: 'easeOut' }}
+            className="relative aspect-video w-full bg-black border border-white/10 overflow-hidden"
+          >
+            <iframe
+              src="https://player.vimeo.com/video/819715322?autoplay=1&loop=1&muted=1&background=1&title=0&byline=0&portrait=0&dnt=1"
+              className="absolute inset-0 w-full h-full"
+              allow="autoplay; fullscreen; picture-in-picture"
+              allowFullScreen
+              loading="lazy"
+              title="Anchor Art Works Showreel"
+            />
+          </motion.div>
+          <motion.div
+            initial={{ opacity: 0, y: 15 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+            className="flex justify-center mt-10"
+          >
+            <button
+              onClick={onNavigateToWorks}
+              className="px-12 py-3.5 bg-brand text-black font-bold text-[11px] uppercase tracking-[0.2em] hover:bg-white transition-all flex items-center gap-3 group"
+            >
+              <span>VIEW ALL WORKS</span>
+              <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
+            </button>
+          </motion.div>
+        </div>
       </section>
 
       {/* Selected Works */}
       <section className="py-20 px-6 max-w-[1200px] mx-auto">
-        <h2 className="text-2xl md:text-3xl font-display font-bold tracking-tight text-center mb-12">SELECTED WORKS.</h2>
+        <motion.h2
+          initial={{ opacity: 0, y: 15 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6 }}
+          className="text-2xl md:text-3xl font-display font-bold tracking-tight text-center mb-12"
+        >SELECTED WORKS.</motion.h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
           {isLoading ? (
             Array(3).fill(0).map((_, i) => (
@@ -501,30 +823,26 @@ function HomePage({ works, isLoading, isLoadingJournal, journalPosts, onNavigate
               </div>
             ))
           ) : (
-            works.slice(0, 3).map((work, idx) => (
-              <motion.div
-                key={work.id}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: idx * 0.1 }}
-                className="group cursor-pointer text-center space-y-3"
-                onClick={onNavigateToWorks}
-              >
-                <div className="aspect-video overflow-hidden">
-                  <img
-                    src={work.thumbnail}
-                    alt={work.title}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
-                    referrerPolicy="no-referrer"
+            (() => {
+              const selected = works.filter(w => w.isSelected);
+              const featured = selected.length > 0
+                ? [...selected].sort((a, b) => {
+                    const da = a.displayOrder ?? Infinity;
+                    const db = b.displayOrder ?? Infinity;
+                    if (da !== db) return da - db;
+                    return (a.sheetRowIndex ?? Infinity) - (b.sheetRowIndex ?? Infinity);
+                  }).slice(0, 3)
+                : works.slice(0, 3);
+              return featured.map((work, idx) => (
+                <Fragment key={work.id}>
+                  <SelectedWorkCard
+                    work={work}
+                    idx={idx}
+                    onClick={() => onSelectWork(work)}
                   />
-                </div>
-                <p className="text-[11px] font-bold text-black/70">
-                  『{work.title}』ブランド映像
-                </p>
-                <p className="text-[10px] text-black/40">Client_共同印刷 株式会社</p>
-              </motion.div>
-            ))
+                </Fragment>
+              ));
+            })()
           )}
         </div>
         <div className="flex justify-center">
@@ -538,112 +856,72 @@ function HomePage({ works, isLoading, isLoadingJournal, journalPosts, onNavigate
         </div>
       </section>
 
-      {/* CTA */}
-      <div className="px-6 pb-20 max-w-[1200px] mx-auto">
-        <CTASection onNavigate={onNavigateToContact} />
-      </div>
+      {/* WE DELIVER — Brand promise */}
+      <section className="bg-brand py-24 md:py-32 px-6">
+        <div className="max-w-[900px] mx-auto text-center">
+          <motion.div
+            initial={{ opacity: 0, y: 15 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5 }}
+            className="mb-10"
+          >
+            <div className="flex items-center justify-center gap-4 max-w-md mx-auto">
+              <span className="text-[10px] font-bold tracking-[0.3em] uppercase text-black/40 whitespace-nowrap">WE DELIVER</span>
+              <div className="h-px bg-black/30 flex-1" />
+            </div>
+          </motion.div>
+          <motion.h2
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6, delay: 0.1 }}
+            className="text-4xl md:text-6xl font-display font-bold tracking-tight leading-[1.15] mb-10"
+          >
+            速いだけでは、<br />終わらせない。
+          </motion.h2>
+          <motion.p
+            initial={{ opacity: 0, y: 15 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+            className="text-base md:text-xl text-black/70 leading-relaxed mb-8"
+          >
+            企画、CG、編集まで。<br />
+            <span className="font-bold text-black">"思考の速度"</span>で、最後まで着地させる。
+          </motion.p>
+          <motion.p
+            initial={{ opacity: 0, y: 15 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6, delay: 0.3 }}
+            className="text-sm md:text-base font-bold text-black/80 tracking-wide"
+          >
+            急ぎ案件も、解像度を落とさない。
+          </motion.p>
 
-      {/* Strengths */}
-      <section className="bg-black text-white py-24 px-6">
-        <div className="max-w-[900px] mx-auto space-y-16">
-          <div className="text-center space-y-3">
-            <h2 className="text-3xl md:text-4xl font-display font-bold text-brand">OUR STRENGTHS.</h2>
-            <p className="text-white/50 text-sm leading-relaxed">
-              社内一貫体制により、戦略設計から最終的なアウトプットまで、<br />
-              ブレのないクオリティを提供します。
-            </p>
-          </div>
-          <div className="border border-white/20 divide-y divide-white/20">
-            {[
-              {
-                title: "Marketing & Design",
-                subtitle: "認知構造の設計",
-                desc: "デザイン思考を用い、視聴者の脳内に情報を定着させるための「情報の重み付け」を映像化。戦略なき映像制作を打破します。",
-                expert: "勝田 康 (CEO)"
-              },
-              {
-                title: "Motion & Creative",
-                subtitle: "論理的動態デザイン",
-                desc: "3DCGとモーショングラフィックスを駆使し、複雑な概念を直感的に理解させる「動く図解」を構築。視覚的ノイズを排除します。",
-                expert: "勝田 友亮 / 矢戸 光一"
-              },
-              {
-                title: "Production & Quality",
-                subtitle: "放送基準の品質担保",
-                desc: "テレビ業界標準の制作フローとブランドセーフティを適用。企業の社会的信頼を保護し、高める映像を提供します。",
-                expert: "目 学"
-              }
-            ].map((item, idx) => (
-              <motion.div
-                key={idx}
-                initial={{ opacity: 0, y: 15 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                className="p-8 md:p-10 space-y-4"
-              >
-                <h3 className="text-xl md:text-2xl font-display font-bold text-brand">{item.title}</h3>
-                <p className="text-[10px] text-white/30 tracking-[0.2em] font-bold uppercase">{item.subtitle}</p>
-                <p className="text-sm text-white/60 leading-relaxed">{item.desc}</p>
-                <div className="pt-4 border-t border-white/10">
-                  <p className="text-[9px] text-white/30 uppercase tracking-widest">Expert in Charge</p>
-                  <p className="text-xs font-medium text-white/50 mt-1">{item.expert}</p>
-                </div>
-              </motion.div>
-            ))}
-          </div>
+          {/* Footnote bar — larger credibility markers */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5, delay: 0.4 }}
+            className="mt-16 pt-10 border-t border-black/15"
+          >
+            <div className="flex flex-wrap items-baseline justify-center gap-x-8 md:gap-x-14 gap-y-4">
+              <span className="flex items-baseline gap-2">
+                <span className="font-display font-bold text-3xl md:text-4xl text-black tracking-tight">500+</span>
+                <span className="font-bold tracking-widest uppercase text-xs md:text-sm text-black/60">Projects</span>
+              </span>
+              <span className="hidden md:inline-block w-2 h-2 rounded-full bg-black/25" />
+              <span className="font-bold tracking-widest uppercase text-xs md:text-sm text-black/70">ワンストップ制作</span>
+              <span className="hidden md:inline-block w-2 h-2 rounded-full bg-black/25" />
+              <span className="font-bold tracking-widest uppercase text-xs md:text-sm text-black/70">最短対応</span>
+            </div>
+          </motion.div>
         </div>
       </section>
 
-      {/* INFORMATION (note posts) */}
-      <section className="py-20 px-6 max-w-[1200px] mx-auto">
-        <div className="text-center mb-12">
-          <h2 className="text-2xl md:text-3xl font-display font-bold tracking-tight">INFORMATION</h2>
-        </div>
-        {isLoadingJournal ? (
-          <div className="flex justify-center py-16">
-            <div className="w-6 h-6 border-2 border-black/10 border-t-black rounded-full animate-spin" />
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            {journalPosts.map((post, idx) => (
-              <motion.a
-                key={idx}
-                href={post.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                initial={{ opacity: 0, y: 15 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: idx * 0.08 }}
-                className="group flex flex-col border border-black/8 hover:border-black/20 transition-colors"
-              >
-                <div className="aspect-[16/9] overflow-hidden bg-gray-100 relative">
-                  <div className="absolute top-3 left-3 z-10 bg-black text-white px-2 py-1">
-                    <span className="text-[9px] font-bold tracking-widest uppercase">no·te</span>
-                  </div>
-                  <img
-                    src={post.image || `https://picsum.photos/seed/note-${idx}/800/450`}
-                    alt={post.title}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
-                    referrerPolicy="no-referrer"
-                  />
-                </div>
-                <div className="p-5 space-y-2 flex-1 flex flex-col">
-                  <p className="text-[10px] text-black/40 font-bold">{post.date}</p>
-                  <h3 className="text-sm font-bold leading-snug group-hover:text-black/60 transition-colors line-clamp-2 flex-1">
-                    {post.title}
-                  </h3>
-                  <p className="text-[11px] text-black/50 line-clamp-2 leading-relaxed">{post.excerpt}</p>
-                  <div className="pt-2 flex items-center gap-1 text-[10px] font-bold text-black/50 group-hover:text-black transition-colors">
-                    <span>noteについて</span>
-                    <ChevronRight size={11} />
-                  </div>
-                </div>
-              </motion.a>
-            ))}
-          </div>
-        )}
-      </section>
     </div>
   );
 }
@@ -658,31 +936,57 @@ function WorksPage({ works, isLoading, onSelectWork, onNavigateToContact }: {
   onNavigateToContact: () => void;
 }) {
   const [activeCategory, setActiveCategory] = useState('ALL');
-  const categories = ['ALL', 'COAPORATE', 'PR', 'EVENT', 'GRAPHIC'];
+  const [currentPage, setCurrentPage] = useState(1);
+  const categories = ['ALL', 'GAME', 'EVENT', 'PR', 'GRAPHIC', 'COAPORATE', 'OTHER'];
+  const PER_PAGE = 15;
 
   const filteredWorks = activeCategory === 'ALL'
     ? works
-    : works.filter(work => work.category?.toUpperCase().includes(activeCategory.toUpperCase()));
+    : works.filter(work => (work.category || 'OTHER').toUpperCase() === activeCategory.toUpperCase());
+
+  const totalPages = Math.max(1, Math.ceil(filteredWorks.length / PER_PAGE));
+  const safePage = Math.min(currentPage, totalPages);
+  const paginatedWorks = filteredWorks.slice((safePage - 1) * PER_PAGE, safePage * PER_PAGE);
+
+  // Reset to page 1 when category changes
+  useEffect(() => { setCurrentPage(1); }, [activeCategory]);
+
+  // Build page number list: 1 2 3 4 ... last (with ellipsis if needed)
+  const pageNumbers: (number | '...')[] = (() => {
+    if (totalPages <= 7) return Array.from({ length: totalPages }, (_, i) => i + 1);
+    const pages: (number | '...')[] = [];
+    if (safePage <= 4) {
+      pages.push(1, 2, 3, 4, 5, '...', totalPages);
+    } else if (safePage >= totalPages - 3) {
+      pages.push(1, '...', totalPages - 4, totalPages - 3, totalPages - 2, totalPages - 1, totalPages);
+    } else {
+      pages.push(1, '...', safePage - 1, safePage, safePage + 1, '...', totalPages);
+    }
+    return pages;
+  })();
 
   return (
     <div className="pb-20 bg-white">
       {/* Header */}
-      <section className="pt-28 pb-12 text-center px-6">
+      <section className="pt-28 pb-12 px-6">
         <motion.div
           initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
-          className="max-w-3xl mx-auto space-y-6"
+          className="max-w-4xl mx-auto space-y-10"
         >
-          <div className="relative inline-block">
-            <h1 className="text-6xl md:text-8xl font-display font-bold tracking-tighter relative z-10">WORKS</h1>
-            <div className="absolute bottom-1 left-0 w-full h-5 bg-brand -z-0 opacity-80" />
+          <div className="text-center">
+            <h1 className="text-6xl md:text-8xl font-display font-bold tracking-tighter leading-[0.95]">WORKS</h1>
+            <div className="flex items-center gap-4 mt-5">
+              <span className="text-[10px] font-bold tracking-[0.3em] uppercase text-black/50 whitespace-nowrap">OUR LIBRARY</span>
+              <div className="h-2 bg-brand flex-1" />
+            </div>
           </div>
-          <p className="text-black/70 text-sm md:text-base leading-relaxed max-w-2xl mx-auto">
-            企業やプロジェクト、商品やイベントの価値を、伝わるカタチに。<br />
-            課題の整理からコンセプト設計、アウトプットまでを一貫し、<br />
-            スピードと完成度を両立したクリエイティブをAnchor Art Worksは提供しています。
-          </p>
+          <div className="text-center">
+            <p className="text-xl md:text-3xl font-display font-bold tracking-tight leading-snug">
+              「やりたい」の直後に、カタチがある。
+            </p>
+          </div>
         </motion.div>
       </section>
 
@@ -721,51 +1025,50 @@ function WorksPage({ works, isLoading, onSelectWork, onNavigateToContact }: {
                 <div className="h-3 w-3/4 bg-black/5 animate-pulse mx-auto" />
               </div>
             ))
+          ) : paginatedWorks.length === 0 ? (
+            <div className="col-span-full text-center py-20 text-black/40 text-sm">
+              該当する作品が見つかりませんでした。
+            </div>
           ) : (
-            filteredWorks.map((work, idx) => (
-              <motion.div
-                key={work.id}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: idx * 0.05 }}
-                className="group cursor-pointer"
-                onClick={() => onSelectWork(work)}
-              >
-                <div className="aspect-video overflow-hidden mb-3">
-                  <img
-                    src={work.thumbnail}
-                    alt={work.title}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
-                    referrerPolicy="no-referrer"
-                  />
-                </div>
-                <div className="text-center space-y-1 px-2">
-                  <p className="text-[11px] font-bold text-black/80 group-hover:text-black/50 transition-colors">
-                    『{work.title}』ブランド映像
-                  </p>
-                  <p className="text-[10px] text-black/40">Client_共同印刷 株式会社</p>
-                </div>
-              </motion.div>
+            paginatedWorks.map((work, idx) => (
+              <Fragment key={work.id}>
+                <WorkGridCard work={work} idx={idx} onClick={() => onSelectWork(work)} />
+              </Fragment>
             ))
           )}
         </div>
       </section>
 
       {/* Pagination */}
-      <section className="mt-20 flex justify-center items-center gap-4 text-[11px] font-bold tracking-widest text-black/40 px-6">
-        <span className="text-black border-b border-black pb-0.5 px-1">1</span>
-        {[2,3,4].map(n => <button key={n} className="hover:text-black transition-colors">{n}</button>)}
-        <span>...</span>
-        <button className="hover:text-black transition-colors">20</button>
-        <button className="flex items-center gap-1.5 hover:text-black transition-colors">
-          NEXT <ChevronRight size={11} />
-        </button>
-      </section>
+      {totalPages > 1 && (
+        <section className="mt-20 flex justify-center items-center gap-4 text-[11px] font-bold tracking-widest text-black/40 px-6">
+          {pageNumbers.map((p, i) =>
+            p === '...' ? (
+              <span key={`dots-${i}`}>...</span>
+            ) : (
+              <button
+                key={p}
+                onClick={() => { setCurrentPage(p as number); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                className={p === safePage
+                  ? "text-black border-b border-black pb-0.5 px-1"
+                  : "hover:text-black transition-colors"
+                }
+              >
+                {p}
+              </button>
+            )
+          )}
+          {safePage < totalPages && (
+            <button
+              onClick={() => { setCurrentPage(safePage + 1); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+              className="flex items-center gap-1.5 hover:text-black transition-colors"
+            >
+              NEXT <ChevronRight size={11} />
+            </button>
+          )}
+        </section>
+      )}
 
-      <div className="mt-24 px-6 max-w-[1200px] mx-auto">
-        <CTASection onNavigate={onNavigateToContact} />
-      </div>
     </div>
   );
 }
@@ -787,25 +1090,74 @@ function AboutPage({ onNavigateToContact }: { onNavigateToContact: () => void })
 
   return (
     <div className="bg-white">
-      {/* Hero: LET'S TALK. */}
-      <section className="pt-28 pb-16 px-6 text-center">
+      {/* Hero: TRUST IN MOTION. */}
+      <section className="pt-28 pb-16 px-6">
         <motion.div
           initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
-          className="max-w-3xl mx-auto space-y-6"
+          className="max-w-4xl mx-auto space-y-10"
         >
-          <div className="relative inline-block">
-            <h1 className="text-6xl md:text-8xl font-display font-bold tracking-tighter relative z-10">LET'S TALK.</h1>
-            <div className="absolute bottom-1 left-0 w-full h-5 bg-brand -z-0 opacity-80" />
+          <div className="text-center">
+            <h1 className="text-6xl md:text-8xl font-display font-bold tracking-tighter leading-[0.95]">ABOUT.</h1>
+            <div className="flex items-center gap-4 mt-5">
+              <span className="text-[10px] font-bold tracking-[0.3em] uppercase text-black/50 whitespace-nowrap">WHO WE ARE</span>
+              <div className="h-2 bg-brand flex-1" />
+            </div>
           </div>
-          <p className="text-black/70 text-sm md:text-base leading-relaxed max-w-2xl mx-auto">
-            私たちは企業の価値を"伝わるカタチ"に設計するクリエイティブチームです。<br />
-            課題の整理からコンセプト設計、映像・デザインのアウトプットまでを一貫して行い、ブランドの伝え方を再構築します。<br />
-            スピードと精度を両立しながら、本質的な価値をわかりやすく、そして魅力的に届けることを大切にしています。<br />
-            ひとつひとつのプロジェクトに丁寧に向き合い、継続的な価値創出につなげていきます。
-          </p>
+          <div className="text-center space-y-6">
+            <p className="text-2xl md:text-4xl font-display font-bold tracking-tight leading-tight">
+              TRUST IN MOTION.
+            </p>
+            <p className="text-base md:text-xl font-display font-bold tracking-tight leading-snug max-w-2xl mx-auto">
+              脳内の解像度を、そのままの速度で。<br />
+              思考が止まる前に、イメージは動き出す。
+            </p>
+            <p className="text-black/70 text-sm md:text-base leading-relaxed max-w-2xl mx-auto">
+              CG、モーショングラフィック、映像編集。<br />
+              企画段階のラフな発想から実制作まで、スピードと品質を両立しながら伴走します。
+            </p>
+          </div>
         </motion.div>
+      </section>
+
+      {/* Mission / Vision */}
+      <section className="py-20 md:py-24 px-6 bg-white">
+        <div className="max-w-[900px] mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 15 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+            className="text-center mb-12 space-y-3"
+          >
+            <div className="flex items-center justify-center gap-4 max-w-md mx-auto">
+              <span className="text-[10px] font-bold tracking-[0.3em] uppercase text-black/40 whitespace-nowrap">MISSION & VISION</span>
+              <div className="h-px bg-brand flex-1" />
+            </div>
+            <h2 className="text-3xl md:text-5xl font-display font-bold tracking-tight">
+              私たちが目指すこと。
+            </h2>
+          </motion.div>
+          <div className="space-y-8 text-base md:text-lg text-black/75 leading-relaxed">
+            <motion.p
+              initial={{ opacity: 0, y: 15 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6, delay: 0.1 }}
+            >
+              Anchor Art Worksのミッションは、企業の本質的な価値を <span className="font-bold text-black">「伝わるカタチ」</span> に変換することです。映像制作業界では、コンセプト設計と実制作が分断されがちです。Anchor Art Worksは、戦略、デザイン、編集、モーショングラフィックス、SNS運用、マーケティングまでを社内一貫体制で担うことで、思考から完成までの距離を限りなく短縮します。
+            </motion.p>
+            <motion.p
+              initial={{ opacity: 0, y: 15 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+            >
+              私たちが目指すのは、単なる映像制作会社ではなく、ブランドの<span className="font-bold text-black">「伝え方」を再設計するクリエイティブパートナー</span>です。脳内の解像度を、そのままの速度で。思考が止まる前に、イメージは動き出す。この思想を、すべてのプロジェクトに通底させています。
+            </motion.p>
+          </div>
+        </div>
       </section>
 
       {/* CEO Section */}
@@ -834,27 +1186,47 @@ function AboutPage({ onNavigateToContact }: { onNavigateToContact: () => void })
         </div>
       </section>
 
-      {/* Team: 3-column on black */}
+      {/* Team: 6 members on black */}
       <section className="bg-black text-white py-20 px-6 md:px-12">
-        <div className="max-w-[1100px] mx-auto grid grid-cols-1 md:grid-cols-3 gap-10">
+        <div className="max-w-[1100px] mx-auto grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-10 md:gap-y-16">
           {[
+            // 上段: ① ② ③
             {
               role: "Editor / Motion Grapher",
               name: "勝田　友亮",
               enName: "YUSUKE KATSUDA",
-              bio: "1989年4月7日生まれ。PRムービーやイベント映像、企業のブランドムービー、VPなどモーショングラフィックスを主軸に制作。クライアントの要望に柔軟に応えるロジカル思考な映像表現が得意。"
+              bio: "1989年4月7日生まれ。PRムービー、イベント映像、企業ブランドムービー、VP、CMなどモーショングラフィックスを主軸に幅広く制作。複雑な情報構造を視覚的に整理し、直感的に伝わる動きへと再構築する設計力が強み。クライアントの要望に柔軟に応えるロジカル思考と、視覚的なリズムを両立した映像表現で、ブランドの世界観を多面的に支える。細部の質感までこだわった編集で、視聴者の記憶に残るシーンを生み出す。"
             },
             {
               role: "Editor / Motion Grapher",
               name: "矢戸　光一",
               enName: "KOICHI YATO",
-              bio: "2003年1月1日生まれ。PRムービーやイベント映像などモーショングラフィックスを主軸に制作。eスポーツの選手を目指していた経験から集中力が高く、細かな作業が得意。"
+              bio: "2003年1月1日生まれ。PRムービー、イベント映像、ゲーム関連コンテンツなどモーショングラフィックスを主軸に制作。eスポーツのプロ選手を目指していた経験から培われた、高い集中力と緻密な観察眼が武器。0.1秒単位での編集精度と、視聴者の注意を逃さないリズム設計に強みを持ち、次世代のクリエイティブを牽引する。SNS時代のテンポ感を熟知し、短尺から長尺まで幅広いフォーマットに対応する柔軟性も備える。"
             },
+            {
+              role: "Illustrator / Designer",
+              name: "内田　理恵",
+              enName: "RIE UCHIDA",
+              bio: "イラストとデザインの境界を行き来しながら、クライアントの世界観や想いを視覚的に表現する、イラストレーター兼デザイナー。オーダーやコンセプトに合わせた柔軟なイラスト表現を得意とし、エモーショナルなタッチからポップで親しみやすい表現まで、幅広く描き分けます。広告・パッケージ・Webなど、多様な分野で制作を行い、単に“見せる”だけでなく、見る人の感情や空気感まで伝わるクリエイションを大切にしています。一つひとつのプロジェクトに丁寧に向き合いながら、記憶に残るビジュアルを目指して制作しています。"
+            },
+            // 下段: ④ ⑤ ⑥
             {
               role: "Producer / Director",
               name: "目　学",
               enName: "MANABU SAKKA",
-              bio: "1983年10月2日生まれ。映像専門学校を卒業後、テレビ業界へ就職。その後広告業界へ転身。業界で培った豊富な実績にもとづく確かな力で良質な映像をプロデュース。"
+              bio: "1983年10月2日生まれ。映像専門学校卒業後、テレビ業界に就職。報道・バラエティ・ドキュメンタリーなど多様な現場で経験を積み、その後広告業界へ転身。テレビ品質の制作工程と、広告に求められるスピード感を融合させたプロデュース力で、Anchor Art Worksの映像品質を担保する責任者を務める。スタッフィングから予算管理、クライアント折衝までを一貫して統括し、現場とブランドを橋渡しする中核ポジション。"
+            },
+            {
+              role: "SNS / Podcaster",
+              name: "森屋　沙耶",
+              enName: "SAYA MORIYA",
+              bio: "某人気YouTuberとのコラボ経験を持つポッドキャスター。独特の視点と世界観を活かしたトークを得意とし、親しみやすさとテンポ感のある語り口でリスナーを引き込む。明るく自然体なキャラクターと、少し低めで落ち着きのある声質が特徴。長時間でも心地よく聴けるトーンで、日常の何気ない話題からカルチャー、ライフスタイル、社会的なテーマまで幅広く発信している。リスナーとの距離感を大切にしながら、“誰かの日常に自然と馴染む言葉”を届けることをテーマに活動。耳だけで楽しめる空気感や温度感を意識したトークで、多くの共感を集めている。"
+            },
+            {
+              role: "Marketing Specialist",
+              name: "沖田　紘亮",
+              enName: "KOUSUKE OKITA",
+              bio: "テレビ局、総合広告代理店を経て独立。AI時代のマーケティング戦略とデータ分析を基盤に、コンテンツの価値最大化を担うスペシャリスト。行動経済学や市場構造を踏まえた戦略設計により、ターゲットへの最適なリーチと継続的な成果創出を実現。映像制作の前段階となる課題設定からKPI設計、効果測定までを一貫して支援する。クリエイティブと数字を繋ぐ視点で、ブランドの長期的な成長を支える。"
             }
           ].map((member, idx) => (
             <motion.div
@@ -879,7 +1251,7 @@ function AboutPage({ onNavigateToContact }: { onNavigateToContact: () => void })
       </section>
 
       {/* Company Profile */}
-      <section className="py-20 px-6 bg-white">
+      <section className="py-20 px-6 bg-gray-100">
         <div className="max-w-[900px] mx-auto space-y-10">
           <h2 className="text-2xl md:text-3xl font-display font-bold text-center tracking-tight">COMPANY PROFILE</h2>
           <div className="grid md:grid-cols-2 gap-x-16 gap-y-5 text-sm">
@@ -898,23 +1270,30 @@ function AboutPage({ onNavigateToContact }: { onNavigateToContact: () => void })
         </div>
       </section>
 
-      {/* Clients */}
-      <section className="py-16 px-6 bg-white border-t border-black/5">
-        <div className="max-w-[1100px] mx-auto space-y-12">
+      {/* Clients - infinite horizontal scroll */}
+      <section className="py-16 bg-white border-t border-black/5">
+        <div className="max-w-[1100px] mx-auto px-6 mb-12">
           <h2 className="text-2xl md:text-3xl font-display font-bold text-center tracking-tight uppercase">CLIENTS</h2>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 items-center">
-            {clients.map((client, idx) => (
-              <div key={idx} className="flex items-center justify-center h-14">
+        </div>
+        <div className="relative overflow-hidden">
+          {/* Edge fade masks */}
+          <div className="absolute left-0 top-0 bottom-0 w-20 md:w-32 bg-gradient-to-r from-white to-transparent z-10 pointer-events-none" />
+          <div className="absolute right-0 top-0 bottom-0 w-20 md:w-32 bg-gradient-to-l from-white to-transparent z-10 pointer-events-none" />
+
+          <motion.div
+            className="flex items-center w-fit"
+            animate={{ x: ['0%', '-50%'] }}
+            transition={{ duration: 35, ease: 'linear', repeat: Infinity }}
+          >
+            {[...clients, ...clients].map((client, idx) => (
+              <div key={idx} className="flex-shrink-0 flex items-center justify-center h-14 px-10 md:px-14">
                 <ClientLogo client={client} />
               </div>
             ))}
-          </div>
+          </motion.div>
         </div>
       </section>
 
-      <div className="px-6 pb-20 max-w-[1200px] mx-auto">
-        <CTASection onNavigate={onNavigateToContact} />
-      </div>
     </div>
   );
 }
@@ -943,21 +1322,33 @@ function ContactPage({ works, onNavigateToPrivacy }: { works: Work[]; onNavigate
   return (
     <div className="bg-white pb-0">
       {/* Header */}
-      <section className="pt-28 pb-12 px-6 text-center">
+      <section className="pt-28 pb-12 px-6">
         <motion.div
           initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
-          className="max-w-3xl mx-auto space-y-6"
+          className="max-w-4xl mx-auto space-y-10"
         >
-          <div className="relative inline-block">
-            <h1 className="text-6xl md:text-8xl font-display font-bold tracking-tighter relative z-10">LET'S TALK.</h1>
-            <div className="absolute bottom-1 left-0 w-full h-5 bg-brand -z-0 opacity-80" />
+          <div className="text-center">
+            <h1 className="text-6xl md:text-8xl font-display font-bold tracking-tighter leading-[0.95]">CONTACT.</h1>
+            <div className="flex items-center gap-4 mt-5">
+              <span className="text-[10px] font-bold tracking-[0.3em] uppercase text-black/50 whitespace-nowrap">GET IN TOUCH</span>
+              <div className="h-2 bg-brand flex-1" />
+            </div>
           </div>
-          <p className="text-black/70 text-sm leading-relaxed max-w-xl mx-auto">
-            伝え方に迷ったら、まずはご相談ください。課題の整理から制作まで一貫して対応します。<br />
-            アイデアがまとまっていなくても大丈夫です。スピードとクオリティを大切に、最適な形をご提案します。
-          </p>
+          <div className="text-center space-y-6">
+            <p className="text-2xl md:text-4xl font-display font-bold tracking-tight leading-tight">
+              LET'S TALK.
+            </p>
+            <p className="text-lg md:text-2xl font-display font-bold tracking-tight leading-snug">
+              ひらめきを、待たせない。<br />
+              <span className="text-black/60 text-sm md:text-base font-medium">思考の速度で、カタチにする。</span>
+            </p>
+            <p className="text-black/70 text-sm md:text-base leading-relaxed max-w-xl mx-auto">
+              伝え方に迷ったら、まずはご相談ください。課題の整理から制作まで一貫して対応します。<br />
+              アイデアがまとまっていなくても大丈夫です。スピードとクオリティを大切に、最適な形をご提案します。
+            </p>
+          </div>
         </motion.div>
       </section>
 
@@ -1211,6 +1602,345 @@ Your mission is to provide professional consultation about the company's service
 }
 
 // ─────────────────────────────────────────
+// SELECTED WORK CARD (HOME) — with Netflix-style hover preview
+// ─────────────────────────────────────────
+interface SelectedWorkCardProps {
+  work: Work;
+  idx: number;
+  onClick: () => void;
+}
+
+function SelectedWorkCard({ work, idx, onClick }: SelectedWorkCardProps) {
+  const [isHovered, setIsHovered] = useState(false);
+  const [showPreview, setShowPreview] = useState(false);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const handleEnter = () => {
+    setIsHovered(true);
+    if (timerRef.current) clearTimeout(timerRef.current);
+    timerRef.current = setTimeout(() => setShowPreview(true), 700);
+  };
+
+  const handleLeave = () => {
+    setIsHovered(false);
+    setShowPreview(false);
+    if (timerRef.current) {
+      clearTimeout(timerRef.current);
+      timerRef.current = null;
+    }
+  };
+
+  useEffect(() => () => {
+    if (timerRef.current) clearTimeout(timerRef.current);
+  }, []);
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 40, scale: 0.95 }}
+      whileInView={{ opacity: 1, y: 0, scale: 1 }}
+      viewport={{ once: true }}
+      transition={{ delay: idx * 0.15, duration: 0.7, ease: 'easeOut' }}
+      className="group cursor-pointer text-center space-y-3"
+      onClick={onClick}
+      onMouseEnter={handleEnter}
+      onMouseLeave={handleLeave}
+    >
+      <div className="aspect-video overflow-hidden relative bg-black">
+        <img
+          src={work.thumbnail}
+          alt={work.title}
+          className={`absolute inset-0 w-full h-full object-cover transition-all duration-500 group-hover:scale-105 ${
+            showPreview ? 'opacity-0' : 'opacity-100'
+          }`}
+          referrerPolicy="no-referrer"
+        />
+        {showPreview && work.vimeoId && (
+          <iframe
+            src={`https://player.vimeo.com/video/${work.vimeoId}?autoplay=1&loop=1&muted=1&background=1&dnt=1`}
+            className="absolute inset-0 w-full h-full"
+            allow="autoplay; fullscreen; picture-in-picture"
+            loading="lazy"
+            title={work.title}
+          />
+        )}
+        {/* Hover overlay + Play icon (shows during hover, before iframe kicks in) */}
+        <div className={`absolute inset-0 bg-black/40 flex items-center justify-center transition-opacity duration-300 pointer-events-none ${
+          isHovered && !showPreview ? 'opacity-100' : 'opacity-0'
+        }`}>
+          <div className="w-14 h-14 md:w-16 md:h-16 rounded-full bg-white/95 flex items-center justify-center shadow-lg">
+            <Play size={20} className="fill-black text-black ml-1" />
+          </div>
+        </div>
+      </div>
+      <p className="text-[11px] font-bold text-black/70">
+        『{work.title}』ブランド映像
+      </p>
+      <p className="text-[10px] text-black/40">{work.clientName ? `Client_${work.clientName}` : 'Client_共同印刷 株式会社'}</p>
+    </motion.div>
+  );
+}
+
+// ─────────────────────────────────────────
+// FLOATING CTA — right-edge vertical label, designer style
+// ─────────────────────────────────────────
+function FloatingCTA({ onClick, hidden }: { onClick: () => void; hidden: boolean }) {
+  if (hidden) return null;
+  return (
+    <>
+      {/* Desktop: right-edge vertical label */}
+      <button
+        onClick={onClick}
+        className="hidden md:flex fixed right-0 top-1/2 -translate-y-1/2 z-40 bg-brand text-black px-3 py-8 hover:bg-black hover:text-white transition-all duration-300 shadow-lg group items-center"
+        aria-label="START A PROJECT"
+      >
+        <div className="flex flex-col items-center gap-3">
+          <span
+            className="text-[11px] font-bold tracking-[0.35em] uppercase"
+            style={{ writingMode: 'vertical-rl', textOrientation: 'mixed' }}
+          >
+            START A PROJECT
+          </span>
+          <ArrowRight size={14} className="rotate-90 group-hover:translate-y-1 transition-transform" />
+        </div>
+      </button>
+      {/* Mobile: bottom-right FAB */}
+      <button
+        onClick={onClick}
+        className="md:hidden fixed right-4 bottom-5 z-40 bg-brand text-black w-14 h-14 rounded-full shadow-lg flex items-center justify-center active:scale-95 transition-transform"
+        aria-label="お問い合わせ"
+      >
+        <Mail size={22} strokeWidth={2.2} />
+      </button>
+    </>
+  );
+}
+
+// ─────────────────────────────────────────
+// CUSTOM CURSOR — desktop only, light implementation
+// ─────────────────────────────────────────
+function CustomCursor() {
+  const [pos, setPos] = useState({ x: -100, y: -100 });
+  const [isPointer, setIsPointer] = useState(false);
+  const [isVisible, setIsVisible] = useState(false);
+
+  useEffect(() => {
+    // Skip on touch devices
+    if (typeof window === 'undefined') return;
+    const isTouch = window.matchMedia('(pointer: coarse)').matches;
+    if (isTouch) return;
+
+    const onMove = (e: MouseEvent) => {
+      setPos({ x: e.clientX, y: e.clientY });
+      setIsVisible(true);
+      // Detect interactive element
+      const target = e.target as HTMLElement | null;
+      const interactive = target?.closest('a, button, [role="button"], input, textarea, select, label') !== null;
+      setIsPointer(interactive);
+    };
+    const onLeave = () => setIsVisible(false);
+
+    window.addEventListener('mousemove', onMove);
+    window.addEventListener('mouseleave', onLeave);
+    return () => {
+      window.removeEventListener('mousemove', onMove);
+      window.removeEventListener('mouseleave', onLeave);
+    };
+  }, []);
+
+  return (
+    <div
+      aria-hidden="true"
+      className={`hidden md:block fixed top-0 left-0 z-[200] pointer-events-none transition-[width,height,background-color,opacity] duration-200 ease-out mix-blend-difference rounded-full ${
+        isVisible ? 'opacity-100' : 'opacity-0'
+      } ${
+        isPointer ? 'w-10 h-10 bg-brand' : 'w-3 h-3 bg-white'
+      }`}
+      style={{
+        transform: `translate(${pos.x}px, ${pos.y}px) translate(-50%, -50%)`,
+      }}
+    />
+  );
+}
+
+// ─────────────────────────────────────────
+// WORKS GRID CARD — compact card with Netflix-style hover preview
+// ─────────────────────────────────────────
+interface WorkGridCardProps {
+  work: Work;
+  idx: number;
+  onClick: () => void;
+}
+
+function WorkGridCard({ work, idx, onClick }: WorkGridCardProps) {
+  const [isHovered, setIsHovered] = useState(false);
+  const [showPreview, setShowPreview] = useState(false);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const handleEnter = () => {
+    setIsHovered(true);
+    if (timerRef.current) clearTimeout(timerRef.current);
+    timerRef.current = setTimeout(() => setShowPreview(true), 800);
+  };
+  const handleLeave = () => {
+    setIsHovered(false);
+    setShowPreview(false);
+    if (timerRef.current) {
+      clearTimeout(timerRef.current);
+      timerRef.current = null;
+    }
+  };
+  useEffect(() => () => {
+    if (timerRef.current) clearTimeout(timerRef.current);
+  }, []);
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true }}
+      transition={{ delay: idx * 0.05 }}
+      className="group cursor-pointer"
+      onClick={onClick}
+      onMouseEnter={handleEnter}
+      onMouseLeave={handleLeave}
+    >
+      <div className="aspect-video overflow-hidden mb-3 bg-black relative">
+        <img
+          src={work.thumbnail}
+          alt={work.title}
+          className={`absolute inset-0 w-full h-full object-cover transition-all duration-500 group-hover:scale-105 ${
+            showPreview ? 'opacity-0' : 'opacity-100'
+          }`}
+          referrerPolicy="no-referrer"
+          loading="lazy"
+        />
+        {showPreview && work.vimeoId && (
+          <iframe
+            src={`https://player.vimeo.com/video/${work.vimeoId}?autoplay=1&loop=1&muted=1&background=1&dnt=1`}
+            className="absolute inset-0 w-full h-full"
+            allow="autoplay; fullscreen; picture-in-picture"
+            loading="lazy"
+            title={work.title}
+          />
+        )}
+        <div className={`absolute inset-0 bg-black/40 flex items-center justify-center transition-opacity duration-300 pointer-events-none ${
+          isHovered && !showPreview ? 'opacity-100' : 'opacity-0'
+        }`}>
+          <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-white/95 flex items-center justify-center shadow-lg">
+            <Play size={16} className="fill-black text-black ml-0.5" />
+          </div>
+        </div>
+      </div>
+      <div className="text-center space-y-1 px-2">
+        <p className="text-[11px] font-bold text-black/80 group-hover:text-black/50 transition-colors line-clamp-2">
+          {work.title}
+        </p>
+        {work.clientName && (
+          <p className="text-[10px] text-black/40">Client_{work.clientName}</p>
+        )}
+      </div>
+    </motion.div>
+  );
+}
+
+// ─────────────────────────────────────────
+// FAQ SECTION (HOME)
+// ─────────────────────────────────────────
+const FAQ_ITEMS = [
+  {
+    q: "制作期間はどのくらいですか？",
+    a: "案件規模により2週間から3ヶ月程度が目安です。緊急対応も可能ですので、まずはご相談ください。スピードを重視する案件には、社内一貫体制ならではの最短納期でお応えします。"
+  },
+  {
+    q: "予算が決まっていなくても相談できますか？",
+    a: "もちろんです。ご予算とご要望を踏まえ、最適な構成・規模をご提案します。「何から始めればいいかわからない」段階でも、課題の整理からサポートします。"
+  },
+  {
+    q: "SNS用ショート動画にも対応していますか？",
+    a: "TikTok、Instagram Reels、YouTube Shorts など、各プラットフォームに最適化されたショート動画制作に特化したメンバーが在籍しています。長尺映像との連動運用や、複数バリエーション展開も得意です。"
+  },
+  {
+    q: "CGや3Dアニメーションの相談は可能ですか？",
+    a: "可能です。3DCG・2DCG、モーショングラフィックスを社内で制作する体制を持っています。製品3Dモデルからのレンダリング、キャラクターアニメーション、テクニカルビジュアライゼーションまで対応可能です。"
+  },
+  {
+    q: "テレビCMやブランドムービーの制作実績はありますか？",
+    a: "はい、テレビ局や広告代理店出身のプロデューサー・ディレクターが在籍しており、放送基準の品質を担保した制作が可能です。共同印刷（TOMOWEL）、MIXI、LINE Digital Frontier などの実績があります。"
+  },
+  {
+    q: "マーケティング戦略から相談できますか？",
+    a: "はい、テレビ局・総合広告代理店出身のマーケティングスペシャリストが、課題設定、ターゲット定義、KPI設計、配信戦略、効果測定までトータルでサポートします。映像とマーケティングを統合した提案が可能です。"
+  },
+];
+
+function FAQSection() {
+  const [openIdx, setOpenIdx] = useState<number | null>(null);
+  return (
+    <section className="py-20 px-6 max-w-[900px] mx-auto">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true }}
+        transition={{ duration: 0.6 }}
+        className="text-center mb-12 space-y-3"
+      >
+        <div className="flex items-center justify-center gap-4 max-w-md mx-auto">
+          <span className="text-[10px] font-bold tracking-[0.3em] uppercase text-black/40 whitespace-nowrap">FAQ</span>
+          <div className="h-px bg-brand flex-1" />
+        </div>
+        <h2 className="text-2xl md:text-3xl font-display font-bold tracking-tight">よくあるご質問</h2>
+      </motion.div>
+      <div className="divide-y divide-black/10 border-t border-b border-black/10">
+        {FAQ_ITEMS.map((item, idx) => {
+          const isOpen = openIdx === idx;
+          return (
+            <motion.div
+              key={idx}
+              initial={{ opacity: 0, y: 10 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: idx * 0.05, duration: 0.4 }}
+            >
+              <button
+                onClick={() => setOpenIdx(isOpen ? null : idx)}
+                className="w-full flex items-center justify-between gap-6 py-6 text-left hover:bg-black/[0.02] transition-colors px-2"
+                aria-expanded={isOpen}
+              >
+                <span className="text-sm md:text-base font-bold text-black/80 leading-snug flex-1">
+                  Q. {item.q}
+                </span>
+                <motion.span
+                  animate={{ rotate: isOpen ? 45 : 0 }}
+                  transition={{ duration: 0.2 }}
+                  className="shrink-0 w-7 h-7 rounded-full bg-brand flex items-center justify-center text-black"
+                >
+                  <Plus size={14} />
+                </motion.span>
+              </button>
+              <AnimatePresence initial={false}>
+                {isOpen && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: 'auto', opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{ duration: 0.3, ease: 'easeOut' }}
+                    className="overflow-hidden"
+                  >
+                    <p className="text-sm text-black/65 leading-relaxed px-2 pb-6">
+                      {item.a}
+                    </p>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </motion.div>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+
+// ─────────────────────────────────────────
 // CTA SECTION
 // ─────────────────────────────────────────
 function CTASection({ onNavigate }: { onNavigate: () => void }) {
@@ -1228,14 +1958,14 @@ function CTASection({ onNavigate }: { onNavigate: () => void }) {
             <p className="text-black/40 font-bold tracking-[0.3em] text-[11px] uppercase">PLEASE CONSULT</p>
             <img src="/logo.png" alt="Anchor Art Works" className="h-16 md:h-24 w-auto mx-auto object-contain" />
           </div>
-          <p className="text-sm text-black/75 leading-relaxed">
-            私たちは課題の整理からコンセプト設計、<br />
-            アウトプットまでを一貫して支援しています。<br />
-            まだ具体的でなくても構いません。<br />
-            「何から始めればいいかわからない」という段階でも大丈夫です。<br />
-            スピードと精度を大切にしながら、最適な進め方をご提案します。<br />
-            <span className="text-lg md:text-xl font-bold mt-3 block text-black">まずはお気軽にご相談ください。</span>
-          </p>
+          <div className="space-y-3">
+            <h2 className="text-3xl md:text-5xl font-display font-bold tracking-tight text-black leading-tight">
+              ひらめきを、待たせない
+            </h2>
+            <p className="text-base md:text-xl text-black/70 font-medium leading-relaxed">
+              思考の速度で、カタチにする。
+            </p>
+          </div>
           <button
             onClick={onNavigate}
             className="px-12 py-3.5 bg-black text-white font-bold text-[11px] uppercase tracking-[0.2em] hover:opacity-90 transition-all flex items-center gap-3 mx-auto group"
@@ -1253,6 +1983,7 @@ function CTASection({ onNavigate }: { onNavigate: () => void }) {
 // WORK MODAL
 // ─────────────────────────────────────────
 function WorkModal({ work, onClose }: { work: Work; onClose: () => void }) {
+  const [iframeLoaded, setIframeLoaded] = useState(false);
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-8">
       <motion.div
@@ -1275,26 +2006,56 @@ function WorkModal({ work, onClose }: { work: Work; onClose: () => void }) {
           <X size={18} />
         </button>
         <div className="overflow-y-auto">
+          {/* Vimeo Player with thumbnail placeholder */}
           <div className="relative aspect-video w-full bg-black">
-            <img src={work.thumbnail} alt={work.title} className="w-full h-full object-cover opacity-60" referrerPolicy="no-referrer" />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
-            <div className="absolute bottom-6 left-6 right-14 md:bottom-10 md:left-10">
-              <span className="px-2 py-0.5 bg-white/20 text-[9px] text-white uppercase tracking-widest font-bold inline-block mb-3">{work.category}</span>
-              <h2 className="text-2xl md:text-4xl font-display font-bold text-white tracking-tighter leading-tight">{work.title}</h2>
-              <div className="flex items-center gap-4 mt-4">
-                <button className="px-6 py-2 bg-white text-black font-bold text-[10px] uppercase tracking-widest flex items-center gap-2 hover:bg-gray-200 transition-colors">
-                  <Play size={12} className="fill-black" />
-                  Play Video
-                </button>
-                {work.e_id_link && (
-                  <a href={work.e_id_link} target="_blank" rel="noopener noreferrer"
-                    className="w-10 h-10 border border-white/30 rounded-full flex items-center justify-center text-white hover:bg-white hover:text-black transition-all">
-                    <ExternalLink size={14} />
-                  </a>
+            {work.vimeoId ? (
+              <>
+                {/* Thumbnail placeholder — visible until iframe loads */}
+                {work.thumbnail && (
+                  <img
+                    src={work.thumbnail}
+                    alt={work.title}
+                    className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-500 ${
+                      iframeLoaded ? 'opacity-0 pointer-events-none' : 'opacity-100'
+                    }`}
+                    referrerPolicy="no-referrer"
+                  />
                 )}
-              </div>
-            </div>
+                <iframe
+                  src={`https://player.vimeo.com/video/${work.vimeoId}?title=0&byline=0&portrait=0&dnt=1`}
+                  className={`absolute inset-0 w-full h-full transition-opacity duration-500 ${
+                    iframeLoaded ? 'opacity-100' : 'opacity-0'
+                  }`}
+                  allow="autoplay; fullscreen; picture-in-picture"
+                  allowFullScreen
+                  loading="lazy"
+                  title={work.title}
+                  onLoad={() => setIframeLoaded(true)}
+                />
+              </>
+            ) : (
+              <img src={work.thumbnail} alt={work.title} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+            )}
           </div>
+
+          {/* Title & Meta */}
+          <div className="px-6 md:px-12 pt-8 pb-2 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
+            <div className="space-y-2">
+              <span className="px-2 py-0.5 bg-black text-[9px] text-white uppercase tracking-widest font-bold inline-block">{work.category || 'OTHER'}</span>
+              <h2 className="text-2xl md:text-4xl font-display font-bold text-black tracking-tighter leading-tight">{work.title}</h2>
+              {work.clientName && (
+                <p className="text-xs text-black/50 font-medium">Client_{work.clientName}</p>
+              )}
+            </div>
+            {work.e_id_link && (
+              <a href={work.e_id_link} target="_blank" rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 px-4 py-2 border border-black/15 text-[10px] font-bold uppercase tracking-widest text-black hover:bg-black hover:text-white transition-all whitespace-nowrap">
+                <ExternalLink size={12} />
+                View Evidence
+              </a>
+            )}
+          </div>
+
           <div className="p-6 md:p-12 grid md:grid-cols-12 gap-8 md:gap-16">
             <div className="md:col-span-8 space-y-10">
               {work.a01_intent && (
@@ -1340,6 +2101,357 @@ function WorkModal({ work, onClose }: { work: Work; onClose: () => void }) {
           </div>
         </div>
       </motion.div>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────
+// WHAT WE DO PAGE — 依頼範囲
+// ─────────────────────────────────────────
+function WhatWeDoPage({ onNavigateToContact }: { onNavigateToContact: () => void }) {
+  return (
+    <div className="bg-white">
+      {/* Header */}
+      <section className="pt-28 pb-12 px-6">
+        <motion.div
+          initial={{ opacity: 0, y: 15 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          className="max-w-4xl mx-auto space-y-10"
+        >
+          <div className="text-center">
+            <h1 className="text-6xl md:text-8xl font-display font-bold tracking-tighter leading-[0.95]">WHAT<br />WE DO.</h1>
+            <div className="flex items-center gap-4 mt-5">
+              <span className="text-[10px] font-bold tracking-[0.3em] uppercase text-black/50 whitespace-nowrap">SCOPE OF WORK</span>
+              <div className="h-2 bg-brand flex-1" />
+            </div>
+          </div>
+          <div className="text-center space-y-6">
+            <p className="text-xl md:text-3xl font-display font-bold tracking-tight leading-snug">
+              企画から、CG、編集、運用まで。<br />
+              ワンストップで、最後まで。
+            </p>
+            <p className="text-black/70 text-sm md:text-base leading-relaxed max-w-2xl mx-auto">
+              Anchor Art Worksが提供できる領域、得意とする業界、制作プロセス、よくあるご質問までを一枚で。
+            </p>
+          </div>
+        </motion.div>
+      </section>
+
+      {/* Services */}
+      <section className="py-20 px-6 max-w-[1200px] mx-auto">
+        <motion.div
+          initial={{ opacity: 0, y: 15 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6 }}
+          className="text-center mb-16 space-y-3"
+        >
+          <div className="flex items-center justify-center gap-4 max-w-md mx-auto">
+            <span className="text-[10px] font-bold tracking-[0.3em] uppercase text-black/40 whitespace-nowrap">SERVICES</span>
+            <div className="h-px bg-brand flex-1" />
+          </div>
+          <h2 className="text-2xl md:text-4xl font-display font-bold tracking-tight">提供サービス</h2>
+        </motion.div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {[
+            { title: 'CGデザイン制作', desc: '3DCG・2DCGアニメーション、モーションキャプチャ、リアルタイムレンダリングを駆使し、複雑な情報や抽象概念を、視聴者が直感的に理解できるビジュアルへ変換します。' },
+            { title: 'モーショングラフィックス', desc: 'タイポグラフィ、インフォグラフィック、アニメーションロゴ、トランジション設計まで。視聴者の認知負荷を最小化する「動く図解」を構築します。' },
+            { title: '映像編集', desc: 'テレビ業界標準の制作フローとブランドセーフティを適用。長尺、PR、CM、VP、イベント、SNSショート — 各納品形態に最適な編集を提供します。' },
+            { title: '企画・コンセプト設計', desc: 'デザイン思考と行動経済学を用いた認知構造の設計から、戦略的ストーリーテリング、KPI連動の構成設計まで、制作の前段階を一貫支援します。' },
+            { title: 'SNS / ショート動画運用', desc: 'TikTok、Instagram Reels、YouTube Shorts、X等、各プラットフォームの特性を活かした短尺展開。長尺映像との連動運用も。' },
+            { title: 'マーケティング戦略', desc: '課題設定、ターゲット定義、KPI設計、配信戦略、効果測定まで。テレビ局・総合広告代理店出身のスペシャリストが、投資対効果を最大化します。' },
+          ].map((s, idx) => (
+            <motion.div
+              key={idx}
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: idx * 0.08 }}
+              className="p-6 border border-black/10 hover:border-black/30 transition-colors space-y-3"
+            >
+              <h3 className="text-base md:text-lg font-display font-bold tracking-tight">{s.title}</h3>
+              <p className="text-xs text-black/65 leading-relaxed">{s.desc}</p>
+            </motion.div>
+          ))}
+        </div>
+      </section>
+
+      {/* Strengths */}
+      <section className="bg-black text-white py-24 px-6">
+        <div className="max-w-[900px] mx-auto space-y-16">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+            className="text-center space-y-3"
+          >
+            <h2 className="text-3xl md:text-4xl font-display font-bold text-brand">OUR STRENGTHS.</h2>
+            <p className="text-white/50 text-sm leading-relaxed">
+              社内一貫体制により、戦略設計から最終的なアウトプットまで、<br />
+              ブレのないクオリティを提供します。
+            </p>
+          </motion.div>
+          <div className="border border-white/20 divide-y divide-white/20">
+            {[
+              { title: "Marketing & Design", subtitle: "認知構造の設計", desc: "デザイン思考を用い、視聴者の脳内に情報を定着させるための「情報の重み付け」を映像化。戦略なき映像制作を打破します。", expert: "勝田 康 (CEO)" },
+              { title: "Motion & Creative", subtitle: "論理的動態デザイン", desc: "3DCGとモーショングラフィックスを駆使し、複雑な概念を直感的に理解させる「動く図解」を構築。視覚的ノイズを排除します。", expert: "勝田 友亮 / 矢戸 光一" },
+              { title: "Production & Quality", subtitle: "放送基準の品質担保", desc: "テレビ業界標準の制作フローとブランドセーフティを適用。企業の社会的信頼を保護し、高める映像を提供します。", expert: "目 学" }
+            ].map((item, idx) => (
+              <motion.div key={idx} initial={{ opacity: 0, y: 15 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="p-8 md:p-10 space-y-4">
+                <h3 className="text-xl md:text-2xl font-display font-bold text-brand">{item.title}</h3>
+                <p className="text-[10px] text-white/30 tracking-[0.2em] font-bold uppercase">{item.subtitle}</p>
+                <p className="text-sm text-white/60 leading-relaxed">{item.desc}</p>
+                <div className="pt-4 border-t border-white/10">
+                  <p className="text-[9px] text-white/30 uppercase tracking-widest">Expert in Charge</p>
+                  <p className="text-xs font-medium text-white/50 mt-1">{item.expert}</p>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Process */}
+      <section className="py-24 px-6 bg-white">
+        <div className="max-w-[1100px] mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 15 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+            className="text-center mb-16 space-y-3"
+          >
+            <div className="flex items-center justify-center gap-4 max-w-md mx-auto">
+              <span className="text-[10px] font-bold tracking-[0.3em] uppercase text-black/40 whitespace-nowrap">PROCESS</span>
+              <div className="h-px bg-brand flex-1" />
+            </div>
+            <h2 className="text-3xl md:text-5xl font-display font-bold tracking-tight">
+              アイデアが、カタチに変わるまで。
+            </h2>
+            <p className="text-black/60 text-sm max-w-xl mx-auto leading-relaxed">
+              Anchor Art Works の制作は、5つの工程を通じて進みます。
+            </p>
+          </motion.div>
+          <div className="space-y-6 md:space-y-0 md:grid md:grid-cols-5 md:gap-4">
+            {[
+              { step: '01', title: 'Discovery', subtitle: '課題の整理', desc: 'ヒアリングを通じて、伝えたい価値の核と想定する受け手を明確化。事業課題と本質要件を定義します。' },
+              { step: '02', title: 'Concept', subtitle: 'コンセプト設計', desc: '戦略仮説とビジュアル方向性、ストーリーテリングを設計。デザイン思考で「伝わる構成」を組み立てます。' },
+              { step: '03', title: 'Storyboard', subtitle: '構成設計', desc: '映像の流れとシーンごとの意図、視覚的リズムを文書化。制作前に方向性を固め、手戻りを最小化します。' },
+              { step: '04', title: 'Production', subtitle: '制作', desc: 'CG・撮影・編集・モーション・サウンドまで内製チームで一貫実行。思考の速度に追従するスピードで進めます。' },
+              { step: '05', title: 'Delivery', subtitle: '納品と継続支援', desc: '納品後の効果測定、SNS用ショート展開、別言語版まで、長期的なブランド運用を支援します。' },
+            ].map((p, idx) => (
+              <motion.div key={idx} initial={{ opacity: 0, y: 25 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5, delay: idx * 0.1 }} className="relative md:p-4">
+                <div className="flex md:flex-col gap-4 md:gap-3 items-start">
+                  <div className="font-display font-bold text-3xl md:text-4xl text-brand leading-none shrink-0">{p.step}</div>
+                  <div className="flex-1 space-y-1.5">
+                    <h3 className="text-base md:text-lg font-display font-bold tracking-tight">{p.title}</h3>
+                    <p className="text-[10px] text-black/40 font-bold tracking-widest uppercase">{p.subtitle}</p>
+                    <p className="text-xs text-black/60 leading-relaxed pt-2">{p.desc}</p>
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Industries */}
+      <section className="py-24 px-6 bg-black text-white">
+        <div className="max-w-[1100px] mx-auto">
+          <motion.div initial={{ opacity: 0, y: 15 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.6 }} className="text-center mb-12 space-y-3">
+            <div className="flex items-center justify-center gap-4 max-w-md mx-auto">
+              <span className="text-[10px] font-bold tracking-[0.3em] uppercase text-white/40 whitespace-nowrap">INDUSTRIES</span>
+              <div className="h-px bg-brand flex-1" />
+            </div>
+            <h2 className="text-3xl md:text-5xl font-display font-bold tracking-tight text-brand">対応領域。</h2>
+            <p className="text-white/60 text-sm max-w-xl mx-auto leading-relaxed">業界横断のクリエイティブで、多様なブランドを支えてきました。</p>
+          </motion.div>
+          <div className="flex flex-wrap justify-center gap-3 md:gap-4 max-w-3xl mx-auto">
+            {['エンターテインメント', 'ゲーム', '放送', '広告', 'テクノロジー', 'SaaS', '製造業', '教育', 'ヘルスケア', 'コンシューマー製品'].map((industry, idx) => (
+              <motion.span key={idx} initial={{ opacity: 0, scale: 0.9 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }} transition={{ duration: 0.4, delay: idx * 0.04 }} className="px-5 py-2.5 border border-white/20 text-xs md:text-sm font-bold tracking-wide text-white/80 hover:border-brand hover:text-brand transition-colors">
+                {industry}
+              </motion.span>
+            ))}
+          </div>
+          <motion.p initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} transition={{ duration: 0.5, delay: 0.4 }} className="text-center text-[11px] text-white/40 mt-10 leading-relaxed max-w-2xl mx-auto">
+            特に、ゲームIP・eスポーツ・テレビ局・配信プラットフォーム・企業VP・テクノロジー製品のサービス紹介・SNS連動キャンペーンに強みを持ちます。
+          </motion.p>
+        </div>
+      </section>
+
+      {/* FAQ */}
+      <FAQSection />
+
+      {/* CTA */}
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────
+// JOURNAL PAGE — 現在地
+// ─────────────────────────────────────────
+function JournalPage({ journalPosts, isLoadingJournal, onNavigateToContact }: {
+  journalPosts: NotePost[];
+  isLoadingJournal: boolean;
+  onNavigateToContact: () => void;
+}) {
+  return (
+    <div className="bg-white">
+      {/* Header */}
+      <section className="pt-28 pb-12 px-6">
+        <motion.div
+          initial={{ opacity: 0, y: 15 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          className="max-w-4xl mx-auto space-y-10"
+        >
+          <div className="text-center">
+            <h1 className="text-6xl md:text-8xl font-display font-bold tracking-tighter leading-[0.95]">JOURNAL</h1>
+            <div className="flex items-center gap-4 mt-5">
+              <span className="text-[10px] font-bold tracking-[0.3em] uppercase text-black/50 whitespace-nowrap">CURRENT THOUGHTS</span>
+              <div className="h-2 bg-brand flex-1" />
+            </div>
+          </div>
+          <div className="text-center space-y-6">
+            <p className="text-xl md:text-3xl font-display font-bold tracking-tight leading-snug">
+              いま、Anchorが考えていること。
+            </p>
+            <p className="text-black/70 text-sm md:text-base leading-relaxed max-w-2xl mx-auto">
+              制作の裏側、業界の動向、ブランディングの考察まで。<br />
+              note を通じて発信する Anchor Art Works の現在地。
+            </p>
+          </div>
+        </motion.div>
+      </section>
+
+      {/* Posts */}
+      <section className="py-12 px-6 max-w-[1200px] mx-auto">
+        {isLoadingJournal ? (
+          <div className="flex justify-center py-16">
+            <div className="w-6 h-6 border-2 border-black/10 border-t-black rounded-full animate-spin" />
+          </div>
+        ) : journalPosts.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            {journalPosts.map((post, idx) => (
+              <motion.a
+                key={idx}
+                href={post.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                initial={{ opacity: 0, y: 15 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: idx * 0.06 }}
+                className="group flex flex-col border border-black/8 hover:border-black/20 transition-colors"
+              >
+                <div className="aspect-[16/9] overflow-hidden bg-gray-100 relative">
+                  <div className="absolute top-4 left-4 z-10 bg-white px-3 py-1.5 shadow-sm">
+                    <span className="font-bold text-base leading-none flex items-baseline gap-0.5">
+                      <span className="text-black">no</span>
+                      <span className="text-emerald-500 text-lg leading-none">+</span>
+                      <span className="text-black">e</span>
+                    </span>
+                  </div>
+                  {post.image ? (
+                    <img src={post.image} alt={post.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" referrerPolicy="no-referrer" loading="lazy" />
+                  ) : (
+                    <div className="w-full h-full bg-gradient-to-br from-gray-100 to-gray-200" />
+                  )}
+                </div>
+                <div className="p-6 space-y-3 flex-1 flex flex-col">
+                  {post.date && <p className="text-[10px] text-black/40 font-bold tracking-wider">{post.date}</p>}
+                  <h3 className="text-sm font-bold leading-snug line-clamp-2 group-hover:text-black/60 transition-colors flex-1">
+                    {post.title}
+                  </h3>
+                  {post.excerpt && (
+                    <p className="text-[11px] text-black/60 leading-relaxed line-clamp-3">{post.excerpt}</p>
+                  )}
+                  <div className="pt-2">
+                    <span className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-black/60 group-hover:text-black transition-colors">
+                      READ ON NOTE <ChevronRight size={11} />
+                    </span>
+                  </div>
+                </div>
+              </motion.a>
+            ))}
+          </div>
+        ) : (
+          // Fallback: note / note PRO promo cards (when no RSS posts yet)
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            {[
+              {
+                type: 'note' as const,
+                desc: 'noteはクリエイターが文章や画像、音声、動画を投稿して、ユーザーがそのコンテンツを楽しんで応援できるメディアプラットフォームです。だれもが創作を楽しんで続けられるよう、安心できる雰囲気や、多様性を大切にしています。',
+                url: 'https://note.com/anchor_art_works',
+                image: 'https://images.unsplash.com/photo-1611162616475-46b635cb6868?q=80&w=1000',
+              },
+              {
+                type: 'note_pro' as const,
+                desc: '法人向け情報発信プラットフォーム。多くのひとが集まるnoteの街でメディアをかんたんにつくり、情報を届けることができます。届ける仕組みと充実したサポートで、企業がポジティブなユーザーとつながって関係を深めるお手伝いをします。',
+                url: 'https://note.jp/n/n4fe51c391a36',
+                image: 'https://images.unsplash.com/photo-1593642632559-0c6d3fc62b89?q=80&w=1000',
+              },
+              {
+                type: 'note' as const,
+                desc: 'noteはクリエイターが文章や画像、音声、動画を投稿して、ユーザーがそのコンテンツを楽しんで応援できるメディアプラットフォームです。だれもが創作を楽しんで続けられるよう、安心できる雰囲気や、多様性を大切にしています。',
+                url: 'https://note.com/anchor_art_works',
+                image: 'https://images.unsplash.com/photo-1611162616475-46b635cb6868?q=80&w=1000',
+              },
+              {
+                type: 'note_pro' as const,
+                desc: '法人向け情報発信プラットフォーム。多くのひとが集まるnoteの街でメディアをかんたんにつくり、情報を届けることができます。届ける仕組みと充実したサポートで、企業がポジティブなユーザーとつながって関係を深めるお手伝いをします。',
+                url: 'https://note.jp/n/n4fe51c391a36',
+                image: 'https://images.unsplash.com/photo-1593642632559-0c6d3fc62b89?q=80&w=1000',
+              },
+            ].map((card, idx) => (
+              <motion.a
+                key={idx}
+                href={card.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                initial={{ opacity: 0, y: 15 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: idx * 0.08 }}
+                className="group flex flex-col border border-black/8 hover:border-black/20 transition-colors"
+              >
+                <div className="aspect-[16/9] overflow-hidden bg-gray-100 relative">
+                  <div className="absolute top-4 left-4 z-10 bg-white px-3 py-1.5 shadow-sm">
+                    <span className="font-bold text-base leading-none flex items-baseline gap-0.5">
+                      <span className="text-black">no</span>
+                      <span className="text-emerald-500 text-lg leading-none">+</span>
+                      <span className="text-black">e</span>
+                      {card.type === 'note_pro' && (
+                        <span className="ml-1.5 text-[10px] text-black/70 font-bold tracking-wider">PRO</span>
+                      )}
+                    </span>
+                  </div>
+                  <img
+                    src={card.image}
+                    alt={card.type === 'note' ? 'note' : 'note PRO'}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                    referrerPolicy="no-referrer"
+                  />
+                </div>
+                <div className="p-6 space-y-4 flex-1 flex flex-col">
+                  <p className="text-[11px] text-black/65 leading-relaxed flex-1">
+                    {card.desc}
+                  </p>
+                  <div className="pt-2">
+                    <span className="inline-flex items-center justify-center px-6 py-2.5 border border-black/15 text-[10px] font-bold uppercase tracking-widest text-black group-hover:bg-black group-hover:text-white transition-all">
+                      {card.type === 'note' ? 'noteについて' : 'note proについて'}
+                    </span>
+                  </div>
+                </div>
+              </motion.a>
+            ))}
+          </div>
+        )}
+      </section>
+
+      {/* CTA */}
     </div>
   );
 }

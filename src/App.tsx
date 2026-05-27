@@ -694,10 +694,10 @@ function HomePage({ works, isLoading, isLoadingJournal, journalPosts, onNavigate
               <div className="h-px bg-brand flex-1" />
             </div>
             <h2 className="text-3xl md:text-5xl font-display font-bold text-brand tracking-tight">
-              思考の速度を、映像で。
+              アイデアが、動き出す。
             </h2>
             <p className="text-white/60 text-sm md:text-base max-w-xl mx-auto leading-relaxed">
-              Anchor Art Worksの世界観を、約60秒に凝縮。
+              Anchor Art Worksのクリエイティブを、約60秒で。
             </p>
           </motion.div>
           <motion.div
@@ -716,6 +716,47 @@ function HomePage({ works, isLoading, isLoadingJournal, journalPosts, onNavigate
               title="Anchor Art Works Showreel"
             />
           </motion.div>
+        </div>
+      </section>
+
+      {/* STATS — credibility numbers */}
+      <section className="bg-brand py-16 md:py-20 px-6">
+        <div className="max-w-[1100px] mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 15 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5 }}
+            className="text-center mb-10"
+          >
+            <div className="flex items-center justify-center gap-4 max-w-md mx-auto">
+              <span className="text-[10px] font-bold tracking-[0.3em] uppercase text-black/40 whitespace-nowrap">BY THE NUMBERS</span>
+              <div className="h-px bg-black/30 flex-1" />
+            </div>
+          </motion.div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-4">
+            {[
+              { num: '296', suffix: '+', label: '制作実績', sublabel: 'Projects Delivered' },
+              { num: '12', suffix: '+', label: '年の創造経験', sublabel: 'Years of Creative Leadership' },
+              { num: '8', suffix: '+', label: '対応業界', sublabel: 'Industries Served' },
+              { num: '6', suffix: '', label: 'スペシャリスト', sublabel: 'In-house Specialists' },
+            ].map((stat, idx) => (
+              <motion.div
+                key={idx}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: idx * 0.08 }}
+                className="text-center"
+              >
+                <div className="font-display font-bold text-5xl md:text-6xl text-black leading-none tracking-tighter">
+                  {stat.num}<span className="text-3xl md:text-4xl">{stat.suffix}</span>
+                </div>
+                <div className="mt-3 text-sm font-bold text-black/80">{stat.label}</div>
+                <div className="mt-1 text-[10px] font-medium tracking-widest uppercase text-black/40">{stat.sublabel}</div>
+              </motion.div>
+            ))}
+          </div>
         </div>
       </section>
 
@@ -1300,6 +1341,110 @@ function AboutPage({ onNavigateToContact }: { onNavigateToContact: () => void })
               <p className="text-xs text-white/55 leading-relaxed">{member.bio}</p>
             </motion.div>
           ))}
+        </div>
+      </section>
+
+      {/* PROCESS — How we work */}
+      <section className="py-24 px-6 bg-white">
+        <div className="max-w-[1100px] mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 15 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+            className="text-center mb-16 space-y-3"
+          >
+            <div className="flex items-center justify-center gap-4 max-w-md mx-auto">
+              <span className="text-[10px] font-bold tracking-[0.3em] uppercase text-black/40 whitespace-nowrap">PROCESS</span>
+              <div className="h-px bg-brand flex-1" />
+            </div>
+            <h2 className="text-3xl md:text-5xl font-display font-bold tracking-tight">
+              アイデアが、カタチに変わるまで。
+            </h2>
+            <p className="text-black/60 text-sm max-w-xl mx-auto leading-relaxed">
+              Anchor Art Works の制作は、5つの工程を通じて進みます。
+            </p>
+          </motion.div>
+          <div className="space-y-6 md:space-y-0 md:grid md:grid-cols-5 md:gap-4">
+            {[
+              { step: '01', title: 'Discovery', subtitle: '課題の整理', desc: 'ヒアリングを通じて、伝えたい価値の核と想定する受け手を明確化。事業課題と本質要件を定義します。' },
+              { step: '02', title: 'Concept', subtitle: 'コンセプト設計', desc: '戦略仮説とビジュアル方向性、ストーリーテリングを設計。デザイン思考で「伝わる構成」を組み立てます。' },
+              { step: '03', title: 'Storyboard', subtitle: '構成設計', desc: '映像の流れとシーンごとの意図、視覚的リズムを文書化。制作前に方向性を固め、手戻りを最小化します。' },
+              { step: '04', title: 'Production', subtitle: '制作', desc: 'CG・撮影・編集・モーション・サウンドまで内製チームで一貫実行。思考の速度に追従するスピードで進めます。' },
+              { step: '05', title: 'Delivery', subtitle: '納品と継続支援', desc: '納品後の効果測定、SNS用ショート展開、別言語版まで、長期的なブランド運用を支援します。' },
+            ].map((p, idx) => (
+              <motion.div
+                key={idx}
+                initial={{ opacity: 0, y: 25 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: idx * 0.1 }}
+                className="relative md:p-4"
+              >
+                <div className="flex md:flex-col gap-4 md:gap-3 items-start">
+                  <div className="font-display font-bold text-3xl md:text-4xl text-brand leading-none shrink-0">
+                    {p.step}
+                  </div>
+                  <div className="flex-1 space-y-1.5">
+                    <h3 className="text-base md:text-lg font-display font-bold tracking-tight">{p.title}</h3>
+                    <p className="text-[10px] text-black/40 font-bold tracking-widest uppercase">{p.subtitle}</p>
+                    <p className="text-xs text-black/60 leading-relaxed pt-2">{p.desc}</p>
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* INDUSTRIES — Areas served */}
+      <section className="py-24 px-6 bg-black text-white">
+        <div className="max-w-[1100px] mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 15 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+            className="text-center mb-12 space-y-3"
+          >
+            <div className="flex items-center justify-center gap-4 max-w-md mx-auto">
+              <span className="text-[10px] font-bold tracking-[0.3em] uppercase text-white/40 whitespace-nowrap">INDUSTRIES</span>
+              <div className="h-px bg-brand flex-1" />
+            </div>
+            <h2 className="text-3xl md:text-5xl font-display font-bold tracking-tight text-brand">
+              対応領域。
+            </h2>
+            <p className="text-white/60 text-sm max-w-xl mx-auto leading-relaxed">
+              業界横断のクリエイティブで、多様なブランドを支えてきました。
+            </p>
+          </motion.div>
+          <div className="flex flex-wrap justify-center gap-3 md:gap-4 max-w-3xl mx-auto">
+            {[
+              'エンターテインメント', 'ゲーム', '放送', '広告',
+              'テクノロジー', 'SaaS', '製造業', '教育',
+              'ヘルスケア', 'コンシューマー製品',
+            ].map((industry, idx) => (
+              <motion.span
+                key={idx}
+                initial={{ opacity: 0, scale: 0.9 }}
+                whileInView={{ opacity: 1, scale: 1 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.4, delay: idx * 0.04 }}
+                className="px-5 py-2.5 border border-white/20 text-xs md:text-sm font-bold tracking-wide text-white/80 hover:border-brand hover:text-brand transition-colors"
+              >
+                {industry}
+              </motion.span>
+            ))}
+          </div>
+          <motion.p
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5, delay: 0.4 }}
+            className="text-center text-[11px] text-white/40 mt-10 leading-relaxed max-w-2xl mx-auto"
+          >
+            特に、ゲームIP・eスポーツ・テレビ局・配信プラットフォーム・企業VP・テクノロジー製品のサービス紹介・SNS連動キャンペーンに強みを持ちます。
+          </motion.p>
         </div>
       </section>
 

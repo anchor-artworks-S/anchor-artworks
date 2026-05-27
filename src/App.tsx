@@ -9,6 +9,7 @@ import { useState, useEffect, useRef, Fragment } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { GoogleGenAI } from "@google/genai";
 import Papa from "papaparse";
+import { buildSystemPrompt } from "./aiPrompt";
 import {
   ExternalLink,
   X,
@@ -1637,7 +1638,7 @@ function ContactPage({ works, onNavigateToPrivacy }: { works: Work[]; onNavigate
 
 function ChatConcierge({ works, initialPrompt }: { works: Work[]; initialPrompt?: string }) {
   const [messages, setMessages] = useState<Message[]>([
-    { role: 'assistant', content: 'こんにちは。Anchor Art WorksのAIコンシェルジュです。代表の勝田が提唱する「デザイン思考」と、プロデューサーの目が管理する「放送品質」を軸に、貴社の課題に最適なアプローチをご提案します。どのような課題をお持ちですか？' }
+    { role: 'assistant', content: 'こんにちは。Anchor Art Works のAIコンシェルジュです。CG・映像制作からポッドキャスト企画、VTuber MV まで、「思考の速度」で貴社の課題に最適なアプローチをご提案します。どのような課題をお持ちですか？' }
   ]);
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
@@ -1678,11 +1679,7 @@ function ChatConcierge({ works, initialPrompt }: { works: Work[]; initialPrompt?
 
     try {
       if (!aiRef.current) throw new Error("AI not initialized");
-      const systemPrompt = `You are the AI Concierge for Anchor Art Works (株式会社Anchor Art Works).
-Your mission is to provide professional consultation about the company's services, team, and philosophy.
-[Company]: 株式会社Anchor Art Works, CEO: 勝田 康, Tokyo Meguro
-[Instructions]: Professional, polite Japanese (Keigo). Concise, evidence-based suggestions.
-[Works Context]: ${works.map(w => `- ${w.title}: ${w.m07_solution}`).join('\n')}`;
+      const systemPrompt = buildSystemPrompt(works.map(w => w.title));
 
       const history = messages.map(msg => ({
         role: msg.role === 'user' ? 'user' : 'model',
@@ -1690,7 +1687,7 @@ Your mission is to provide professional consultation about the company's service
       }));
 
       const chat = aiRef.current.chats.create({
-        model: 'gemini-2.0-flash',
+        model: 'gemini-2.5-flash',
         config: { systemInstruction: systemPrompt, temperature: 0.7 },
         history: history as any
       });

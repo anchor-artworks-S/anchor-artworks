@@ -666,16 +666,6 @@ function HomePage({ works, isLoading, isLoadingJournal, journalPosts, onNavigate
               Anchor Art Worksは、スピードとクオリティを両立するクリエイティブパートナーです。
             </p>
           </div>
-          <motion.button
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.4 }}
-            onClick={onNavigateToWorks}
-            className="mt-4 px-10 py-3 bg-black text-white font-bold text-[11px] uppercase tracking-widest hover:bg-black/80 transition-all flex items-center gap-3 group"
-          >
-            <span>VIEW WORKS</span>
-            <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
-          </motion.button>
         </motion.div>
       </section>
 
@@ -716,47 +706,84 @@ function HomePage({ works, isLoading, isLoadingJournal, journalPosts, onNavigate
               title="Anchor Art Works Showreel"
             />
           </motion.div>
+          <motion.div
+            initial={{ opacity: 0, y: 15 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+            className="flex justify-center mt-10"
+          >
+            <button
+              onClick={onNavigateToWorks}
+              className="px-12 py-3.5 bg-brand text-black font-bold text-[11px] uppercase tracking-[0.2em] hover:bg-white transition-all flex items-center gap-3 group"
+            >
+              <span>VIEW ALL WORKS</span>
+              <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
+            </button>
+          </motion.div>
         </div>
       </section>
 
-      {/* STATS — credibility numbers */}
-      <section className="bg-brand py-16 md:py-20 px-6">
-        <div className="max-w-[1100px] mx-auto">
+      {/* WE DELIVER — Brand promise */}
+      <section className="bg-brand py-24 md:py-32 px-6">
+        <div className="max-w-[900px] mx-auto text-center">
           <motion.div
             initial={{ opacity: 0, y: 15 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.5 }}
-            className="text-center mb-10"
+            className="mb-10"
           >
             <div className="flex items-center justify-center gap-4 max-w-md mx-auto">
-              <span className="text-[10px] font-bold tracking-[0.3em] uppercase text-black/40 whitespace-nowrap">BY THE NUMBERS</span>
+              <span className="text-[10px] font-bold tracking-[0.3em] uppercase text-black/40 whitespace-nowrap">WE DELIVER</span>
               <div className="h-px bg-black/30 flex-1" />
             </div>
           </motion.div>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-4">
-            {[
-              { num: '296', suffix: '+', label: '制作実績', sublabel: 'Projects Delivered' },
-              { num: '12', suffix: '+', label: '年の創造経験', sublabel: 'Years of Creative Leadership' },
-              { num: '8', suffix: '+', label: '対応業界', sublabel: 'Industries Served' },
-              { num: '6', suffix: '', label: 'スペシャリスト', sublabel: 'In-house Specialists' },
-            ].map((stat, idx) => (
-              <motion.div
-                key={idx}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: idx * 0.08 }}
-                className="text-center"
-              >
-                <div className="font-display font-bold text-5xl md:text-6xl text-black leading-none tracking-tighter">
-                  {stat.num}<span className="text-3xl md:text-4xl">{stat.suffix}</span>
-                </div>
-                <div className="mt-3 text-sm font-bold text-black/80">{stat.label}</div>
-                <div className="mt-1 text-[10px] font-medium tracking-widest uppercase text-black/40">{stat.sublabel}</div>
-              </motion.div>
-            ))}
-          </div>
+          <motion.h2
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6, delay: 0.1 }}
+            className="text-4xl md:text-6xl font-display font-bold tracking-tight leading-[1.15] mb-10"
+          >
+            速いだけでは、<br />終わらせない。
+          </motion.h2>
+          <motion.p
+            initial={{ opacity: 0, y: 15 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+            className="text-base md:text-xl text-black/70 leading-relaxed mb-8"
+          >
+            企画、CG、編集まで。<br />
+            <span className="font-bold text-black">"思考の速度"</span>で、最後まで着地させる。
+          </motion.p>
+          <motion.p
+            initial={{ opacity: 0, y: 15 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6, delay: 0.3 }}
+            className="text-sm md:text-base font-bold text-black/80 tracking-wide"
+          >
+            急ぎ案件も、解像度を落とさない。
+          </motion.p>
+
+          {/* Footnote bar — small credibility markers */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5, delay: 0.4 }}
+            className="mt-16 pt-8 border-t border-black/15"
+          >
+            <div className="flex flex-wrap items-baseline justify-center gap-x-6 md:gap-x-10 gap-y-3 text-xs md:text-sm text-black/60">
+              <span><span className="font-display font-bold text-xl text-black">500+</span> <span className="font-medium tracking-widest uppercase text-[10px] ml-1">Projects</span></span>
+              <span className="hidden md:inline text-black/30">●</span>
+              <span className="font-bold tracking-widest uppercase text-[10px] text-black/70">ワンストップ制作</span>
+              <span className="hidden md:inline text-black/30">●</span>
+              <span className="font-bold tracking-widest uppercase text-[10px] text-black/70">最短対応</span>
+            </div>
+          </motion.div>
         </div>
       </section>
 

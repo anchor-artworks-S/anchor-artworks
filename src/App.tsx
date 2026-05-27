@@ -880,11 +880,6 @@ function HomePage({ works, isLoading, isLoadingJournal, journalPosts, onNavigate
         </div>
       </section>
 
-      {/* CTA */}
-      <div className="px-6 pb-20 max-w-[1200px] mx-auto">
-        <CTASection onNavigate={onNavigateToContact} />
-      </div>
-
     </div>
   );
 }
@@ -1089,16 +1084,17 @@ function AboutPage({ onNavigateToContact }: { onNavigateToContact: () => void })
           className="max-w-4xl mx-auto space-y-10"
         >
           <div className="text-center">
-            <h1 className="text-6xl md:text-8xl font-display font-bold tracking-tighter leading-[0.95]">
-              TRUST<br />IN MOTION.
-            </h1>
+            <h1 className="text-6xl md:text-8xl font-display font-bold tracking-tighter leading-[0.95]">ABOUT.</h1>
             <div className="flex items-center gap-4 mt-5">
               <span className="text-[10px] font-bold tracking-[0.3em] uppercase text-black/50 whitespace-nowrap">WHO WE ARE</span>
               <div className="h-2 bg-brand flex-1" />
             </div>
           </div>
           <div className="text-center space-y-6">
-            <p className="text-xl md:text-3xl font-display font-bold tracking-tight leading-snug">
+            <p className="text-2xl md:text-4xl font-display font-bold tracking-tight leading-tight">
+              TRUST IN MOTION.
+            </p>
+            <p className="text-base md:text-xl font-display font-bold tracking-tight leading-snug max-w-2xl mx-auto">
               脳内の解像度を、そのままの速度で。<br />
               思考が止まる前に、イメージは動き出す。
             </p>
@@ -1283,14 +1279,17 @@ function ContactPage({ works, onNavigateToPrivacy }: { works: Work[]; onNavigate
           className="max-w-4xl mx-auto space-y-10"
         >
           <div className="text-center">
-            <h1 className="text-6xl md:text-8xl font-display font-bold tracking-tighter leading-[0.95]">LET'S TALK.</h1>
+            <h1 className="text-6xl md:text-8xl font-display font-bold tracking-tighter leading-[0.95]">CONTACT.</h1>
             <div className="flex items-center gap-4 mt-5">
               <span className="text-[10px] font-bold tracking-[0.3em] uppercase text-black/50 whitespace-nowrap">GET IN TOUCH</span>
               <div className="h-2 bg-brand flex-1" />
             </div>
           </div>
-          <div className="text-center">
-            <p className="text-black/70 text-sm leading-relaxed max-w-xl mx-auto">
+          <div className="text-center space-y-6">
+            <p className="text-2xl md:text-4xl font-display font-bold tracking-tight leading-tight">
+              LET'S TALK.
+            </p>
+            <p className="text-black/70 text-sm md:text-base leading-relaxed max-w-xl mx-auto">
               伝え方に迷ったら、まずはご相談ください。課題の整理から制作まで一貫して対応します。<br />
               アイデアがまとまっていなくても大丈夫です。スピードとクオリティを大切に、最適な形をご提案します。
             </p>

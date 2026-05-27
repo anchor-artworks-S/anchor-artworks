@@ -524,6 +524,7 @@ export default function App() {
                 journalPosts={journalPosts}
                 onNavigateToWorks={() => setCurrentPage('works')}
                 onNavigateToContact={() => setCurrentPage('contact')}
+                onSelectWork={setSelectedWork}
               />
             </motion.div>
           )}
@@ -576,13 +577,14 @@ export default function App() {
 // ─────────────────────────────────────────
 // HOME PAGE
 // ─────────────────────────────────────────
-function HomePage({ works, isLoading, isLoadingJournal, journalPosts, onNavigateToWorks, onNavigateToContact }: {
+function HomePage({ works, isLoading, isLoadingJournal, journalPosts, onNavigateToWorks, onNavigateToContact, onSelectWork }: {
   works: Work[];
   isLoading: boolean;
   isLoadingJournal: boolean;
   journalPosts: NotePost[];
   onNavigateToWorks: () => void;
   onNavigateToContact: () => void;
+  onSelectWork: (work: Work) => void;
 }) {
   return (
     <div className="bg-white">
@@ -660,7 +662,7 @@ function HomePage({ works, isLoading, isLoadingJournal, journalPosts, onNavigate
                 viewport={{ once: true }}
                 transition={{ delay: idx * 0.1 }}
                 className="group cursor-pointer text-center space-y-3"
-                onClick={onNavigateToWorks}
+                onClick={() => onSelectWork(work)}
               >
                 <div className="aspect-video overflow-hidden">
                   <img
@@ -1601,26 +1603,39 @@ function WorkModal({ work, onClose }: { work: Work; onClose: () => void }) {
           <X size={18} />
         </button>
         <div className="overflow-y-auto">
+          {/* Vimeo Player */}
           <div className="relative aspect-video w-full bg-black">
-            <img src={work.thumbnail} alt={work.title} className="w-full h-full object-cover opacity-60" referrerPolicy="no-referrer" />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
-            <div className="absolute bottom-6 left-6 right-14 md:bottom-10 md:left-10">
-              <span className="px-2 py-0.5 bg-white/20 text-[9px] text-white uppercase tracking-widest font-bold inline-block mb-3">{work.category}</span>
-              <h2 className="text-2xl md:text-4xl font-display font-bold text-white tracking-tighter leading-tight">{work.title}</h2>
-              <div className="flex items-center gap-4 mt-4">
-                <button className="px-6 py-2 bg-white text-black font-bold text-[10px] uppercase tracking-widest flex items-center gap-2 hover:bg-gray-200 transition-colors">
-                  <Play size={12} className="fill-black" />
-                  Play Video
-                </button>
-                {work.e_id_link && (
-                  <a href={work.e_id_link} target="_blank" rel="noopener noreferrer"
-                    className="w-10 h-10 border border-white/30 rounded-full flex items-center justify-center text-white hover:bg-white hover:text-black transition-all">
-                    <ExternalLink size={14} />
-                  </a>
-                )}
-              </div>
-            </div>
+            {work.vimeoId ? (
+              <iframe
+                src={`https://player.vimeo.com/video/${work.vimeoId}?title=0&byline=0&portrait=0&dnt=1`}
+                className="absolute inset-0 w-full h-full"
+                allow="autoplay; fullscreen; picture-in-picture"
+                allowFullScreen
+                title={work.title}
+              />
+            ) : (
+              <img src={work.thumbnail} alt={work.title} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+            )}
           </div>
+
+          {/* Title & Meta */}
+          <div className="px-6 md:px-12 pt-8 pb-2 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
+            <div className="space-y-2">
+              <span className="px-2 py-0.5 bg-black text-[9px] text-white uppercase tracking-widest font-bold inline-block">{work.category || 'OTHER'}</span>
+              <h2 className="text-2xl md:text-4xl font-display font-bold text-black tracking-tighter leading-tight">{work.title}</h2>
+              {work.clientName && (
+                <p className="text-xs text-black/50 font-medium">Client_{work.clientName}</p>
+              )}
+            </div>
+            {work.e_id_link && (
+              <a href={work.e_id_link} target="_blank" rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 px-4 py-2 border border-black/15 text-[10px] font-bold uppercase tracking-widest text-black hover:bg-black hover:text-white transition-all whitespace-nowrap">
+                <ExternalLink size={12} />
+                View Evidence
+              </a>
+            )}
+          </div>
+
           <div className="p-6 md:p-12 grid md:grid-cols-12 gap-8 md:gap-16">
             <div className="md:col-span-8 space-y-10">
               {work.a01_intent && (

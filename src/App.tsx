@@ -784,10 +784,10 @@ function HomePage({ works, isLoading, isLoadingJournal, journalPosts, onNavigate
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.8 }}
-          className="relative z-10 flex flex-col items-center gap-6 max-w-2xl mx-auto"
+          className="relative z-10 flex flex-col items-center gap-6 max-w-4xl mx-auto"
         >
-          <div className="space-y-6">
-            <h1 className="text-4xl md:text-7xl font-display font-bold tracking-tight leading-[1.05]">
+          <div className="space-y-5">
+            <h1 className="text-4xl md:text-6xl font-display font-bold tracking-tighter leading-[1.05]">
               <span className="block">CG・映像制作を、</span>
               <span className="block relative h-[1.2em] overflow-hidden">
                 {/* Static fallback for SEO/AI crawlers: 思考の速度で。 */}
@@ -795,7 +795,7 @@ function HomePage({ works, isLoading, isLoadingJournal, journalPosts, onNavigate
                 <AnimatePresence mode="wait">
                   <motion.span
                     key={phraseIdx}
-                    className="absolute inset-0 flex justify-center"
+                    className="absolute inset-0 flex justify-center whitespace-nowrap"
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
@@ -818,9 +818,8 @@ function HomePage({ works, isLoading, isLoadingJournal, journalPosts, onNavigate
                 </AnimatePresence>
               </span>
             </h1>
-            <p className="text-sm md:text-base text-black/70 leading-relaxed">
-              企画からCG・編集まで。豊富なアイデアを、最速でカタチに。<br />
-              Anchor Art Worksは、スピードとクオリティを両立するクリエイティブパートナーです。
+            <p className="text-sm md:text-base text-black/70 leading-relaxed font-medium tracking-wide">
+              企画から納品まで。最速でカタチに。
             </p>
           </div>
         </motion.div>

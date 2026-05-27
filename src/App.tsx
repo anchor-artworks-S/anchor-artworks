@@ -47,7 +47,16 @@ interface Work {
   e_id_link: string;
   vimeoId?: string;
   stats?: { views: string; likes: string; };
+  // Sheet metadata (Aisle framework + operational columns)
+  isSelected?: boolean;
+  displayOrder?: number;
+  clientName?: string;
+  isPublished?: boolean;
+  uploadedAt?: string;
 }
+
+// Category sort order
+const CATEGORY_ORDER = ['COAPORATE', 'PR', 'EVENT', 'GRAPHIC', 'OTHER'];
 
 interface Message {
   role: 'user' | 'assistant';
@@ -177,7 +186,7 @@ export default function App() {
   const [currentPage, setCurrentPage] = useState<Page>('home');
   const [selectedWork, setSelectedWork] = useState<Work | null>(null);
   const [works, setWorks] = useState<Work[]>(FALLBACK_WORKS_DATA);
-  const [journalPosts, setJournalPosts] = useState<NotePost[]>(NOTE_POSTS);
+  const [journalPosts, setJournalPosts] = useState<NotePost[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingJournal, setIsLoadingJournal] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
@@ -190,94 +199,165 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    const loadWorks = async () => {
-      setIsLoading(true);
-      const sheetUrl = import.meta.env.VITE_WORKS_SHEET_URL;
-      const vimeoToken = import.meta.env.VITE_VIMEO_ACCESS_TOKEN;
-      let finalWorks: Work[] = [];
-
-      if (vimeoToken) {
-        try {
-          const vimeoWorks = await fetchAllVimeoVideos(vimeoToken);
-          if (vimeoWorks.length > 0) finalWorks = vimeoWorks;
-        } catch (error) {
-          console.error("Vimeo fetch error:", error);
-        }
-      }
-
-      if (finalWorks.length === 0) {
-        if (sheetUrl) {
-          try {
-            const response = await fetch(sheetUrl);
-            const csvText = await response.text();
-            Papa.parse(csvText, {
-              header: true,
-              skipEmptyLines: true,
-              complete: (results) => {
-                if (results.data && results.data.length > 0) {
-                  const sheetWorks: Work[] = (results.data as any[]).map((row, idx) => ({
-                    id: row['A列: vimeoId'] || row.vimeoId || `work-${idx}`,
-                    title: row['B列: title (A-02)'] || row.title || "Untitled Work",
-                    category: row.category || "Works",
-                    tags: row.tags ? row.tags.split(',').map((t: string) => t.trim()) : [],
-                    thumbnail: row.thumbnail || `https://picsum.photos/seed/${idx}/1920/1080`,
-                    videoPreview: row.videoPreview || "",
-                    vimeoId: row['A列: vimeoId'] || row.vimeoId || "",
-                    m07_solution: row['D列: strategy (M-07)'] || row.m07_solution || "",
-                    a01_intent: row['C列: production_note (A-01)'] || row.a01_intent || "",
-                    m03_results: row.m03_results ? row.m03_results.split('|').map((t: string) => t.trim()) : [],
-                    e_id_link: row['E列: evidence_url (E-ID)'] || row.e_id_link || "",
-                    stats: { views: "---", likes: "---" }
-                  })).filter(w => w.vimeoId || w.title);
-                  setWorks(sheetWorks);
-                }
-                setIsLoading(false);
-              }
-            });
-            return;
-          } catch (e) {
-            finalWorks = FALLBACK_WORKS_DATA;
-          }
-        } else {
-          finalWorks = FALLBACK_WORKS_DATA;
-        }
-      }
-      setWorks(finalWorks);
-      setIsLoading(false);
-    };
-
+    // Fetch all Vimeo videos (up to 300, paginated 100 each)
     const fetchAllVimeoVideos = async (token: string): Promise<Work[]> => {
       try {
         let allVideos: any[] = [];
         for (let page = 1; page <= 3; page++) {
-          const response = await fetch(`https://api.vimeo.com/me/videos?per_page=100&page=${page}&fields=uri,name,pictures.base_link,description,stats,metadata`, {
+          const response = await fetch(`https://api.vimeo.com/me/videos?per_page=100&page=${page}&fields=uri,name,pictures.base_link,description,stats,metadata,created_time`, {
             headers: { 'Authorization': `Bearer ${token}` }
           });
           if (!response.ok) break;
           const data = await response.json();
           if (data.data && data.data.length > 0) allVideos = [...allVideos, ...data.data];
-          if (!data.paging.next) break;
+          if (!data.paging || !data.paging.next) break;
         }
-        return allVideos.map((v) => ({
-          id: v.uri.split('/').pop() || Math.random().toString(),
-          title: v.name || "Untitled",
-          category: "Works",
-          tags: [],
-          thumbnail: v.pictures.base_link || "",
-          videoPreview: "",
-          vimeoId: v.uri.split('/').pop() || "",
-          m07_solution: v.description || "",
-          a01_intent: "",
-          m03_results: [],
-          e_id_link: "",
-          stats: {
-            views: v.stats.plays?.toLocaleString() || "0",
-            likes: v.metadata.connections.likes.total?.toLocaleString() || "0"
-          }
-        }));
+        return allVideos.map((v) => {
+          const vimeoId = v.uri.split('/').pop() || Math.random().toString();
+          return {
+            id: vimeoId,
+            title: v.name || "Untitled",
+            category: "OTHER",
+            tags: [],
+            thumbnail: v.pictures?.base_link || "",
+            videoPreview: "",
+            vimeoId,
+            m07_solution: v.description || "",
+            a01_intent: "",
+            m03_results: [],
+            e_id_link: "",
+            uploadedAt: v.created_time || "",
+            isPublished: true,
+            isSelected: false,
+            displayOrder: undefined,
+            clientName: "",
+            stats: {
+              views: v.stats?.plays?.toLocaleString() || "0",
+              likes: v.metadata?.connections?.likes?.total?.toLocaleString() || "0"
+            }
+          };
+        });
       } catch (error) {
+        console.error("Vimeo fetch error:", error);
         return [];
       }
+    };
+
+    // Fetch Sheet metadata, return map: vimeoId -> partial Work
+    const fetchSheetMetadata = (sheetUrl: string): Promise<Map<string, Partial<Work>>> => {
+      return new Promise((resolve) => {
+        fetch(sheetUrl)
+          .then(r => r.text())
+          .then(csvText => {
+            Papa.parse(csvText, {
+              header: true,
+              skipEmptyLines: true,
+              complete: (results) => {
+                const map = new Map<string, Partial<Work>>();
+                const norm = (row: any, key: string) => {
+                  // Find key tolerantly (handle trailing/leading spaces)
+                  const found = Object.keys(row).find(k => k.trim() === key.trim());
+                  return found ? String(row[found] ?? '').trim() : '';
+                };
+                (results.data as any[]).forEach(row => {
+                  const vimeoId = norm(row, 'A列: vimeoId') || norm(row, 'vimeoId');
+                  if (!vimeoId) return;
+                  const titleOverride = norm(row, 'B列: title') || norm(row, 'title');
+                  const productionNote = norm(row, 'C列: production_note') || norm(row, 'production_note');
+                  const strategy = norm(row, 'D列: strategy') || norm(row, 'strategy');
+                  const evidenceUrl = norm(row, 'E列: evidence_url') || norm(row, 'evidence_url');
+                  const category = (norm(row, 'category') || 'OTHER').toUpperCase();
+                  const isSelected = /^true$/i.test(norm(row, 'is_selected'));
+                  const displayOrderStr = norm(row, 'display_order');
+                  const displayOrder = displayOrderStr ? Number(displayOrderStr) : undefined;
+                  const clientName = norm(row, 'client_name');
+                  const publishedStr = norm(row, 'is_published');
+                  const isPublished = publishedStr === '' ? true : /^true$/i.test(publishedStr);
+
+                  map.set(vimeoId, {
+                    ...(titleOverride && { title: titleOverride }),
+                    category: CATEGORY_ORDER.includes(category) ? category : 'OTHER',
+                    isSelected,
+                    displayOrder,
+                    clientName,
+                    isPublished,
+                    ...(productionNote && { a01_intent: productionNote }),
+                    ...(strategy && { m07_solution: strategy }),
+                    ...(evidenceUrl && { e_id_link: evidenceUrl }),
+                  });
+                });
+                resolve(map);
+              },
+              error: () => resolve(new Map()),
+            });
+          })
+          .catch(() => resolve(new Map()));
+      });
+    };
+
+    const loadWorks = async () => {
+      setIsLoading(true);
+      const sheetUrl = import.meta.env.VITE_WORKS_SHEET_URL;
+      const vimeoToken = import.meta.env.VITE_VIMEO_ACCESS_TOKEN;
+
+      // 1. Fetch Vimeo (base) + Sheet (metadata) in parallel
+      const [vimeoWorks, sheetMap] = await Promise.all([
+        vimeoToken ? fetchAllVimeoVideos(vimeoToken) : Promise.resolve([] as Work[]),
+        sheetUrl ? fetchSheetMetadata(sheetUrl) : Promise.resolve(new Map<string, Partial<Work>>()),
+      ]);
+
+      // 2. If both empty, use hardcoded fallback
+      if (vimeoWorks.length === 0 && sheetMap.size === 0) {
+        setWorks(FALLBACK_WORKS_DATA);
+        setIsLoading(false);
+        return;
+      }
+
+      // 3. Merge: Vimeo base + Sheet metadata overlay by vimeoId
+      let merged: Work[] = vimeoWorks.map(v => {
+        const meta = sheetMap.get(v.vimeoId || '') || {};
+        return { ...v, ...meta };
+      });
+
+      // 4. If Sheet has rows for vimeoIds NOT in Vimeo response, include those too (with placeholder)
+      sheetMap.forEach((meta, vimeoId) => {
+        if (!merged.find(w => w.vimeoId === vimeoId)) {
+          merged.push({
+            id: vimeoId,
+            title: meta.title || 'Untitled',
+            category: meta.category || 'OTHER',
+            tags: [],
+            thumbnail: `https://vumbnail.com/${vimeoId}.jpg`,
+            videoPreview: '',
+            vimeoId,
+            m07_solution: meta.m07_solution || '',
+            a01_intent: meta.a01_intent || '',
+            m03_results: [],
+            e_id_link: meta.e_id_link || '',
+            isSelected: meta.isSelected,
+            displayOrder: meta.displayOrder,
+            clientName: meta.clientName,
+            isPublished: meta.isPublished,
+          });
+        }
+      });
+
+      // 5. Filter out is_published === false
+      merged = merged.filter(w => w.isPublished !== false);
+
+      // 6. Sort: CATEGORY_ORDER → displayOrder → uploadedAt desc
+      merged.sort((a, b) => {
+        const ca = CATEGORY_ORDER.indexOf(a.category || 'OTHER');
+        const cb = CATEGORY_ORDER.indexOf(b.category || 'OTHER');
+        if (ca !== cb) return (ca === -1 ? 999 : ca) - (cb === -1 ? 999 : cb);
+        const da = a.displayOrder ?? Infinity;
+        const db = b.displayOrder ?? Infinity;
+        if (da !== db) return da - db;
+        return (b.uploadedAt || '').localeCompare(a.uploadedAt || '');
+      });
+
+      setWorks(merged);
+      setIsLoading(false);
     };
 
     loadWorks();
@@ -294,15 +374,17 @@ export default function App() {
           const fetchedPosts: NotePost[] = data.items.map((item: any) => ({
             title: item.title,
             date: new Date(item.pubDate).toLocaleDateString('ja-JP').replace(/\//g, '.'),
-            excerpt: item.description.replace(/<[^>]*>?/gm, '').substring(0, 100) + "...",
+            excerpt: (item.description || '').replace(/<[^>]*>?/gm, '').substring(0, 100) + "...",
             url: item.link,
             tags: item.categories || [],
             image: item.thumbnail || item.enclosure?.link
           }));
           setJournalPosts(fetchedPosts.slice(0, 4));
         }
+        // On no items, leave journalPosts as [] → static promo cards will render as fallback
       } catch (e) {
-        setJournalPosts(NOTE_POSTS);
+        // RSS fetch failed → leave journalPosts as [] → static promo cards render
+        console.warn("Note RSS fetch failed, falling back to static cards:", e);
       } finally {
         setIsLoadingJournal(false);
       }
@@ -518,7 +600,12 @@ function HomePage({ works, isLoading, isLoadingJournal, journalPosts, onNavigate
               </div>
             ))
           ) : (
-            works.slice(0, 3).map((work, idx) => (
+            (() => {
+              const selected = works.filter(w => w.isSelected);
+              const featured = selected.length > 0
+                ? [...selected].sort((a, b) => (a.displayOrder ?? Infinity) - (b.displayOrder ?? Infinity)).slice(0, 3)
+                : works.slice(0, 3);
+              return featured.map((work, idx) => (
               <motion.div
                 key={work.id}
                 initial={{ opacity: 0, y: 20 }}
@@ -539,9 +626,10 @@ function HomePage({ works, isLoading, isLoadingJournal, journalPosts, onNavigate
                 <p className="text-[11px] font-bold text-black/70">
                   『{work.title}』ブランド映像
                 </p>
-                <p className="text-[10px] text-black/40">Client_共同印刷 株式会社</p>
+                <p className="text-[10px] text-black/40">{work.clientName ? `Client_${work.clientName}` : 'Client_共同印刷 株式会社'}</p>
               </motion.div>
-            ))
+              ));
+            })()
           )}
         </div>
         <div className="flex justify-center">
@@ -611,12 +699,66 @@ function HomePage({ works, isLoading, isLoadingJournal, journalPosts, onNavigate
         </div>
       </section>
 
-      {/* INFORMATION (note / note PRO promo cards) */}
+      {/* INFORMATION — Dynamic note RSS posts (with static promo cards as fallback) */}
       <section className="py-20 px-6 max-w-[1200px] mx-auto">
         <div className="text-center mb-12">
           <h2 className="text-2xl md:text-3xl font-display font-bold tracking-tight">INFORMATION</h2>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        {journalPosts.length > 0 ? (
+          // Dynamic: latest posts from note RSS
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            {journalPosts.map((post, idx) => (
+              <motion.a
+                key={idx}
+                href={post.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                initial={{ opacity: 0, y: 15 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: idx * 0.08 }}
+                className="group flex flex-col border border-black/8 hover:border-black/20 transition-colors"
+              >
+                <div className="aspect-[16/9] overflow-hidden bg-gray-100 relative">
+                  <div className="absolute top-4 left-4 z-10 bg-white px-3 py-1.5 shadow-sm">
+                    <span className="font-bold text-base leading-none flex items-baseline gap-0.5">
+                      <span className="text-black">no</span>
+                      <span className="text-emerald-500 text-lg leading-none">+</span>
+                      <span className="text-black">e</span>
+                    </span>
+                  </div>
+                  {post.image ? (
+                    <img
+                      src={post.image}
+                      alt={post.title}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                      referrerPolicy="no-referrer"
+                      loading="lazy"
+                    />
+                  ) : (
+                    <div className="w-full h-full bg-gradient-to-br from-gray-100 to-gray-200" />
+                  )}
+                </div>
+                <div className="p-6 space-y-3 flex-1 flex flex-col">
+                  <p className="text-[10px] text-black/40 font-bold tracking-wider">{post.date}</p>
+                  <h3 className="text-sm font-bold leading-snug line-clamp-2 group-hover:text-black/60 transition-colors flex-1">
+                    {post.title}
+                  </h3>
+                  <p className="text-[11px] text-black/60 leading-relaxed line-clamp-3">
+                    {post.excerpt}
+                  </p>
+                  <div className="pt-2">
+                    <span className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-black/60 group-hover:text-black transition-colors">
+                      READ ON NOTE <ChevronRight size={11} />
+                    </span>
+                  </div>
+                </div>
+              </motion.a>
+            ))}
+          </div>
+        ) : (
+          // Static fallback: note / note PRO promo cards (Aisle-friendly + RSS失敗時保険)
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           {[
             {
               type: 'note' as const,
@@ -684,7 +826,8 @@ function HomePage({ works, isLoading, isLoadingJournal, journalPosts, onNavigate
               </div>
             </motion.a>
           ))}
-        </div>
+          </div>
+        )}
       </section>
     </div>
   );
@@ -700,11 +843,34 @@ function WorksPage({ works, isLoading, onSelectWork, onNavigateToContact }: {
   onNavigateToContact: () => void;
 }) {
   const [activeCategory, setActiveCategory] = useState('ALL');
+  const [currentPage, setCurrentPage] = useState(1);
   const categories = ['ALL', 'COAPORATE', 'PR', 'EVENT', 'GRAPHIC'];
+  const PER_PAGE = 15;
 
   const filteredWorks = activeCategory === 'ALL'
     ? works
-    : works.filter(work => work.category?.toUpperCase().includes(activeCategory.toUpperCase()));
+    : works.filter(work => (work.category || 'OTHER').toUpperCase() === activeCategory.toUpperCase());
+
+  const totalPages = Math.max(1, Math.ceil(filteredWorks.length / PER_PAGE));
+  const safePage = Math.min(currentPage, totalPages);
+  const paginatedWorks = filteredWorks.slice((safePage - 1) * PER_PAGE, safePage * PER_PAGE);
+
+  // Reset to page 1 when category changes
+  useEffect(() => { setCurrentPage(1); }, [activeCategory]);
+
+  // Build page number list: 1 2 3 4 ... last (with ellipsis if needed)
+  const pageNumbers: (number | '...')[] = (() => {
+    if (totalPages <= 7) return Array.from({ length: totalPages }, (_, i) => i + 1);
+    const pages: (number | '...')[] = [];
+    if (safePage <= 4) {
+      pages.push(1, 2, 3, 4, 5, '...', totalPages);
+    } else if (safePage >= totalPages - 3) {
+      pages.push(1, '...', totalPages - 4, totalPages - 3, totalPages - 2, totalPages - 1, totalPages);
+    } else {
+      pages.push(1, '...', safePage - 1, safePage, safePage + 1, '...', totalPages);
+    }
+    return pages;
+  })();
 
   return (
     <div className="pb-20 bg-white">
@@ -766,8 +932,12 @@ function WorksPage({ works, isLoading, onSelectWork, onNavigateToContact }: {
                 <div className="h-3 w-3/4 bg-black/5 animate-pulse mx-auto" />
               </div>
             ))
+          ) : paginatedWorks.length === 0 ? (
+            <div className="col-span-full text-center py-20 text-black/40 text-sm">
+              該当する作品が見つかりませんでした。
+            </div>
           ) : (
-            filteredWorks.map((work, idx) => (
+            paginatedWorks.map((work, idx) => (
               <motion.div
                 key={work.id}
                 initial={{ opacity: 0, y: 20 }}
@@ -777,19 +947,22 @@ function WorksPage({ works, isLoading, onSelectWork, onNavigateToContact }: {
                 className="group cursor-pointer"
                 onClick={() => onSelectWork(work)}
               >
-                <div className="aspect-video overflow-hidden mb-3">
+                <div className="aspect-video overflow-hidden mb-3 bg-black/5">
                   <img
                     src={work.thumbnail}
                     alt={work.title}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
                     referrerPolicy="no-referrer"
+                    loading="lazy"
                   />
                 </div>
                 <div className="text-center space-y-1 px-2">
-                  <p className="text-[11px] font-bold text-black/80 group-hover:text-black/50 transition-colors">
-                    『{work.title}』ブランド映像
+                  <p className="text-[11px] font-bold text-black/80 group-hover:text-black/50 transition-colors line-clamp-2">
+                    {work.title}
                   </p>
-                  <p className="text-[10px] text-black/40">Client_共同印刷 株式会社</p>
+                  {work.clientName && (
+                    <p className="text-[10px] text-black/40">Client_{work.clientName}</p>
+                  )}
                 </div>
               </motion.div>
             ))
@@ -798,15 +971,34 @@ function WorksPage({ works, isLoading, onSelectWork, onNavigateToContact }: {
       </section>
 
       {/* Pagination */}
-      <section className="mt-20 flex justify-center items-center gap-4 text-[11px] font-bold tracking-widest text-black/40 px-6">
-        <span className="text-black border-b border-black pb-0.5 px-1">1</span>
-        {[2,3,4].map(n => <button key={n} className="hover:text-black transition-colors">{n}</button>)}
-        <span>...</span>
-        <button className="hover:text-black transition-colors">20</button>
-        <button className="flex items-center gap-1.5 hover:text-black transition-colors">
-          NEXT <ChevronRight size={11} />
-        </button>
-      </section>
+      {totalPages > 1 && (
+        <section className="mt-20 flex justify-center items-center gap-4 text-[11px] font-bold tracking-widest text-black/40 px-6">
+          {pageNumbers.map((p, i) =>
+            p === '...' ? (
+              <span key={`dots-${i}`}>...</span>
+            ) : (
+              <button
+                key={p}
+                onClick={() => { setCurrentPage(p as number); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                className={p === safePage
+                  ? "text-black border-b border-black pb-0.5 px-1"
+                  : "hover:text-black transition-colors"
+                }
+              >
+                {p}
+              </button>
+            )
+          )}
+          {safePage < totalPages && (
+            <button
+              onClick={() => { setCurrentPage(safePage + 1); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+              className="flex items-center gap-1.5 hover:text-black transition-colors"
+            >
+              NEXT <ChevronRight size={11} />
+            </button>
+          )}
+        </section>
+      )}
 
       <div className="mt-24 px-6 max-w-[1200px] mx-auto">
         <CTASection onNavigate={onNavigateToContact} />

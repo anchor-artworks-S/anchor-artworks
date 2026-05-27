@@ -511,15 +511,15 @@ export default function App() {
   return (
     <div className="min-h-screen bg-white text-black font-sans selection:bg-black selection:text-white">
       {/* Header */}
-      <header className={`fixed top-0 w-full z-50 transition-all duration-300 ${isScrolled ? 'bg-black/95 backdrop-blur-md border-b border-white/5 h-16' : 'bg-black h-16'}`}>
+      <header className={`fixed top-0 w-full z-50 transition-all duration-300 ${isScrolled ? 'bg-black/95 backdrop-blur-md border-b border-white/5 h-20' : 'bg-black h-20'}`}>
         <div className="max-w-[1400px] mx-auto px-6 md:px-10 h-full flex items-center justify-between">
-          {/* Logo */}
+          {/* Logo (AAW + Anchor Art Works 一体型) */}
           <button
             onClick={() => { setCurrentPage('home'); setIsMobileMenuOpen(false); }}
-            className="flex items-center gap-2 hover:opacity-80 transition-opacity"
+            className="hover:opacity-80 transition-opacity"
+            aria-label="Anchor Art Works"
           >
-            <img src="/ol_AAW_Logo.jpg" alt="AAW" style={{ height: 28 }} className="w-auto object-contain" />
-            <span className="font-serif font-bold text-sm tracking-wide hidden sm:block text-white">Anchor Art Works</span>
+            <img src="/aaw_logo_full.png" alt="Anchor Art Works" className="h-12 w-auto object-contain" />
           </button>
 
           {/* Desktop Nav */}
@@ -552,7 +552,7 @@ export default function App() {
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
-              className="absolute top-16 left-0 w-full bg-black border-b border-white/5 shadow-lg md:hidden"
+              className="absolute top-20 left-0 w-full bg-black border-b border-white/5 shadow-lg md:hidden"
             >
               <nav className="flex flex-col p-6 space-y-1">
                 {navLinks.map((link) => (
@@ -648,7 +648,7 @@ function HomePage({ works, isLoading, isLoadingJournal, journalPosts, onNavigate
   return (
     <div className="bg-white">
       {/* Hero */}
-      <section className="bg-brand min-h-[50vh] flex flex-col items-center justify-center text-center px-6 py-12">
+      <section className="bg-brand min-h-[50vh] flex flex-col items-center justify-center text-center px-6 pt-28 pb-12">
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -1181,41 +1181,43 @@ function AboutPage({ onNavigateToContact }: { onNavigateToContact: () => void })
       <section className="bg-black text-white py-20 px-6 md:px-12">
         <div className="max-w-[1100px] mx-auto grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-10 md:gap-y-16">
           {[
+            // 上段: ① ② ③
             {
               role: "Editor / Motion Grapher",
               name: "勝田　友亮",
               enName: "YUSUKE KATSUDA",
-              bio: "1989年4月7日生まれ。PRムービー、イベント映像、企業ブランドムービー、VPなどモーショングラフィックスを主軸に制作。複雑な情報構造を視覚的に整理し、直感的に伝わる動きへと再構築する設計力が強み。クライアントの要望に柔軟に応えるロジカル思考と、視覚的なリズムを両立した映像表現で、ブランドの世界観を多面的に支える。"
+              bio: "1989年4月7日生まれ。PRムービー、イベント映像、企業ブランドムービー、VP、CMなどモーショングラフィックスを主軸に幅広く制作。複雑な情報構造を視覚的に整理し、直感的に伝わる動きへと再構築する設計力が強み。クライアントの要望に柔軟に応えるロジカル思考と、視覚的なリズムを両立した映像表現で、ブランドの世界観を多面的に支える。細部の質感までこだわった編集で、視聴者の記憶に残るシーンを生み出す。"
             },
             {
               role: "Editor / Motion Grapher",
               name: "矢戸　光一",
               enName: "KOICHI YATO",
-              bio: "2003年1月1日生まれ。PRムービー、イベント映像、ゲーム関連コンテンツなどモーショングラフィックスを主軸に制作。eスポーツのプロ選手を目指していた経験から培われた、高い集中力と緻密な観察眼が武器。0.1秒単位での編集精度と、視聴者の注意を逃さないリズム設計に強みを持ち、次世代のクリエイティブを牽引する。"
+              bio: "2003年1月1日生まれ。PRムービー、イベント映像、ゲーム関連コンテンツなどモーショングラフィックスを主軸に制作。eスポーツのプロ選手を目指していた経験から培われた、高い集中力と緻密な観察眼が武器。0.1秒単位での編集精度と、視聴者の注意を逃さないリズム設計に強みを持ち、次世代のクリエイティブを牽引する。SNS時代のテンポ感を熟知し、短尺から長尺まで幅広いフォーマットに対応する柔軟性も備える。"
             },
+            {
+              role: "Illustrator / Designer",
+              name: "内田　理恵",
+              enName: "RIE UCHIDA",
+              bio: "イラストとデザインの境界を行き来しながら、クライアントの世界観や想いを視覚的に表現する、イラストレーター兼デザイナー。オーダーやコンセプトに合わせた柔軟なイラスト表現を得意とし、エモーショナルなタッチからポップで親しみやすい表現まで、幅広く描き分けます。広告・パッケージ・Webなど、多様な分野で制作を行い、単に“見せる”だけでなく、見る人の感情や空気感まで伝わるクリエイションを大切にしています。一つひとつのプロジェクトに丁寧に向き合いながら、記憶に残るビジュアルを目指して制作しています。"
+            },
+            // 下段: ④ ⑤ ⑥
             {
               role: "Producer / Director",
               name: "目　学",
               enName: "MANABU SAKKA",
-              bio: "1983年10月2日生まれ。映像専門学校卒業後、テレビ業界に就職。報道・バラエティ・ドキュメンタリーなど多様な現場で経験を積み、その後広告業界へ転身。テレビ品質の制作工程と、広告に求められるスピード感を融合させたプロデュース力で、Anchor Art Worksの映像品質を担保する責任者を務める。"
+              bio: "1983年10月2日生まれ。映像専門学校卒業後、テレビ業界に就職。報道・バラエティ・ドキュメンタリーなど多様な現場で経験を積み、その後広告業界へ転身。テレビ品質の制作工程と、広告に求められるスピード感を融合させたプロデュース力で、Anchor Art Worksの映像品質を担保する責任者を務める。スタッフィングから予算管理、クライアント折衝までを一貫して統括し、現場とブランドを橋渡しする中核ポジション。"
             },
             {
-              role: "SNS / Short Video Editor",
-              name: "名前差し替え予定",
-              enName: "NAMAE SASIKAEYOTEI",
-              bio: "SNS運用とショート動画制作に特化した視点を持つエディター。TikTok、Instagram Reels、YouTube Shortsなど主要プラットフォームの仕様とユーザー行動を深く理解し、各メディア特性に最適化したコンテンツ設計を行う。トレンドを瞬時にキャッチするテンポ感と、データに基づく継続的な改善で、ブランドのSNS発信を成果に直結させる。"
-            },
-            {
-              role: "Designer",
-              name: "名前差し替え予定",
-              enName: "NAMAE SASIKAEYOTEI",
-              bio: "視覚的な美しさと情報構造の整理を両立させるデザイナー。映像内のタイポグラフィ、レイアウト、グラフィック要素、カラーパレットまで、ブランドの世界観を支える視覚要素を緻密に設計する。グラフィックデザインの原則を映像表現に応用し、静と動の調和したビジュアル言語を構築。ブランドアイデンティティを深める繊細なデザインを提供する。"
+              role: "SNS / Podcaster",
+              name: "森屋　沙耶",
+              enName: "SAYA MORIYA",
+              bio: "某人気YouTuberとのコラボ経験を持つポッドキャスター。独特の視点と世界観を活かしたトークを得意とし、親しみやすさとテンポ感のある語り口でリスナーを引き込む。明るく自然体なキャラクターと、少し低めで落ち着きのある声質が特徴。長時間でも心地よく聴けるトーンで、日常の何気ない話題からカルチャー、ライフスタイル、社会的なテーマまで幅広く発信している。リスナーとの距離感を大切にしながら、“誰かの日常に自然と馴染む言葉”を届けることをテーマに活動。耳だけで楽しめる空気感や温度感を意識したトークで、多くの共感を集めている。"
             },
             {
               role: "Marketing Specialist",
               name: "沖田　紘亮",
               enName: "KOUSUKE OKITA",
-              bio: "テレビ局、総合広告代理店を経て独立。AI時代のマーケティング戦略とデータ分析を基盤に、コンテンツの価値最大化を担うスペシャリスト。行動経済学や市場構造を踏まえた戦略設計により、ターゲットへの最適なリーチと継続的な成果創出を実現。映像制作の前段階となる課題設定からKPI設計、効果測定までを支援する。"
+              bio: "テレビ局、総合広告代理店を経て独立。AI時代のマーケティング戦略とデータ分析を基盤に、コンテンツの価値最大化を担うスペシャリスト。行動経済学や市場構造を踏まえた戦略設計により、ターゲットへの最適なリーチと継続的な成果創出を実現。映像制作の前段階となる課題設定からKPI設計、効果測定までを一貫して支援する。クリエイティブと数字を繋ぐ視点で、ブランドの長期的な成長を支える。"
             }
           ].map((member, idx) => (
             <motion.div

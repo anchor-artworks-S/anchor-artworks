@@ -1647,7 +1647,11 @@ function ChatConcierge({ works, initialPrompt }: { works: Work[]; initialPrompt?
   const sentInitialRef = useRef<string>('');
 
   useEffect(() => {
-    aiRef.current = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || '' });
+    const apiKey = import.meta.env.VITE_GEMINI_API_KEY || '';
+    if (!apiKey) {
+      console.warn('[AI Concierge] VITE_GEMINI_API_KEY が設定されていません。Vercel の環境変数を確認してください。');
+    }
+    aiRef.current = new GoogleGenAI({ apiKey });
   }, []);
 
   // Auto-send when initialPrompt is provided (once per prompt value)
@@ -1701,7 +1705,7 @@ function ChatConcierge({ works, initialPrompt }: { works: Work[]; initialPrompt?
     }
   };
 
-  const suggestions = ["強みについて教えて", "勝田 康の実績は？", "3DCG制作の相談ができる？", "Aisleフレームワークとは？"];
+  const suggestions = ["強みについて教えて", "代表 勝田の実績は？", "3DCG制作の相談ができる？", "ポッドキャストの相談は？"];
 
   return (
     <div className="flex flex-col h-full">

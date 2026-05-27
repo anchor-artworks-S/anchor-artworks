@@ -24,7 +24,7 @@ import {
 } from "lucide-react";
 
 // --- Types ---
-type Page = 'home' | 'works' | 'about' | 'contact' | 'privacy';
+type Page = 'home' | 'works' | 'whatwedo' | 'about' | 'journal' | 'contact' | 'privacy';
 
 interface NotePost {
   title: string;
@@ -190,7 +190,9 @@ const FALLBACK_WORKS_DATA: Work[] = [
 function pathToPage(pathname: string): Page {
   const p = pathname.toLowerCase();
   if (p.startsWith('/works')) return 'works';
+  if (p.startsWith('/whatwedo')) return 'whatwedo';
   if (p.startsWith('/about')) return 'about';
+  if (p.startsWith('/journal')) return 'journal';
   if (p.startsWith('/contact')) return 'contact';
   if (p.startsWith('/privacy')) return 'privacy';
   return 'home';
@@ -411,7 +413,7 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    const MAX_POSTS = 4;
+    const MAX_POSTS = 50;
 
     // Fetch pinned posts from Sheet (if URL env var exists)
     const fetchNotePins = async (): Promise<NotePost[]> => {
@@ -505,7 +507,9 @@ export default function App() {
   const navLinks = [
     { id: 'home', label: 'Home' },
     { id: 'works', label: 'Works' },
+    { id: 'whatwedo', label: 'What We Do' },
     { id: 'about', label: 'About' },
+    { id: 'journal', label: 'Journal' },
     { id: 'contact', label: 'Contact' },
   ];
 
@@ -524,7 +528,7 @@ export default function App() {
           </button>
 
           {/* Desktop Nav */}
-          <nav className="hidden md:flex items-center gap-10 text-[11px] font-bold uppercase tracking-[0.18em]">
+          <nav className="hidden md:flex items-center gap-6 lg:gap-8 text-[11px] font-bold uppercase tracking-[0.18em]">
             {navLinks.map((link) => (
               <button
                 key={link.id}
@@ -593,9 +597,19 @@ export default function App() {
               <WorksPage works={works} isLoading={isLoading} onSelectWork={setSelectedWork} onNavigateToContact={() => setCurrentPage('contact')} />
             </motion.div>
           )}
+          {currentPage === 'whatwedo' && (
+            <motion.div key="whatwedo" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.3 }}>
+              <WhatWeDoPage onNavigateToContact={() => setCurrentPage('contact')} />
+            </motion.div>
+          )}
           {currentPage === 'about' && (
             <motion.div key="about" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.3 }}>
               <AboutPage onNavigateToContact={() => setCurrentPage('contact')} />
+            </motion.div>
+          )}
+          {currentPage === 'journal' && (
+            <motion.div key="journal" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.3 }}>
+              <JournalPage journalPosts={journalPosts} isLoadingJournal={isLoadingJournal} onNavigateToContact={() => setCurrentPage('contact')} />
             </motion.div>
           )}
           {currentPage === 'contact' && (
@@ -617,16 +631,45 @@ export default function App() {
         )}
       </AnimatePresence>
 
-      <footer className="bg-brand text-black py-8 px-6 md:px-10">
-        <div className="max-w-[1400px] mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
-          <button
-            onClick={() => setCurrentPage('privacy')}
-            className="text-[10px] uppercase font-bold tracking-widest text-black/60 hover:text-black transition-colors"
-          >
-            Privacy Policy
-          </button>
-          <div className="text-black/60 text-[10px] uppercase font-bold tracking-widest">
-            © Anchor Art Works Co. Ltd.
+      <footer className="bg-brand text-black">
+        <div className="max-w-[1400px] mx-auto px-6 md:px-10 py-14 md:py-16">
+          {/* Sitemap */}
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-x-6 gap-y-8 mb-12">
+            {[
+              { id: 'home', label: 'Home', tag: '', desc: 'はじまり' },
+              { id: 'works', label: 'Works', tag: '証拠', desc: '映像で語る、これまでの実績' },
+              { id: 'whatwedo', label: 'What We Do', tag: '依頼範囲', desc: '私たちが提供できる領域' },
+              { id: 'about', label: 'About', tag: '信頼', desc: 'チーム・代表・カルチャー' },
+              { id: 'journal', label: 'Journal', tag: '現在地', desc: 'いま考えていること' },
+              { id: 'contact', label: 'Contact', tag: '行動', desc: '相談・打ち合わせへ' },
+            ].map((item) => (
+              <button
+                key={item.id}
+                onClick={() => setCurrentPage(item.id as Page)}
+                className="text-left group"
+              >
+                <div className="text-base md:text-lg font-display font-bold tracking-tight text-black group-hover:opacity-60 transition-opacity">
+                  {item.label}
+                </div>
+                {item.tag && (
+                  <div className="text-[10px] font-bold tracking-[0.2em] uppercase text-black/50 mt-1">{item.tag}</div>
+                )}
+                <div className="text-[10px] text-black/55 mt-1.5 leading-relaxed">{item.desc}</div>
+              </button>
+            ))}
+          </div>
+
+          {/* Bottom row */}
+          <div className="pt-6 border-t border-black/15 flex flex-col md:flex-row justify-between items-center gap-3">
+            <button
+              onClick={() => setCurrentPage('privacy')}
+              className="text-[10px] uppercase font-bold tracking-widest text-black/60 hover:text-black transition-colors"
+            >
+              Privacy Policy
+            </button>
+            <div className="text-black/60 text-[10px] uppercase font-bold tracking-widest">
+              © Anchor Art Works Co. Ltd.
+            </div>
           </div>
         </div>
       </footer>
@@ -846,202 +889,6 @@ function HomePage({ works, isLoading, isLoadingJournal, journalPosts, onNavigate
         <CTASection onNavigate={onNavigateToContact} />
       </div>
 
-      {/* Strengths */}
-      <section className="bg-black text-white py-24 px-6">
-        <div className="max-w-[900px] mx-auto space-y-16">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6 }}
-            className="text-center space-y-3"
-          >
-            <h2 className="text-3xl md:text-4xl font-display font-bold text-brand">OUR STRENGTHS.</h2>
-            <p className="text-white/50 text-sm leading-relaxed">
-              社内一貫体制により、戦略設計から最終的なアウトプットまで、<br />
-              ブレのないクオリティを提供します。
-            </p>
-          </motion.div>
-          <div className="border border-white/20 divide-y divide-white/20">
-            {[
-              {
-                title: "Marketing & Design",
-                subtitle: "認知構造の設計",
-                desc: "デザイン思考を用い、視聴者の脳内に情報を定着させるための「情報の重み付け」を映像化。戦略なき映像制作を打破します。",
-                expert: "勝田 康 (CEO)"
-              },
-              {
-                title: "Motion & Creative",
-                subtitle: "論理的動態デザイン",
-                desc: "3DCGとモーショングラフィックスを駆使し、複雑な概念を直感的に理解させる「動く図解」を構築。視覚的ノイズを排除します。",
-                expert: "勝田 友亮 / 矢戸 光一"
-              },
-              {
-                title: "Production & Quality",
-                subtitle: "放送基準の品質担保",
-                desc: "テレビ業界標準の制作フローとブランドセーフティを適用。企業の社会的信頼を保護し、高める映像を提供します。",
-                expert: "目 学"
-              }
-            ].map((item, idx) => (
-              <motion.div
-                key={idx}
-                initial={{ opacity: 0, y: 15 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                className="p-8 md:p-10 space-y-4"
-              >
-                <h3 className="text-xl md:text-2xl font-display font-bold text-brand">{item.title}</h3>
-                <p className="text-[10px] text-white/30 tracking-[0.2em] font-bold uppercase">{item.subtitle}</p>
-                <p className="text-sm text-white/60 leading-relaxed">{item.desc}</p>
-                <div className="pt-4 border-t border-white/10">
-                  <p className="text-[9px] text-white/30 uppercase tracking-widest">Expert in Charge</p>
-                  <p className="text-xs font-medium text-white/50 mt-1">{item.expert}</p>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* FAQ */}
-      <FAQSection />
-
-      {/* INFORMATION — Dynamic note RSS posts (with static promo cards as fallback) */}
-      <section className="py-20 px-6 max-w-[1200px] mx-auto">
-        <motion.div
-          initial={{ opacity: 0, y: 15 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6 }}
-          className="text-center mb-12"
-        >
-          <h2 className="text-2xl md:text-3xl font-display font-bold tracking-tight">INFORMATION</h2>
-        </motion.div>
-        {journalPosts.length > 0 ? (
-          // Dynamic: latest posts from note RSS
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            {journalPosts.map((post, idx) => (
-              <motion.a
-                key={idx}
-                href={post.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                initial={{ opacity: 0, y: 15 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: idx * 0.08 }}
-                className="group flex flex-col border border-black/8 hover:border-black/20 transition-colors"
-              >
-                <div className="aspect-[16/9] overflow-hidden bg-gray-100 relative">
-                  <div className="absolute top-4 left-4 z-10 bg-white px-3 py-1.5 shadow-sm">
-                    <span className="font-bold text-base leading-none flex items-baseline gap-0.5">
-                      <span className="text-black">no</span>
-                      <span className="text-emerald-500 text-lg leading-none">+</span>
-                      <span className="text-black">e</span>
-                    </span>
-                  </div>
-                  {post.image ? (
-                    <img
-                      src={post.image}
-                      alt={post.title}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
-                      referrerPolicy="no-referrer"
-                      loading="lazy"
-                    />
-                  ) : (
-                    <div className="w-full h-full bg-gradient-to-br from-gray-100 to-gray-200" />
-                  )}
-                </div>
-                <div className="p-6 space-y-3 flex-1 flex flex-col">
-                  <p className="text-[10px] text-black/40 font-bold tracking-wider">{post.date}</p>
-                  <h3 className="text-sm font-bold leading-snug line-clamp-2 group-hover:text-black/60 transition-colors flex-1">
-                    {post.title}
-                  </h3>
-                  <p className="text-[11px] text-black/60 leading-relaxed line-clamp-3">
-                    {post.excerpt}
-                  </p>
-                  <div className="pt-2">
-                    <span className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-black/60 group-hover:text-black transition-colors">
-                      READ ON NOTE <ChevronRight size={11} />
-                    </span>
-                  </div>
-                </div>
-              </motion.a>
-            ))}
-          </div>
-        ) : (
-          // Static fallback: note / note PRO promo cards (Aisle-friendly + RSS失敗時保険)
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          {[
-            {
-              type: 'note' as const,
-              desc: 'noteはクリエイターが文章や画像、音声、動画を投稿して、ユーザーがそのコンテンツを楽しんで応援できるメディアプラットフォームです。だれもが創作を楽しんで続けられるよう、安心できる雰囲気や、多様性を大切にしています。',
-              url: 'https://note.com/anchor_art_works',
-              image: 'https://images.unsplash.com/photo-1611162616475-46b635cb6868?q=80&w=1000',
-            },
-            {
-              type: 'note_pro' as const,
-              desc: '法人向け情報発信プラットフォーム。多くのひとが集まるnoteの街でメディアをかんたんにつくり、情報を届けることができます。届ける仕組みと充実したサポートで、企業がポジティブなユーザーとつながって関係を深めるお手伝いをします。',
-              url: 'https://note.jp/n/n4fe51c391a36',
-              image: 'https://images.unsplash.com/photo-1593642632559-0c6d3fc62b89?q=80&w=1000',
-            },
-            {
-              type: 'note' as const,
-              desc: 'noteはクリエイターが文章や画像、音声、動画を投稿して、ユーザーがそのコンテンツを楽しんで応援できるメディアプラットフォームです。だれもが創作を楽しんで続けられるよう、安心できる雰囲気や、多様性を大切にしています。',
-              url: 'https://note.com/anchor_art_works',
-              image: 'https://images.unsplash.com/photo-1611162616475-46b635cb6868?q=80&w=1000',
-            },
-            {
-              type: 'note_pro' as const,
-              desc: '法人向け情報発信プラットフォーム。多くのひとが集まるnoteの街でメディアをかんたんにつくり、情報を届けることができます。届ける仕組みと充実したサポートで、企業がポジティブなユーザーとつながって関係を深めるお手伝いをします。',
-              url: 'https://note.jp/n/n4fe51c391a36',
-              image: 'https://images.unsplash.com/photo-1593642632559-0c6d3fc62b89?q=80&w=1000',
-            },
-          ].map((card, idx) => (
-            <motion.a
-              key={idx}
-              href={card.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              initial={{ opacity: 0, y: 15 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: idx * 0.08 }}
-              className="group flex flex-col border border-black/8 hover:border-black/20 transition-colors"
-            >
-              <div className="aspect-[16/9] overflow-hidden bg-gray-100 relative">
-                <div className="absolute top-4 left-4 z-10 bg-white px-3 py-1.5 shadow-sm">
-                  <span className="font-bold text-base leading-none flex items-baseline gap-0.5">
-                    <span className="text-black">no</span>
-                    <span className="text-emerald-500 text-lg leading-none">+</span>
-                    <span className="text-black">e</span>
-                    {card.type === 'note_pro' && (
-                      <span className="ml-1.5 text-[10px] text-black/70 font-bold tracking-wider">PRO</span>
-                    )}
-                  </span>
-                </div>
-                <img
-                  src={card.image}
-                  alt={card.type === 'note' ? 'note' : 'note PRO'}
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
-                  referrerPolicy="no-referrer"
-                />
-              </div>
-              <div className="p-6 space-y-4 flex-1 flex flex-col">
-                <p className="text-[11px] text-black/65 leading-relaxed flex-1">
-                  {card.desc}
-                </p>
-                <div className="pt-2">
-                  <span className="inline-flex items-center justify-center px-6 py-2.5 border border-black/15 text-[10px] font-bold uppercase tracking-widest text-black group-hover:bg-black group-hover:text-white transition-all">
-                    {card.type === 'note' ? 'noteについて' : 'note proについて'}
-                  </span>
-                </div>
-              </div>
-            </motion.a>
-          ))}
-          </div>
-        )}
-      </section>
     </div>
   );
 }
@@ -1354,110 +1201,6 @@ function AboutPage({ onNavigateToContact }: { onNavigateToContact: () => void })
               <p className="text-xs text-white/55 leading-relaxed">{member.bio}</p>
             </motion.div>
           ))}
-        </div>
-      </section>
-
-      {/* PROCESS — How we work */}
-      <section className="py-24 px-6 bg-white">
-        <div className="max-w-[1100px] mx-auto">
-          <motion.div
-            initial={{ opacity: 0, y: 15 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6 }}
-            className="text-center mb-16 space-y-3"
-          >
-            <div className="flex items-center justify-center gap-4 max-w-md mx-auto">
-              <span className="text-[10px] font-bold tracking-[0.3em] uppercase text-black/40 whitespace-nowrap">PROCESS</span>
-              <div className="h-px bg-brand flex-1" />
-            </div>
-            <h2 className="text-3xl md:text-5xl font-display font-bold tracking-tight">
-              アイデアが、カタチに変わるまで。
-            </h2>
-            <p className="text-black/60 text-sm max-w-xl mx-auto leading-relaxed">
-              Anchor Art Works の制作は、5つの工程を通じて進みます。
-            </p>
-          </motion.div>
-          <div className="space-y-6 md:space-y-0 md:grid md:grid-cols-5 md:gap-4">
-            {[
-              { step: '01', title: 'Discovery', subtitle: '課題の整理', desc: 'ヒアリングを通じて、伝えたい価値の核と想定する受け手を明確化。事業課題と本質要件を定義します。' },
-              { step: '02', title: 'Concept', subtitle: 'コンセプト設計', desc: '戦略仮説とビジュアル方向性、ストーリーテリングを設計。デザイン思考で「伝わる構成」を組み立てます。' },
-              { step: '03', title: 'Storyboard', subtitle: '構成設計', desc: '映像の流れとシーンごとの意図、視覚的リズムを文書化。制作前に方向性を固め、手戻りを最小化します。' },
-              { step: '04', title: 'Production', subtitle: '制作', desc: 'CG・撮影・編集・モーション・サウンドまで内製チームで一貫実行。思考の速度に追従するスピードで進めます。' },
-              { step: '05', title: 'Delivery', subtitle: '納品と継続支援', desc: '納品後の効果測定、SNS用ショート展開、別言語版まで、長期的なブランド運用を支援します。' },
-            ].map((p, idx) => (
-              <motion.div
-                key={idx}
-                initial={{ opacity: 0, y: 25 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: idx * 0.1 }}
-                className="relative md:p-4"
-              >
-                <div className="flex md:flex-col gap-4 md:gap-3 items-start">
-                  <div className="font-display font-bold text-3xl md:text-4xl text-brand leading-none shrink-0">
-                    {p.step}
-                  </div>
-                  <div className="flex-1 space-y-1.5">
-                    <h3 className="text-base md:text-lg font-display font-bold tracking-tight">{p.title}</h3>
-                    <p className="text-[10px] text-black/40 font-bold tracking-widest uppercase">{p.subtitle}</p>
-                    <p className="text-xs text-black/60 leading-relaxed pt-2">{p.desc}</p>
-                  </div>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* INDUSTRIES — Areas served */}
-      <section className="py-24 px-6 bg-black text-white">
-        <div className="max-w-[1100px] mx-auto">
-          <motion.div
-            initial={{ opacity: 0, y: 15 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6 }}
-            className="text-center mb-12 space-y-3"
-          >
-            <div className="flex items-center justify-center gap-4 max-w-md mx-auto">
-              <span className="text-[10px] font-bold tracking-[0.3em] uppercase text-white/40 whitespace-nowrap">INDUSTRIES</span>
-              <div className="h-px bg-brand flex-1" />
-            </div>
-            <h2 className="text-3xl md:text-5xl font-display font-bold tracking-tight text-brand">
-              対応領域。
-            </h2>
-            <p className="text-white/60 text-sm max-w-xl mx-auto leading-relaxed">
-              業界横断のクリエイティブで、多様なブランドを支えてきました。
-            </p>
-          </motion.div>
-          <div className="flex flex-wrap justify-center gap-3 md:gap-4 max-w-3xl mx-auto">
-            {[
-              'エンターテインメント', 'ゲーム', '放送', '広告',
-              'テクノロジー', 'SaaS', '製造業', '教育',
-              'ヘルスケア', 'コンシューマー製品',
-            ].map((industry, idx) => (
-              <motion.span
-                key={idx}
-                initial={{ opacity: 0, scale: 0.9 }}
-                whileInView={{ opacity: 1, scale: 1 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.4, delay: idx * 0.04 }}
-                className="px-5 py-2.5 border border-white/20 text-xs md:text-sm font-bold tracking-wide text-white/80 hover:border-brand hover:text-brand transition-colors"
-              >
-                {industry}
-              </motion.span>
-            ))}
-          </div>
-          <motion.p
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5, delay: 0.4 }}
-            className="text-center text-[11px] text-white/40 mt-10 leading-relaxed max-w-2xl mx-auto"
-          >
-            特に、ゲームIP・eスポーツ・テレビ局・配信プラットフォーム・企業VP・テクノロジー製品のサービス紹介・SNS連動キャンペーンに強みを持ちます。
-          </motion.p>
         </div>
       </section>
 
@@ -2145,6 +1888,304 @@ function WorkModal({ work, onClose }: { work: Work; onClose: () => void }) {
           </div>
         </div>
       </motion.div>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────
+// WHAT WE DO PAGE — 依頼範囲
+// ─────────────────────────────────────────
+function WhatWeDoPage({ onNavigateToContact }: { onNavigateToContact: () => void }) {
+  return (
+    <div className="bg-white">
+      {/* Header */}
+      <section className="pt-28 pb-12 px-6">
+        <motion.div
+          initial={{ opacity: 0, y: 15 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          className="max-w-4xl mx-auto space-y-10"
+        >
+          <div className="text-center">
+            <h1 className="text-6xl md:text-8xl font-display font-bold tracking-tighter leading-[0.95]">WHAT<br />WE DO.</h1>
+            <div className="flex items-center gap-4 mt-5">
+              <span className="text-[10px] font-bold tracking-[0.3em] uppercase text-black/50 whitespace-nowrap">SCOPE OF WORK</span>
+              <div className="h-2 bg-brand flex-1" />
+            </div>
+          </div>
+          <div className="text-center space-y-6">
+            <p className="text-xl md:text-3xl font-display font-bold tracking-tight leading-snug">
+              企画から、CG、編集、運用まで。<br />
+              ワンストップで、最後まで。
+            </p>
+            <p className="text-black/70 text-sm md:text-base leading-relaxed max-w-2xl mx-auto">
+              Anchor Art Worksが提供できる領域、得意とする業界、制作プロセス、よくあるご質問までを一枚で。
+            </p>
+          </div>
+        </motion.div>
+      </section>
+
+      {/* Services */}
+      <section className="py-20 px-6 max-w-[1200px] mx-auto">
+        <motion.div
+          initial={{ opacity: 0, y: 15 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6 }}
+          className="text-center mb-16 space-y-3"
+        >
+          <div className="flex items-center justify-center gap-4 max-w-md mx-auto">
+            <span className="text-[10px] font-bold tracking-[0.3em] uppercase text-black/40 whitespace-nowrap">SERVICES</span>
+            <div className="h-px bg-brand flex-1" />
+          </div>
+          <h2 className="text-2xl md:text-4xl font-display font-bold tracking-tight">提供サービス</h2>
+        </motion.div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {[
+            { title: 'CGデザイン制作', desc: '3DCG・2DCGアニメーション、モーションキャプチャ、リアルタイムレンダリングを駆使し、複雑な情報や抽象概念を、視聴者が直感的に理解できるビジュアルへ変換します。' },
+            { title: 'モーショングラフィックス', desc: 'タイポグラフィ、インフォグラフィック、アニメーションロゴ、トランジション設計まで。視聴者の認知負荷を最小化する「動く図解」を構築します。' },
+            { title: '映像編集', desc: 'テレビ業界標準の制作フローとブランドセーフティを適用。長尺、PR、CM、VP、イベント、SNSショート — 各納品形態に最適な編集を提供します。' },
+            { title: '企画・コンセプト設計', desc: 'デザイン思考と行動経済学を用いた認知構造の設計から、戦略的ストーリーテリング、KPI連動の構成設計まで、制作の前段階を一貫支援します。' },
+            { title: 'SNS / ショート動画運用', desc: 'TikTok、Instagram Reels、YouTube Shorts、X等、各プラットフォームの特性を活かした短尺展開。長尺映像との連動運用も。' },
+            { title: 'マーケティング戦略', desc: '課題設定、ターゲット定義、KPI設計、配信戦略、効果測定まで。テレビ局・総合広告代理店出身のスペシャリストが、投資対効果を最大化します。' },
+          ].map((s, idx) => (
+            <motion.div
+              key={idx}
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: idx * 0.08 }}
+              className="p-6 border border-black/10 hover:border-black/30 transition-colors space-y-3"
+            >
+              <h3 className="text-base md:text-lg font-display font-bold tracking-tight">{s.title}</h3>
+              <p className="text-xs text-black/65 leading-relaxed">{s.desc}</p>
+            </motion.div>
+          ))}
+        </div>
+      </section>
+
+      {/* Strengths */}
+      <section className="bg-black text-white py-24 px-6">
+        <div className="max-w-[900px] mx-auto space-y-16">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+            className="text-center space-y-3"
+          >
+            <h2 className="text-3xl md:text-4xl font-display font-bold text-brand">OUR STRENGTHS.</h2>
+            <p className="text-white/50 text-sm leading-relaxed">
+              社内一貫体制により、戦略設計から最終的なアウトプットまで、<br />
+              ブレのないクオリティを提供します。
+            </p>
+          </motion.div>
+          <div className="border border-white/20 divide-y divide-white/20">
+            {[
+              { title: "Marketing & Design", subtitle: "認知構造の設計", desc: "デザイン思考を用い、視聴者の脳内に情報を定着させるための「情報の重み付け」を映像化。戦略なき映像制作を打破します。", expert: "勝田 康 (CEO)" },
+              { title: "Motion & Creative", subtitle: "論理的動態デザイン", desc: "3DCGとモーショングラフィックスを駆使し、複雑な概念を直感的に理解させる「動く図解」を構築。視覚的ノイズを排除します。", expert: "勝田 友亮 / 矢戸 光一" },
+              { title: "Production & Quality", subtitle: "放送基準の品質担保", desc: "テレビ業界標準の制作フローとブランドセーフティを適用。企業の社会的信頼を保護し、高める映像を提供します。", expert: "目 学" }
+            ].map((item, idx) => (
+              <motion.div key={idx} initial={{ opacity: 0, y: 15 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="p-8 md:p-10 space-y-4">
+                <h3 className="text-xl md:text-2xl font-display font-bold text-brand">{item.title}</h3>
+                <p className="text-[10px] text-white/30 tracking-[0.2em] font-bold uppercase">{item.subtitle}</p>
+                <p className="text-sm text-white/60 leading-relaxed">{item.desc}</p>
+                <div className="pt-4 border-t border-white/10">
+                  <p className="text-[9px] text-white/30 uppercase tracking-widest">Expert in Charge</p>
+                  <p className="text-xs font-medium text-white/50 mt-1">{item.expert}</p>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Process */}
+      <section className="py-24 px-6 bg-white">
+        <div className="max-w-[1100px] mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 15 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+            className="text-center mb-16 space-y-3"
+          >
+            <div className="flex items-center justify-center gap-4 max-w-md mx-auto">
+              <span className="text-[10px] font-bold tracking-[0.3em] uppercase text-black/40 whitespace-nowrap">PROCESS</span>
+              <div className="h-px bg-brand flex-1" />
+            </div>
+            <h2 className="text-3xl md:text-5xl font-display font-bold tracking-tight">
+              アイデアが、カタチに変わるまで。
+            </h2>
+            <p className="text-black/60 text-sm max-w-xl mx-auto leading-relaxed">
+              Anchor Art Works の制作は、5つの工程を通じて進みます。
+            </p>
+          </motion.div>
+          <div className="space-y-6 md:space-y-0 md:grid md:grid-cols-5 md:gap-4">
+            {[
+              { step: '01', title: 'Discovery', subtitle: '課題の整理', desc: 'ヒアリングを通じて、伝えたい価値の核と想定する受け手を明確化。事業課題と本質要件を定義します。' },
+              { step: '02', title: 'Concept', subtitle: 'コンセプト設計', desc: '戦略仮説とビジュアル方向性、ストーリーテリングを設計。デザイン思考で「伝わる構成」を組み立てます。' },
+              { step: '03', title: 'Storyboard', subtitle: '構成設計', desc: '映像の流れとシーンごとの意図、視覚的リズムを文書化。制作前に方向性を固め、手戻りを最小化します。' },
+              { step: '04', title: 'Production', subtitle: '制作', desc: 'CG・撮影・編集・モーション・サウンドまで内製チームで一貫実行。思考の速度に追従するスピードで進めます。' },
+              { step: '05', title: 'Delivery', subtitle: '納品と継続支援', desc: '納品後の効果測定、SNS用ショート展開、別言語版まで、長期的なブランド運用を支援します。' },
+            ].map((p, idx) => (
+              <motion.div key={idx} initial={{ opacity: 0, y: 25 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5, delay: idx * 0.1 }} className="relative md:p-4">
+                <div className="flex md:flex-col gap-4 md:gap-3 items-start">
+                  <div className="font-display font-bold text-3xl md:text-4xl text-brand leading-none shrink-0">{p.step}</div>
+                  <div className="flex-1 space-y-1.5">
+                    <h3 className="text-base md:text-lg font-display font-bold tracking-tight">{p.title}</h3>
+                    <p className="text-[10px] text-black/40 font-bold tracking-widest uppercase">{p.subtitle}</p>
+                    <p className="text-xs text-black/60 leading-relaxed pt-2">{p.desc}</p>
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Industries */}
+      <section className="py-24 px-6 bg-black text-white">
+        <div className="max-w-[1100px] mx-auto">
+          <motion.div initial={{ opacity: 0, y: 15 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.6 }} className="text-center mb-12 space-y-3">
+            <div className="flex items-center justify-center gap-4 max-w-md mx-auto">
+              <span className="text-[10px] font-bold tracking-[0.3em] uppercase text-white/40 whitespace-nowrap">INDUSTRIES</span>
+              <div className="h-px bg-brand flex-1" />
+            </div>
+            <h2 className="text-3xl md:text-5xl font-display font-bold tracking-tight text-brand">対応領域。</h2>
+            <p className="text-white/60 text-sm max-w-xl mx-auto leading-relaxed">業界横断のクリエイティブで、多様なブランドを支えてきました。</p>
+          </motion.div>
+          <div className="flex flex-wrap justify-center gap-3 md:gap-4 max-w-3xl mx-auto">
+            {['エンターテインメント', 'ゲーム', '放送', '広告', 'テクノロジー', 'SaaS', '製造業', '教育', 'ヘルスケア', 'コンシューマー製品'].map((industry, idx) => (
+              <motion.span key={idx} initial={{ opacity: 0, scale: 0.9 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }} transition={{ duration: 0.4, delay: idx * 0.04 }} className="px-5 py-2.5 border border-white/20 text-xs md:text-sm font-bold tracking-wide text-white/80 hover:border-brand hover:text-brand transition-colors">
+                {industry}
+              </motion.span>
+            ))}
+          </div>
+          <motion.p initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} transition={{ duration: 0.5, delay: 0.4 }} className="text-center text-[11px] text-white/40 mt-10 leading-relaxed max-w-2xl mx-auto">
+            特に、ゲームIP・eスポーツ・テレビ局・配信プラットフォーム・企業VP・テクノロジー製品のサービス紹介・SNS連動キャンペーンに強みを持ちます。
+          </motion.p>
+        </div>
+      </section>
+
+      {/* FAQ */}
+      <FAQSection />
+
+      {/* CTA */}
+      <div className="px-6 pb-20 max-w-[1200px] mx-auto">
+        <CTASection onNavigate={onNavigateToContact} />
+      </div>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────
+// JOURNAL PAGE — 現在地
+// ─────────────────────────────────────────
+function JournalPage({ journalPosts, isLoadingJournal, onNavigateToContact }: {
+  journalPosts: NotePost[];
+  isLoadingJournal: boolean;
+  onNavigateToContact: () => void;
+}) {
+  return (
+    <div className="bg-white">
+      {/* Header */}
+      <section className="pt-28 pb-12 px-6">
+        <motion.div
+          initial={{ opacity: 0, y: 15 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          className="max-w-4xl mx-auto space-y-10"
+        >
+          <div className="text-center">
+            <h1 className="text-6xl md:text-8xl font-display font-bold tracking-tighter leading-[0.95]">JOURNAL</h1>
+            <div className="flex items-center gap-4 mt-5">
+              <span className="text-[10px] font-bold tracking-[0.3em] uppercase text-black/50 whitespace-nowrap">CURRENT THOUGHTS</span>
+              <div className="h-2 bg-brand flex-1" />
+            </div>
+          </div>
+          <div className="text-center space-y-6">
+            <p className="text-xl md:text-3xl font-display font-bold tracking-tight leading-snug">
+              いま、Anchorが考えていること。
+            </p>
+            <p className="text-black/70 text-sm md:text-base leading-relaxed max-w-2xl mx-auto">
+              制作の裏側、業界の動向、ブランディングの考察まで。<br />
+              note を通じて発信する Anchor Art Works の現在地。
+            </p>
+          </div>
+        </motion.div>
+      </section>
+
+      {/* Posts */}
+      <section className="py-12 px-6 max-w-[1200px] mx-auto">
+        {isLoadingJournal ? (
+          <div className="flex justify-center py-16">
+            <div className="w-6 h-6 border-2 border-black/10 border-t-black rounded-full animate-spin" />
+          </div>
+        ) : journalPosts.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            {journalPosts.map((post, idx) => (
+              <motion.a
+                key={idx}
+                href={post.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                initial={{ opacity: 0, y: 15 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: idx * 0.06 }}
+                className="group flex flex-col border border-black/8 hover:border-black/20 transition-colors"
+              >
+                <div className="aspect-[16/9] overflow-hidden bg-gray-100 relative">
+                  <div className="absolute top-4 left-4 z-10 bg-white px-3 py-1.5 shadow-sm">
+                    <span className="font-bold text-base leading-none flex items-baseline gap-0.5">
+                      <span className="text-black">no</span>
+                      <span className="text-emerald-500 text-lg leading-none">+</span>
+                      <span className="text-black">e</span>
+                    </span>
+                  </div>
+                  {post.image ? (
+                    <img src={post.image} alt={post.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" referrerPolicy="no-referrer" loading="lazy" />
+                  ) : (
+                    <div className="w-full h-full bg-gradient-to-br from-gray-100 to-gray-200" />
+                  )}
+                </div>
+                <div className="p-6 space-y-3 flex-1 flex flex-col">
+                  {post.date && <p className="text-[10px] text-black/40 font-bold tracking-wider">{post.date}</p>}
+                  <h3 className="text-sm font-bold leading-snug line-clamp-2 group-hover:text-black/60 transition-colors flex-1">
+                    {post.title}
+                  </h3>
+                  {post.excerpt && (
+                    <p className="text-[11px] text-black/60 leading-relaxed line-clamp-3">{post.excerpt}</p>
+                  )}
+                  <div className="pt-2">
+                    <span className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-black/60 group-hover:text-black transition-colors">
+                      READ ON NOTE <ChevronRight size={11} />
+                    </span>
+                  </div>
+                </div>
+              </motion.a>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-20 space-y-6">
+            <p className="text-base md:text-lg text-black/60">記事を準備中です。</p>
+            <a
+              href="https://note.com/anchor_art_works"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 px-6 py-3 border border-black/15 text-[11px] font-bold uppercase tracking-widest hover:bg-black hover:text-white transition-all"
+            >
+              note を見る <ChevronRight size={12} />
+            </a>
+          </div>
+        )}
+      </section>
+
+      {/* CTA */}
+      <div className="px-6 pb-20 max-w-[1200px] mx-auto">
+        <CTASection onNavigate={onNavigateToContact} />
+      </div>
     </div>
   );
 }

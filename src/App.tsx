@@ -54,10 +54,12 @@ interface Work {
   clientName?: string;
   isPublished?: boolean;
   uploadedAt?: string;
+  // Sheet row index — implicit display order (Sheet 行順 = 掲載順)
+  sheetRowIndex?: number;
 }
 
 // Category sort order
-const CATEGORY_ORDER = ['COAPORATE', 'PR', 'EVENT', 'GRAPHIC', 'OTHER'];
+const CATEGORY_ORDER = ['GAME', 'EVENT', 'PR', 'GRAPHIC', 'COAPORATE', 'OTHER'];
 
 interface Message {
   role: 'user' | 'assistant';
@@ -297,7 +299,7 @@ export default function App() {
                   const found = Object.keys(row).find(k => k.trim() === key.trim());
                   return found ? String(row[found] ?? '').trim() : '';
                 };
-                (results.data as any[]).forEach(row => {
+                (results.data as any[]).forEach((row, rowIdx) => {
                   // Multi-form lookup: try with "X列:" prefix variants and plain key
                   const lookup = (...keys: string[]) => {
                     for (const k of keys) {
@@ -327,6 +329,7 @@ export default function App() {
                     displayOrder,
                     clientName,
                     isPublished,
+                    sheetRowIndex: rowIdx,
                     ...(productionNote && { a01_intent: productionNote }),
                     ...(strategy && { m07_solution: strategy }),
                     ...(evidenceUrl && { e_id_link: evidenceUrl }),
@@ -391,14 +394,16 @@ export default function App() {
       // 5. Filter out is_published === false
       merged = merged.filter(w => w.isPublished !== false);
 
-      // 6. Sort: CATEGORY_ORDER → displayOrder → uploadedAt desc
+      // 6. Sort: CATEGORY_ORDER → Sheet row index (掲載順) → uploadedAt desc (fallback)
       merged.sort((a, b) => {
         const ca = CATEGORY_ORDER.indexOf(a.category || 'OTHER');
         const cb = CATEGORY_ORDER.indexOf(b.category || 'OTHER');
         if (ca !== cb) return (ca === -1 ? 999 : ca) - (cb === -1 ? 999 : cb);
-        const da = a.displayOrder ?? Infinity;
-        const db = b.displayOrder ?? Infinity;
-        if (da !== db) return da - db;
+        // Within category: Sheet 行順を最優先（小さい行Indexが先）
+        const ra = a.sheetRowIndex ?? Infinity;
+        const rb = b.sheetRowIndex ?? Infinity;
+        if (ra !== rb) return ra - rb;
+        // Sheet に無い動画は Vimeo アップロード日 新しい順
         return (b.uploadedAt || '').localeCompare(a.uploadedAt || '');
       });
 
@@ -889,37 +894,20 @@ function WorksPage({ works, isLoading, onSelectWork, onNavigateToContact }: {
   onNavigateToContact: () => void;
 }) {
   const [activeCategory, setActiveCategory] = useState('ALL');
-  const [sortBy, setSortBy] = useState<'default' | 'views' | 'recent'>('default');
   const [currentPage, setCurrentPage] = useState(1);
-  const categories = ['ALL', 'COAPORATE', 'PR', 'EVENT', 'GRAPHIC'];
-  const sortOptions: { value: typeof sortBy; label: string }[] = [
-    { value: 'default', label: 'おすすめ' },
-    { value: 'views', label: '再生数順' },
-    { value: 'recent', label: '新着順' },
-  ];
+  const categories = ['ALL', 'GAME', 'EVENT', 'PR', 'GRAPHIC', 'COAPORATE', 'OTHER'];
   const PER_PAGE = 15;
 
-  const categoryFiltered = activeCategory === 'ALL'
+  const filteredWorks = activeCategory === 'ALL'
     ? works
     : works.filter(work => (work.category || 'OTHER').toUpperCase() === activeCategory.toUpperCase());
-
-  // Apply sort
-  const filteredWorks = (() => {
-    if (sortBy === 'views') {
-      return [...categoryFiltered].sort((a, b) => (b.viewCount ?? 0) - (a.viewCount ?? 0));
-    }
-    if (sortBy === 'recent') {
-      return [...categoryFiltered].sort((a, b) => (b.uploadedAt || '').localeCompare(a.uploadedAt || ''));
-    }
-    return categoryFiltered; // default: already sorted by category+order+date in App
-  })();
 
   const totalPages = Math.max(1, Math.ceil(filteredWorks.length / PER_PAGE));
   const safePage = Math.min(currentPage, totalPages);
   const paginatedWorks = filteredWorks.slice((safePage - 1) * PER_PAGE, safePage * PER_PAGE);
 
-  // Reset to page 1 when filter/sort changes
-  useEffect(() => { setCurrentPage(1); }, [activeCategory, sortBy]);
+  // Reset to page 1 when category changes
+  useEffect(() => { setCurrentPage(1); }, [activeCategory]);
 
   // Build page number list: 1 2 3 4 ... last (with ellipsis if needed)
   const pageNumbers: (number | '...')[] = (() => {
@@ -960,10 +948,10 @@ function WorksPage({ works, isLoading, onSelectWork, onNavigateToContact }: {
         </motion.div>
       </section>
 
-      {/* Category Filter + Sort */}
-      <section className="mb-12 px-6 max-w-[1200px] mx-auto space-y-4">
+      {/* Category Filter */}
+      <section className="mb-12 px-6 max-w-[1200px] mx-auto">
         <div className="flex flex-col sm:flex-row items-center gap-6">
-          <div className="flex items-center gap-3 sm:w-32 sm:shrink-0">
+          <div className="flex items-center gap-3">
             <span className="text-sm font-bold tracking-[0.15em] font-display">CATEGORY</span>
             <div className="w-12 h-px bg-black/20" />
           </div>
@@ -979,27 +967,6 @@ function WorksPage({ works, isLoading, onSelectWork, onNavigateToContact }: {
                 }`}
               >
                 {cat}
-              </button>
-            ))}
-          </div>
-        </div>
-        <div className="flex flex-col sm:flex-row items-center gap-6">
-          <div className="flex items-center gap-3 sm:w-32 sm:shrink-0">
-            <span className="text-sm font-bold tracking-[0.15em] font-display">SORT</span>
-            <div className="w-12 h-px bg-black/20" />
-          </div>
-          <div className="flex flex-wrap gap-2">
-            {sortOptions.map((opt) => (
-              <button
-                key={opt.value}
-                onClick={() => setSortBy(opt.value)}
-                className={`px-5 py-1.5 text-[10px] font-bold tracking-widest transition-all ${
-                  sortBy === opt.value
-                    ? "bg-black text-white"
-                    : "bg-brand text-black/60 hover:bg-brand/60"
-                }`}
-              >
-                {opt.label}
               </button>
             ))}
           </div>

@@ -511,15 +511,15 @@ export default function App() {
   return (
     <div className="min-h-screen bg-white text-black font-sans selection:bg-black selection:text-white">
       {/* Header */}
-      <header className={`fixed top-0 w-full z-50 transition-all duration-300 ${isScrolled ? 'bg-white/90 backdrop-blur-md border-b border-black/5 h-16' : 'bg-white h-16'}`}>
+      <header className={`fixed top-0 w-full z-50 transition-all duration-300 ${isScrolled ? 'bg-black/95 backdrop-blur-md border-b border-white/5 h-16' : 'bg-black h-16'}`}>
         <div className="max-w-[1400px] mx-auto px-6 md:px-10 h-full flex items-center justify-between">
           {/* Logo */}
           <button
             onClick={() => { setCurrentPage('home'); setIsMobileMenuOpen(false); }}
             className="flex items-center gap-2 hover:opacity-80 transition-opacity"
           >
-            <img src="/logo.png" alt="AAW" style={{ height: 28 }} className="w-auto object-contain" />
-            <span className="font-display font-semibold text-sm tracking-wide hidden sm:block">Anchor Art Works</span>
+            <img src="/ol_AAW_Logo.jpg" alt="AAW" style={{ height: 28 }} className="w-auto object-contain" />
+            <span className="font-serif font-bold text-sm tracking-wide hidden sm:block text-white">Anchor Art Works</span>
           </button>
 
           {/* Desktop Nav */}
@@ -530,8 +530,8 @@ export default function App() {
                 onClick={() => setCurrentPage(link.id as Page)}
                 className={`relative py-1 transition-colors ${
                   currentPage === link.id
-                    ? "text-black border-b border-black"
-                    : "text-black/50 hover:text-black"
+                    ? "text-white border-b border-white"
+                    : "text-white/50 hover:text-white"
                 }`}
               >
                 {link.label}
@@ -540,7 +540,7 @@ export default function App() {
           </nav>
 
           {/* Mobile toggle */}
-          <button className="md:hidden p-2 text-black" onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}>
+          <button className="md:hidden p-2 text-white" onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}>
             {isMobileMenuOpen ? <X size={22} /> : <Menu size={22} />}
           </button>
         </div>
@@ -552,15 +552,15 @@ export default function App() {
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
-              className="absolute top-16 left-0 w-full bg-white border-b border-black/5 shadow-lg md:hidden"
+              className="absolute top-16 left-0 w-full bg-black border-b border-white/5 shadow-lg md:hidden"
             >
               <nav className="flex flex-col p-6 space-y-1">
                 {navLinks.map((link) => (
                   <button
                     key={link.id}
                     onClick={() => { setCurrentPage(link.id as Page); setIsMobileMenuOpen(false); }}
-                    className={`text-xs font-bold uppercase tracking-widest text-left py-4 border-b border-black/5 ${
-                      currentPage === link.id ? "text-black" : "text-black/40"
+                    className={`text-xs font-bold uppercase tracking-widest text-left py-4 border-b border-white/5 ${
+                      currentPage === link.id ? "text-white" : "text-white/40"
                     }`}
                   >
                     {link.label}
@@ -616,15 +616,15 @@ export default function App() {
         )}
       </AnimatePresence>
 
-      <footer className="bg-black text-white py-8 px-6 md:px-10">
+      <footer className="bg-brand text-black py-8 px-6 md:px-10">
         <div className="max-w-[1400px] mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
           <button
             onClick={() => setCurrentPage('privacy')}
-            className="text-[10px] uppercase font-bold tracking-widest text-white/40 hover:text-white transition-colors"
+            className="text-[10px] uppercase font-bold tracking-widest text-black/60 hover:text-black transition-colors"
           >
             Privacy Policy
           </button>
-          <div className="text-white/40 text-[10px] uppercase font-bold tracking-widest">
+          <div className="text-black/60 text-[10px] uppercase font-bold tracking-widest">
             © Anchor Art Works Co. Ltd.
           </div>
         </div>
@@ -648,29 +648,12 @@ function HomePage({ works, isLoading, isLoadingJournal, journalPosts, onNavigate
   return (
     <div className="bg-white">
       {/* Hero */}
-      <section className="relative bg-brand min-h-[80vh] flex flex-col items-center justify-center text-center px-6 py-24 overflow-hidden">
-        {/* Background Video */}
-        <video
-          autoPlay
-          loop
-          muted
-          playsInline
-          preload="metadata"
-          poster="/video/hero-poster.jpg"
-          className="absolute inset-0 w-full h-full object-cover z-0"
-          aria-hidden="true"
-        >
-          <source src="/video/hero.mp4" type="video/mp4" />
-        </video>
-
-        {/* Pink overlay (brand tint) */}
-        <div className="absolute inset-0 bg-brand/40 z-10" aria-hidden="true" />
-
+      <section className="bg-brand min-h-[50vh] flex flex-col items-center justify-center text-center px-6 py-12">
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.8 }}
-          className="relative z-20 flex flex-col items-center gap-6 max-w-2xl mx-auto"
+          className="flex flex-col items-center gap-6 max-w-2xl mx-auto"
         >
           <img src="/logo.png" alt="Anchor Art Works" className="h-28 md:h-36 w-auto object-contain" />
           <div className="space-y-4">

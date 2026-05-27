@@ -5,7 +5,7 @@
 
 /// <reference types="vite/client" />
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, Fragment } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { GoogleGenAI } from "@google/genai";
 import Papa from "papaparse";
@@ -753,12 +753,13 @@ function HomePage({ works, isLoading, isLoadingJournal, journalPosts, onNavigate
                   }).slice(0, 3)
                 : works.slice(0, 3);
               return featured.map((work, idx) => (
-                <SelectedWorkCard
-                  key={work.id}
-                  work={work}
-                  idx={idx}
-                  onClick={() => onSelectWork(work)}
-                />
+                <Fragment key={work.id}>
+                  <SelectedWorkCard
+                    work={work}
+                    idx={idx}
+                    onClick={() => onSelectWork(work)}
+                  />
+                </Fragment>
               ));
             })()
           )}
@@ -1810,11 +1811,13 @@ Your mission is to provide professional consultation about the company's service
 // ─────────────────────────────────────────
 // SELECTED WORK CARD (HOME) — with Netflix-style hover preview
 // ─────────────────────────────────────────
-function SelectedWorkCard({ work, idx, onClick }: {
+interface SelectedWorkCardProps {
   work: Work;
   idx: number;
   onClick: () => void;
-}) {
+}
+
+function SelectedWorkCard({ work, idx, onClick }: SelectedWorkCardProps) {
   const [isHovered, setIsHovered] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);

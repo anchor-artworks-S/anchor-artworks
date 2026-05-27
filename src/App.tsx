@@ -636,7 +636,7 @@ export default function App() {
         )}
       </AnimatePresence>
 
-      <footer className="bg-brand text-black">
+      <footer className="bg-black text-white">
         <div className="max-w-[1400px] mx-auto px-6 md:px-10 py-14 md:py-16">
           {/* Sitemap */}
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-x-6 gap-y-8 mb-12">
@@ -653,24 +653,24 @@ export default function App() {
                 onClick={() => setCurrentPage(item.id as Page)}
                 className="text-left group"
               >
-                <div className="text-base md:text-lg font-display font-bold tracking-tight text-black group-hover:opacity-60 transition-opacity">
+                <div className="text-base md:text-lg font-display font-bold tracking-tight text-white group-hover:text-brand transition-colors">
                   {item.label}
                 </div>
-                <div className="text-[11px] text-black/55 mt-2 leading-relaxed">{item.desc}</div>
+                <div className="text-[11px] text-white/55 mt-2 leading-relaxed">{item.desc}</div>
               </button>
             ))}
           </div>
 
           {/* Social / Contact links */}
-          <div className="pt-8 border-t border-black/15 mb-6">
+          <div className="pt-8 border-t border-white/15 mb-6">
             <div className="flex flex-wrap items-center justify-center md:justify-start gap-x-6 gap-y-3">
-              <span className="text-[10px] font-bold tracking-[0.3em] uppercase text-black/40">FOLLOW &amp; CONTACT</span>
+              <span className="text-[10px] font-bold tracking-[0.3em] uppercase text-brand">FOLLOW &amp; CONTACT</span>
               <div className="flex items-center gap-4">
                 <a
                   href="https://note.com/anchor_art_works"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-widest text-black/70 hover:text-black transition-colors"
+                  className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-widest text-white/70 hover:text-brand transition-colors"
                   aria-label="note"
                 >
                   <BookOpen size={14} />
@@ -680,7 +680,7 @@ export default function App() {
                   href="https://vimeo.com/user27201919"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-widest text-black/70 hover:text-black transition-colors"
+                  className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-widest text-white/70 hover:text-brand transition-colors"
                   aria-label="Vimeo"
                 >
                   <Video size={14} />
@@ -688,7 +688,7 @@ export default function App() {
                 </a>
                 <a
                   href="mailto:info@anchor-japan.com"
-                  className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-widest text-black/70 hover:text-black transition-colors"
+                  className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-widest text-white/70 hover:text-brand transition-colors"
                   aria-label="Email"
                 >
                   <Mail size={14} />
@@ -702,11 +702,11 @@ export default function App() {
           <div className="pt-4 flex flex-col md:flex-row justify-between items-center gap-3">
             <button
               onClick={() => setCurrentPage('privacy')}
-              className="text-[10px] uppercase font-bold tracking-widest text-black/60 hover:text-black transition-colors"
+              className="text-[10px] uppercase font-bold tracking-widest text-white/60 hover:text-brand transition-colors"
             >
               Privacy Policy
             </button>
-            <div className="text-black/60 text-[10px] uppercase font-bold tracking-widest">
+            <div className="text-white/60 text-[10px] uppercase font-bold tracking-widest">
               © Anchor Art Works Co. Ltd.
             </div>
           </div>
@@ -728,23 +728,98 @@ function HomePage({ works, isLoading, isLoadingJournal, journalPosts, onNavigate
   onNavigateToContact: () => void;
   onSelectWork: (work: Work) => void;
 }) {
+  // Kinetic typography phrases (loop)
+  const phrases = [
+    '思考の速度で。',
+    '最後の磨きで。',
+    '納得のカタチへ。',
+    'ひらめきの隣で。',
+  ];
+  const [phraseIdx, setPhraseIdx] = useState(0);
+  useEffect(() => {
+    const id = setInterval(() => setPhraseIdx(i => (i + 1) % phrases.length), 3500);
+    return () => clearInterval(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   return (
     <div className="bg-white">
       {/* Hero */}
-      <section className="bg-brand min-h-[42vh] md:min-h-[55vh] flex flex-col items-center justify-center text-center px-6 pt-24 pb-10">
+      <section className="relative bg-brand min-h-[48vh] md:min-h-[62vh] flex flex-col items-center justify-center text-center px-6 pt-24 pb-12 overflow-hidden">
+        {/* Floating geometric shapes (背景) */}
+        <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
+          <motion.div
+            className="absolute w-[320px] h-[320px] rounded-full bg-white/35 blur-2xl"
+            style={{ left: '-8%', top: '8%' }}
+            animate={{ x: [0, 40, -20, 0], y: [0, -30, 15, 0], rotate: [0, 20, -10, 0] }}
+            transition={{ duration: 36, repeat: Infinity, ease: 'easeInOut' }}
+          />
+          <motion.div
+            className="absolute w-[280px] h-[280px] rounded-full bg-black/[0.06] blur-2xl"
+            style={{ right: '-6%', bottom: '5%' }}
+            animate={{ x: [0, -35, 15, 0], y: [0, 25, -10, 0], rotate: [0, -15, 10, 0] }}
+            transition={{ duration: 40, repeat: Infinity, ease: 'easeInOut' }}
+          />
+          <motion.div
+            className="absolute w-[180px] h-[180px] bg-white/40 blur-xl"
+            style={{ left: '12%', bottom: '15%', borderRadius: '30%' }}
+            animate={{ x: [0, 25, -15, 0], y: [0, -20, 10, 0], rotate: [0, 45, 90, 135, 180] }}
+            transition={{ duration: 48, repeat: Infinity, ease: 'linear' }}
+          />
+          <motion.div
+            className="absolute w-[150px] h-[150px] bg-white/25 blur-xl"
+            style={{ right: '18%', top: '12%' }}
+            animate={{ x: [0, -20, 10, 0], y: [0, 15, -8, 0], rotate: [0, 60, 120, 180] }}
+            transition={{ duration: 42, repeat: Infinity, ease: 'linear' }}
+          />
+          <motion.div
+            className="absolute w-[90px] h-[90px] rounded-full bg-brand blur-md"
+            style={{ left: '45%', top: '20%' }}
+            animate={{ x: [0, 15, -8, 0], y: [0, -12, 6, 0] }}
+            transition={{ duration: 28, repeat: Infinity, ease: 'easeInOut' }}
+          />
+        </div>
+
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.8 }}
-          className="flex flex-col items-center gap-6 max-w-2xl mx-auto"
+          className="relative z-10 flex flex-col items-center gap-6 max-w-4xl mx-auto"
         >
-          <div className="space-y-6">
-            <h1 className="text-4xl md:text-7xl font-display font-bold tracking-tight leading-[1.05]">
-              CG・映像制作を、<br />思考の速度で。
+          <div className="space-y-5">
+            <h1 className="text-4xl md:text-6xl font-display font-bold tracking-tighter leading-[1.05]">
+              <span className="block">CG・映像制作を、</span>
+              <span className="block relative h-[1.2em] overflow-y-hidden">
+                {/* Static fallback for SEO/AI crawlers: 思考の速度で。 */}
+                <span className="sr-only">思考の速度で。</span>
+                <AnimatePresence mode="wait">
+                  <motion.span
+                    key={phraseIdx}
+                    className="absolute inset-0 flex justify-center whitespace-nowrap"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.3 }}
+                    aria-hidden="true"
+                  >
+                    {phrases[phraseIdx].split('').map((ch, i) => (
+                      <motion.span
+                        key={i}
+                        className="inline-block"
+                        initial={{ opacity: 0, y: 24, filter: 'blur(6px)' }}
+                        animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+                        exit={{ opacity: 0, y: -24, filter: 'blur(6px)' }}
+                        transition={{ duration: 0.45, delay: i * 0.035, ease: [0.22, 1, 0.36, 1] }}
+                      >
+                        {ch}
+                      </motion.span>
+                    ))}
+                  </motion.span>
+                </AnimatePresence>
+              </span>
             </h1>
-            <p className="text-sm md:text-base text-black/70 leading-relaxed">
-              企画からCG・編集まで。豊富なアイデアを、最速でカタチに。<br />
-              Anchor Art Worksは、スピードとクオリティを両立するクリエイティブパートナーです。
+            <p className="text-sm md:text-base text-black/70 leading-relaxed font-medium tracking-wide">
+              企画から納品まで。最速でカタチに。
             </p>
           </div>
         </motion.div>
@@ -1318,6 +1393,26 @@ function ClientLogo({ client }: { client: { name: string; logoSrc: string } }) {
 // ─────────────────────────────────────────
 function ContactPage({ works, onNavigateToPrivacy }: { works: Work[]; onNavigateToPrivacy: () => void }) {
   const [showAI, setShowAI] = useState(false);
+  const [initialPrompt, setInitialPrompt] = useState<string>('');
+  const [quickInput, setQuickInput] = useState('');
+
+  const presetQuestions = [
+    '1分のCG動画の納期と費用感は？',
+    '実績の中でゲーム系の事例は？',
+    '企画から相談できますか？',
+    'AIを使った制作プロセスとは？',
+  ];
+
+  const openAIWithPrompt = (q: string) => {
+    setInitialPrompt(q);
+    setShowAI(true);
+  };
+
+  const handleQuickSubmit = () => {
+    if (!quickInput.trim()) return;
+    openAIWithPrompt(quickInput.trim());
+    setQuickInput('');
+  };
 
   return (
     <div className="bg-white pb-0">
@@ -1353,7 +1448,7 @@ function ContactPage({ works, onNavigateToPrivacy }: { works: Work[]; onNavigate
       </section>
 
       {/* AI Concierge */}
-      <section className="px-6 mb-20 max-w-[800px] mx-auto">
+      <section className="px-6 mb-20 max-w-[820px] mx-auto">
         <div className="relative pt-8">
           <div className="absolute top-0 left-1/2 -translate-x-1/2 z-20">
             <div className="bg-brand text-black px-10 py-1.5 text-center">
@@ -1361,22 +1456,66 @@ function ContactPage({ works, onNavigateToPrivacy }: { works: Work[]; onNavigate
             </div>
             <div className="w-0 h-0 border-l-[10px] border-l-transparent border-r-[10px] border-r-transparent border-t-[10px] border-t-brand mx-auto" />
           </div>
-          <div className="bg-black text-white p-10 md:p-14 text-center space-y-6">
-            <div className="space-y-2">
-              <p className="text-white/40 font-bold tracking-[0.3em] text-[11px] uppercase">AI CONCIERGE</p>
-              <h2 className="text-2xl md:text-3xl font-display font-bold text-brand">Anchor Art Works</h2>
+          <div className="bg-black text-white p-8 md:p-12 space-y-7">
+            {/* Header with live indicator */}
+            <div className="text-center space-y-3">
+              <div className="flex items-center justify-center gap-2">
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-brand"></span>
+                </span>
+                <p className="text-white/50 font-bold tracking-[0.3em] text-[10px] uppercase">AI Concierge — Online</p>
+              </div>
+              <h2 className="text-2xl md:text-3xl font-display font-bold text-brand tracking-tight">
+                まずは、AIに聞いてみる。
+              </h2>
+              <p className="text-xs md:text-sm text-white/60 leading-relaxed max-w-md mx-auto">
+                納期・費用・実績・ワークフローまで。<br />
+                AAWのAIコンシェルジュが、Anchor Art Worksの知識ベースから即座にお答えします。
+              </p>
             </div>
-            <p className="text-xs text-white/60 leading-relaxed max-w-sm mx-auto">
-              お急ぎの場合は、AIコンシェルジュが<br />
-              貴社の課題に最適な制作チームや解決アプローチを即座に回答いたします。
+
+            {/* Quick input field */}
+            <div className="bg-white/5 border border-white/10 rounded-xl p-2 flex items-center gap-2 focus-within:border-brand transition-colors">
+              <Sparkles size={16} className="text-brand ml-2 shrink-0" />
+              <input
+                type="text"
+                value={quickInput}
+                onChange={(e) => setQuickInput(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleQuickSubmit()}
+                placeholder="例：1分のCG動画、最短どれくらいで作れる？"
+                className="flex-grow bg-transparent text-sm text-white placeholder:text-white/30 outline-none py-2"
+              />
+              <button
+                onClick={handleQuickSubmit}
+                disabled={!quickInput.trim()}
+                className="bg-brand text-black w-10 h-10 rounded-lg flex items-center justify-center hover:opacity-90 disabled:opacity-20 transition-opacity shrink-0"
+                aria-label="送信"
+              >
+                <Send size={15} />
+              </button>
+            </div>
+
+            {/* Preset chips */}
+            <div className="space-y-3">
+              <p className="text-[10px] font-bold tracking-[0.3em] uppercase text-white/40 text-center">よくある質問</p>
+              <div className="flex flex-wrap gap-2 justify-center">
+                {presetQuestions.map((q) => (
+                  <button
+                    key={q}
+                    onClick={() => openAIWithPrompt(q)}
+                    className="px-4 py-2 bg-white/5 border border-white/10 text-xs text-white/80 rounded-full hover:bg-brand hover:text-black hover:border-brand transition-all"
+                  >
+                    {q}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Disclaimer */}
+            <p className="text-[10px] text-white/30 text-center leading-relaxed">
+              回答はAIにより生成されます。重要な内容は担当者へお問い合わせください。
             </p>
-            <button
-              onClick={() => setShowAI(true)}
-              className="px-10 py-3 bg-brand text-black font-bold text-[10px] uppercase tracking-[0.2em] hover:opacity-90 transition-all flex items-center gap-3 mx-auto group"
-            >
-              <span>LAUNCH AI ASSISTANT</span>
-              <ArrowRight size={13} className="group-hover:translate-x-1 transition-transform" />
-            </button>
           </div>
         </div>
       </section>
@@ -1483,7 +1622,7 @@ function ContactPage({ works, onNavigateToPrivacy }: { works: Work[]; onNavigate
                 </button>
               </div>
               <div className="flex-grow overflow-hidden bg-gray-50">
-                <ChatConcierge works={works} />
+                <ChatConcierge works={works} initialPrompt={initialPrompt} />
               </div>
               <div className="p-2 bg-white border-t border-black/5 text-[9px] text-black/30 font-bold uppercase tracking-widest text-center">
                 Replies are generated by AI. Please confirm important details with our team.
@@ -1496,7 +1635,7 @@ function ContactPage({ works, onNavigateToPrivacy }: { works: Work[]; onNavigate
   );
 }
 
-function ChatConcierge({ works }: { works: Work[] }) {
+function ChatConcierge({ works, initialPrompt }: { works: Work[]; initialPrompt?: string }) {
   const [messages, setMessages] = useState<Message[]>([
     { role: 'assistant', content: 'こんにちは。Anchor Art WorksのAIコンシェルジュです。代表の勝田が提唱する「デザイン思考」と、プロデューサーの目が管理する「放送品質」を軸に、貴社の課題に最適なアプローチをご提案します。どのような課題をお持ちですか？' }
   ]);
@@ -1504,10 +1643,24 @@ function ChatConcierge({ works }: { works: Work[] }) {
   const [isTyping, setIsTyping] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const aiRef = useRef<GoogleGenAI | null>(null);
+  const sentInitialRef = useRef<string>('');
 
   useEffect(() => {
     aiRef.current = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || '' });
   }, []);
+
+  // Auto-send when initialPrompt is provided (once per prompt value)
+  useEffect(() => {
+    if (initialPrompt && initialPrompt !== sentInitialRef.current && aiRef.current) {
+      sentInitialRef.current = initialPrompt;
+      // small delay so AI client is ready
+      const t = setTimeout(() => {
+        handleSend(initialPrompt);
+      }, 100);
+      return () => clearTimeout(t);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialPrompt]);
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -2257,25 +2410,122 @@ function WhatWeDoPage({ onNavigateToContact }: { onNavigateToContact: () => void
         </div>
       </section>
 
+      {/* AI × Human Workflow */}
+      <section className="bg-gradient-to-b from-black via-black to-zinc-900 text-white py-24 px-6 relative overflow-hidden">
+        {/* subtle dot grid background */}
+        <div
+          className="absolute inset-0 opacity-[0.07] pointer-events-none"
+          style={{
+            backgroundImage: 'radial-gradient(circle, #edc8d7 1px, transparent 1px)',
+            backgroundSize: '24px 24px',
+          }}
+        />
+        <div className="max-w-[1100px] mx-auto relative">
+          <motion.div
+            initial={{ opacity: 0, y: 15 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+            className="text-center mb-14 space-y-3"
+          >
+            <div className="flex items-center justify-center gap-4 max-w-md mx-auto">
+              <div className="flex items-center gap-2">
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-brand"></span>
+                </span>
+                <span className="text-[10px] font-bold tracking-[0.3em] uppercase text-white/50 whitespace-nowrap">AI × HUMAN WORKFLOW</span>
+              </div>
+              <div className="h-px bg-brand flex-1" />
+            </div>
+            <h2 className="text-3xl md:text-5xl font-display font-bold tracking-tight text-brand">
+              最速の理由は、<br className="md:hidden" />分業にある。
+            </h2>
+            <p className="text-white/60 text-sm md:text-base max-w-2xl mx-auto leading-relaxed">
+              AIが「速さ」を、人が「品質」を担う。<br />
+              生成AIを制作の各工程に組み込み、思考の速度でアウトプットへつなげます。
+            </p>
+          </motion.div>
+
+          {/* Workflow grid */}
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
+            {[
+              { step: '01', name: 'Discovery', ai: 'リサーチ・要件整理の高速化', human: 'クライアントの本質要件を引き出す', tools: 'ChatGPT / Claude' },
+              { step: '02', name: 'Concept', ai: 'ビジュアル方向性の量的探索', human: '戦略的なコンセプト判断', tools: 'Midjourney / Sora' },
+              { step: '03', name: 'Storyboard', ai: 'コンテ案・代替案の自動生成', human: '演出意図とストーリー設計', tools: 'Gemini / Runway' },
+              { step: '04', name: 'Production', ai: 'テクスチャ生成・編集補助', human: 'CG・モーション・編集の品質磨き', tools: 'Runway / Topaz / Custom' },
+              { step: '05', name: 'Delivery', ai: '多言語版・短尺展開の自動化', human: '最終納品のブランドチェック', tools: 'ElevenLabs / 内製' },
+            ].map((w, idx) => (
+              <motion.div
+                key={idx}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: idx * 0.08 }}
+                className="bg-white/5 border border-white/10 p-5 space-y-4 hover:border-brand/40 transition-colors"
+              >
+                <div className="flex items-center justify-between">
+                  <span className="font-display font-bold text-2xl text-brand">{w.step}</span>
+                  <span className="text-[9px] text-white/30 font-bold uppercase tracking-widest">Phase</span>
+                </div>
+                <h3 className="text-base font-display font-bold tracking-tight">{w.name}</h3>
+                <div className="space-y-3 pt-2">
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-1.5">
+                      <Sparkles size={10} className="text-brand" />
+                      <span className="text-[9px] font-bold uppercase tracking-widest text-brand">AI</span>
+                    </div>
+                    <p className="text-[11px] text-white/70 leading-relaxed">{w.ai}</p>
+                  </div>
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-1.5">
+                      <div className="w-2 h-2 rounded-full bg-white/60" />
+                      <span className="text-[9px] font-bold uppercase tracking-widest text-white/60">Human</span>
+                    </div>
+                    <p className="text-[11px] text-white/70 leading-relaxed">{w.human}</p>
+                  </div>
+                </div>
+                <div className="pt-3 border-t border-white/10">
+                  <p className="text-[9px] text-white/30 uppercase tracking-widest">Tools</p>
+                  <p className="text-[10px] text-white/50 mt-1">{w.tools}</p>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+
+          {/* Closing line */}
+          <motion.p
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6, delay: 0.4 }}
+            className="text-center text-sm md:text-base text-white/70 mt-12 leading-relaxed max-w-2xl mx-auto"
+          >
+            <span className="text-brand font-bold">AIで時間を、人で品質を守る。</span><br />
+            <span className="text-white/50 text-xs md:text-sm">これが、Anchor Art Worksが「思考の速度」を実現する理由です。</span>
+          </motion.p>
+        </div>
+      </section>
+
       {/* Industries */}
-      <section className="py-24 px-6 bg-black text-white">
+      <section className="py-24 px-6 bg-brand text-black">
         <div className="max-w-[1100px] mx-auto">
           <motion.div initial={{ opacity: 0, y: 15 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.6 }} className="text-center mb-12 space-y-3">
             <div className="flex items-center justify-center gap-4 max-w-md mx-auto">
-              <span className="text-[10px] font-bold tracking-[0.3em] uppercase text-white/40 whitespace-nowrap">INDUSTRIES</span>
-              <div className="h-px bg-brand flex-1" />
+              <span className="text-[10px] font-bold tracking-[0.3em] uppercase text-black/50 whitespace-nowrap">INDUSTRIES</span>
+              <div className="h-px bg-black/30 flex-1" />
             </div>
-            <h2 className="text-3xl md:text-5xl font-display font-bold tracking-tight text-brand">対応領域。</h2>
-            <p className="text-white/60 text-sm max-w-xl mx-auto leading-relaxed">業界横断のクリエイティブで、多様なブランドを支えてきました。</p>
+            <h2 className="text-3xl md:text-5xl font-display font-bold tracking-tight text-black">対応領域。</h2>
+            <p className="text-black/70 text-sm max-w-xl mx-auto leading-relaxed">業界横断のクリエイティブで、多様なブランドを支えてきました。</p>
           </motion.div>
           <div className="flex flex-wrap justify-center gap-3 md:gap-4 max-w-3xl mx-auto">
             {['エンターテインメント', 'ゲーム', '放送', '広告', 'テクノロジー', 'SaaS', '製造業', '教育', 'ヘルスケア', 'コンシューマー製品'].map((industry, idx) => (
-              <motion.span key={idx} initial={{ opacity: 0, scale: 0.9 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }} transition={{ duration: 0.4, delay: idx * 0.04 }} className="px-5 py-2.5 border border-white/20 text-xs md:text-sm font-bold tracking-wide text-white/80 hover:border-brand hover:text-brand transition-colors">
+              <motion.span key={idx} initial={{ opacity: 0, scale: 0.9 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }} transition={{ duration: 0.4, delay: idx * 0.04 }} className="px-5 py-2.5 border border-black/25 bg-white/30 text-xs md:text-sm font-bold tracking-wide text-black/80 hover:bg-black hover:text-white hover:border-black transition-colors">
                 {industry}
               </motion.span>
             ))}
           </div>
-          <motion.p initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} transition={{ duration: 0.5, delay: 0.4 }} className="text-center text-[11px] text-white/40 mt-10 leading-relaxed max-w-2xl mx-auto">
+          <motion.p initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} transition={{ duration: 0.5, delay: 0.4 }} className="text-center text-[11px] text-black/60 mt-10 leading-relaxed max-w-2xl mx-auto">
             特に、ゲームIP・eスポーツ・テレビ局・配信プラットフォーム・企業VP・テクノロジー製品のサービス紹介・SNS連動キャンペーンに強みを持ちます。
           </motion.p>
         </div>

@@ -731,7 +731,7 @@ function HomePage({ works, isLoading, isLoadingJournal, journalPosts, onNavigate
   return (
     <div className="bg-white">
       {/* Hero */}
-      <section className="bg-brand min-h-[50vh] flex flex-col items-center justify-center text-center px-6 pt-28 pb-12">
+      <section className="bg-brand min-h-[42vh] md:min-h-[55vh] flex flex-col items-center justify-center text-center px-6 pt-24 pb-10">
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -1686,21 +1686,32 @@ function SelectedWorkCard({ work, idx, onClick }: SelectedWorkCardProps) {
 function FloatingCTA({ onClick, hidden }: { onClick: () => void; hidden: boolean }) {
   if (hidden) return null;
   return (
-    <button
-      onClick={onClick}
-      className="hidden md:flex fixed right-0 top-1/2 -translate-y-1/2 z-40 bg-brand text-black px-3 py-8 hover:bg-black hover:text-white transition-all duration-300 shadow-lg group items-center"
-      aria-label="START A PROJECT"
-    >
-      <div className="flex flex-col items-center gap-3">
-        <span
-          className="text-[11px] font-bold tracking-[0.35em] uppercase"
-          style={{ writingMode: 'vertical-rl', textOrientation: 'mixed' }}
-        >
-          START A PROJECT
-        </span>
-        <ArrowRight size={14} className="rotate-90 group-hover:translate-y-1 transition-transform" />
-      </div>
-    </button>
+    <>
+      {/* Desktop: right-edge vertical label */}
+      <button
+        onClick={onClick}
+        className="hidden md:flex fixed right-0 top-1/2 -translate-y-1/2 z-40 bg-brand text-black px-3 py-8 hover:bg-black hover:text-white transition-all duration-300 shadow-lg group items-center"
+        aria-label="START A PROJECT"
+      >
+        <div className="flex flex-col items-center gap-3">
+          <span
+            className="text-[11px] font-bold tracking-[0.35em] uppercase"
+            style={{ writingMode: 'vertical-rl', textOrientation: 'mixed' }}
+          >
+            START A PROJECT
+          </span>
+          <ArrowRight size={14} className="rotate-90 group-hover:translate-y-1 transition-transform" />
+        </div>
+      </button>
+      {/* Mobile: bottom-right FAB */}
+      <button
+        onClick={onClick}
+        className="md:hidden fixed right-4 bottom-5 z-40 bg-brand text-black w-14 h-14 rounded-full shadow-lg flex items-center justify-center active:scale-95 transition-transform"
+        aria-label="お問い合わせ"
+      >
+        <Mail size={22} strokeWidth={2.2} />
+      </button>
+    </>
   );
 }
 

@@ -182,8 +182,43 @@ const FALLBACK_WORKS_DATA: Work[] = [
   },
 ];
 
+// Derive page from URL path
+function pathToPage(pathname: string): Page {
+  const p = pathname.toLowerCase();
+  if (p.startsWith('/works')) return 'works';
+  if (p.startsWith('/about')) return 'about';
+  if (p.startsWith('/contact')) return 'contact';
+  if (p.startsWith('/privacy')) return 'privacy';
+  return 'home';
+}
+
+function pageToPath(page: Page): string {
+  return page === 'home' ? '/' : `/${page}`;
+}
+
 export default function App() {
-  const [currentPage, setCurrentPage] = useState<Page>('home');
+  const [currentPage, _setCurrentPage] = useState<Page>(() =>
+    typeof window !== 'undefined' ? pathToPage(window.location.pathname) : 'home'
+  );
+
+  // Wrapper: update state AND URL (via History API, no page reload)
+  const setCurrentPage = (page: Page) => {
+    _setCurrentPage(page);
+    if (typeof window !== 'undefined') {
+      const newPath = pageToPath(page);
+      if (window.location.pathname !== newPath) {
+        window.history.pushState({}, '', newPath);
+      }
+    }
+  };
+
+  // Sync state when user uses browser back/forward
+  useEffect(() => {
+    const onPopState = () => _setCurrentPage(pathToPage(window.location.pathname));
+    window.addEventListener('popstate', onPopState);
+    return () => window.removeEventListener('popstate', onPopState);
+  }, []);
+
   const [selectedWork, setSelectedWork] = useState<Work | null>(null);
   const [works, setWorks] = useState<Work[]>(FALLBACK_WORKS_DATA);
   const [journalPosts, setJournalPosts] = useState<NotePost[]>([]);

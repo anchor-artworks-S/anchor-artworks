@@ -410,32 +410,91 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    const fetchNoteRSS = async () => {
-      setIsLoadingJournal(true);
+    const MAX_POSTS = 4;
+
+    // Fetch pinned posts from Sheet (if URL env var exists)
+    const fetchNotePins = async (): Promise<NotePost[]> => {
+      const pinsUrl = import.meta.env.VITE_NOTE_PINS_SHEET_URL;
+      if (!pinsUrl) return [];
       try {
-        const response = await fetch(`https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(NOTE_RSS_URL)}`);
-        if (!response.ok) throw new Error("Note RSS fetch failed");
-        const data = await response.json();
-        if (data.items && data.items.length > 0) {
-          const fetchedPosts: NotePost[] = data.items.map((item: any) => ({
-            title: item.title,
-            date: new Date(item.pubDate).toLocaleDateString('ja-JP').replace(/\//g, '.'),
-            excerpt: (item.description || '').replace(/<[^>]*>?/gm, '').substring(0, 100) + "...",
-            url: item.link,
-            tags: item.categories || [],
-            image: item.thumbnail || item.enclosure?.link
-          }));
-          setJournalPosts(fetchedPosts.slice(0, 4));
-        }
-        // On no items, leave journalPosts as [] → static promo cards will render as fallback
+        const response = await fetch(pinsUrl);
+        if (!response.ok) return [];
+        const csvText = await response.text();
+        return new Promise((resolve) => {
+          Papa.parse(csvText, {
+            header: true,
+            skipEmptyLines: true,
+            complete: (results) => {
+              const pins: { post: NotePost; order: number }[] = [];
+              (results.data as any[]).forEach((row) => {
+                // Partial-match lookup, same pattern as Works sheet
+                const lookup = (kw: string) => {
+                  const lc = kw.toLowerCase();
+                  const found = Object.keys(row).find(k => k.toLowerCase().includes(lc));
+                  return found ? String(row[found] ?? '').trim() : '';
+                };
+                const title = lookup('title');
+                const url = lookup('url');
+                if (!title || !url) return;
+                const orderStr = lookup('display_order');
+                const order = orderStr ? Number(orderStr) : Infinity;
+                pins.push({
+                  post: {
+                    title,
+                    url,
+                    excerpt: lookup('excerpt'),
+                    date: lookup('date'),
+                    tags: [],
+                    image: lookup('thumbnail') || undefined,
+                  },
+                  order,
+                });
+              });
+              pins.sort((a, b) => a.order - b.order);
+              resolve(pins.map(p => p.post));
+            },
+            error: () => resolve([]),
+          });
+        });
       } catch (e) {
-        // RSS fetch failed → leave journalPosts as [] → static promo cards render
-        console.warn("Note RSS fetch failed, falling back to static cards:", e);
-      } finally {
-        setIsLoadingJournal(false);
+        console.warn("Note pins fetch failed:", e);
+        return [];
       }
     };
-    fetchNoteRSS();
+
+    // Fetch dynamic posts from note RSS
+    const fetchNoteRss = async (): Promise<NotePost[]> => {
+      try {
+        const response = await fetch(`https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(NOTE_RSS_URL)}`);
+        if (!response.ok) return [];
+        const data = await response.json();
+        if (!data.items || data.items.length === 0) return [];
+        return data.items.map((item: any) => ({
+          title: item.title,
+          date: new Date(item.pubDate).toLocaleDateString('ja-JP').replace(/\//g, '.'),
+          excerpt: (item.description || '').replace(/<[^>]*>?/gm, '').substring(0, 100) + "...",
+          url: item.link,
+          tags: item.categories || [],
+          image: item.thumbnail || item.enclosure?.link,
+        }));
+      } catch (e) {
+        console.warn("Note RSS fetch failed:", e);
+        return [];
+      }
+    };
+
+    const loadNotePosts = async () => {
+      setIsLoadingJournal(true);
+      const [pins, rss] = await Promise.all([fetchNotePins(), fetchNoteRss()]);
+      // Combine: pins first, then RSS posts (excluding URLs already in pins)
+      const pinUrls = new Set(pins.map(p => p.url));
+      const remaining = rss.filter(p => !pinUrls.has(p.url));
+      const combined = [...pins, ...remaining].slice(0, MAX_POSTS);
+      setJournalPosts(combined);
+      setIsLoadingJournal(false);
+    };
+
+    loadNotePosts();
   }, []);
 
   useEffect(() => {

@@ -47,6 +47,7 @@ interface Work {
   e_id_link: string;
   vimeoId?: string;
   stats?: { views: string; likes: string; };
+  viewCount?: number;
   // Sheet metadata (Aisle framework + operational columns)
   isSelected?: boolean;
   displayOrder?: number;
@@ -249,6 +250,7 @@ export default function App() {
         }
         return allVideos.map((v) => {
           const vimeoId = v.uri.split('/').pop() || Math.random().toString();
+          const plays = Number(v.stats?.plays) || 0;
           return {
             id: vimeoId,
             title: v.name || "Untitled",
@@ -266,8 +268,9 @@ export default function App() {
             isSelected: false,
             displayOrder: undefined,
             clientName: "",
+            viewCount: plays,
             stats: {
-              views: v.stats?.plays?.toLocaleString() || "0",
+              views: plays.toLocaleString(),
               likes: v.metadata?.connections?.likes?.total?.toLocaleString() || "0"
             }
           };
@@ -886,20 +889,37 @@ function WorksPage({ works, isLoading, onSelectWork, onNavigateToContact }: {
   onNavigateToContact: () => void;
 }) {
   const [activeCategory, setActiveCategory] = useState('ALL');
+  const [sortBy, setSortBy] = useState<'default' | 'views' | 'recent'>('default');
   const [currentPage, setCurrentPage] = useState(1);
   const categories = ['ALL', 'COAPORATE', 'PR', 'EVENT', 'GRAPHIC'];
+  const sortOptions: { value: typeof sortBy; label: string }[] = [
+    { value: 'default', label: 'おすすめ' },
+    { value: 'views', label: '再生数順' },
+    { value: 'recent', label: '新着順' },
+  ];
   const PER_PAGE = 15;
 
-  const filteredWorks = activeCategory === 'ALL'
+  const categoryFiltered = activeCategory === 'ALL'
     ? works
     : works.filter(work => (work.category || 'OTHER').toUpperCase() === activeCategory.toUpperCase());
+
+  // Apply sort
+  const filteredWorks = (() => {
+    if (sortBy === 'views') {
+      return [...categoryFiltered].sort((a, b) => (b.viewCount ?? 0) - (a.viewCount ?? 0));
+    }
+    if (sortBy === 'recent') {
+      return [...categoryFiltered].sort((a, b) => (b.uploadedAt || '').localeCompare(a.uploadedAt || ''));
+    }
+    return categoryFiltered; // default: already sorted by category+order+date in App
+  })();
 
   const totalPages = Math.max(1, Math.ceil(filteredWorks.length / PER_PAGE));
   const safePage = Math.min(currentPage, totalPages);
   const paginatedWorks = filteredWorks.slice((safePage - 1) * PER_PAGE, safePage * PER_PAGE);
 
-  // Reset to page 1 when category changes
-  useEffect(() => { setCurrentPage(1); }, [activeCategory]);
+  // Reset to page 1 when filter/sort changes
+  useEffect(() => { setCurrentPage(1); }, [activeCategory, sortBy]);
 
   // Build page number list: 1 2 3 4 ... last (with ellipsis if needed)
   const pageNumbers: (number | '...')[] = (() => {
@@ -940,10 +960,10 @@ function WorksPage({ works, isLoading, onSelectWork, onNavigateToContact }: {
         </motion.div>
       </section>
 
-      {/* Category Filter */}
-      <section className="mb-12 px-6 max-w-[1200px] mx-auto">
+      {/* Category Filter + Sort */}
+      <section className="mb-12 px-6 max-w-[1200px] mx-auto space-y-4">
         <div className="flex flex-col sm:flex-row items-center gap-6">
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 sm:w-32 sm:shrink-0">
             <span className="text-sm font-bold tracking-[0.15em] font-display">CATEGORY</span>
             <div className="w-12 h-px bg-black/20" />
           </div>
@@ -959,6 +979,27 @@ function WorksPage({ works, isLoading, onSelectWork, onNavigateToContact }: {
                 }`}
               >
                 {cat}
+              </button>
+            ))}
+          </div>
+        </div>
+        <div className="flex flex-col sm:flex-row items-center gap-6">
+          <div className="flex items-center gap-3 sm:w-32 sm:shrink-0">
+            <span className="text-sm font-bold tracking-[0.15em] font-display">SORT</span>
+            <div className="w-12 h-px bg-black/20" />
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {sortOptions.map((opt) => (
+              <button
+                key={opt.value}
+                onClick={() => setSortBy(opt.value)}
+                className={`px-5 py-1.5 text-[10px] font-bold tracking-widest transition-all ${
+                  sortBy === opt.value
+                    ? "bg-black text-white"
+                    : "bg-brand text-black/60 hover:bg-brand/60"
+                }`}
+              >
+                {opt.label}
               </button>
             ))}
           </div>

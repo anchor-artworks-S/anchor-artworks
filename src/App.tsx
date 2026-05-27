@@ -728,19 +728,95 @@ function HomePage({ works, isLoading, isLoadingJournal, journalPosts, onNavigate
   onNavigateToContact: () => void;
   onSelectWork: (work: Work) => void;
 }) {
+  // Kinetic typography phrases (loop)
+  const phrases = [
+    '思考の速度で。',
+    '最後のひと押しで。',
+    '納得のいくカタチで。',
+    '「やりたい」のすぐ後で。',
+  ];
+  const [phraseIdx, setPhraseIdx] = useState(0);
+  useEffect(() => {
+    const id = setInterval(() => setPhraseIdx(i => (i + 1) % phrases.length), 3500);
+    return () => clearInterval(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   return (
     <div className="bg-white">
       {/* Hero */}
-      <section className="bg-brand min-h-[42vh] md:min-h-[55vh] flex flex-col items-center justify-center text-center px-6 pt-24 pb-10">
+      <section className="relative bg-brand min-h-[48vh] md:min-h-[62vh] flex flex-col items-center justify-center text-center px-6 pt-24 pb-12 overflow-hidden">
+        {/* Floating geometric shapes (背景) */}
+        <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
+          <motion.div
+            className="absolute w-[320px] h-[320px] rounded-full bg-white/35 blur-2xl"
+            style={{ left: '-8%', top: '8%' }}
+            animate={{ x: [0, 40, -20, 0], y: [0, -30, 15, 0], rotate: [0, 20, -10, 0] }}
+            transition={{ duration: 36, repeat: Infinity, ease: 'easeInOut' }}
+          />
+          <motion.div
+            className="absolute w-[280px] h-[280px] rounded-full bg-black/[0.06] blur-2xl"
+            style={{ right: '-6%', bottom: '5%' }}
+            animate={{ x: [0, -35, 15, 0], y: [0, 25, -10, 0], rotate: [0, -15, 10, 0] }}
+            transition={{ duration: 40, repeat: Infinity, ease: 'easeInOut' }}
+          />
+          <motion.div
+            className="absolute w-[180px] h-[180px] bg-white/40 blur-xl"
+            style={{ left: '12%', bottom: '15%', borderRadius: '30%' }}
+            animate={{ x: [0, 25, -15, 0], y: [0, -20, 10, 0], rotate: [0, 45, 90, 135, 180] }}
+            transition={{ duration: 48, repeat: Infinity, ease: 'linear' }}
+          />
+          <motion.div
+            className="absolute w-[150px] h-[150px] bg-white/25 blur-xl"
+            style={{ right: '18%', top: '12%' }}
+            animate={{ x: [0, -20, 10, 0], y: [0, 15, -8, 0], rotate: [0, 60, 120, 180] }}
+            transition={{ duration: 42, repeat: Infinity, ease: 'linear' }}
+          />
+          <motion.div
+            className="absolute w-[90px] h-[90px] rounded-full bg-brand blur-md"
+            style={{ left: '45%', top: '20%' }}
+            animate={{ x: [0, 15, -8, 0], y: [0, -12, 6, 0] }}
+            transition={{ duration: 28, repeat: Infinity, ease: 'easeInOut' }}
+          />
+        </div>
+
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.8 }}
-          className="flex flex-col items-center gap-6 max-w-2xl mx-auto"
+          className="relative z-10 flex flex-col items-center gap-6 max-w-2xl mx-auto"
         >
           <div className="space-y-6">
             <h1 className="text-4xl md:text-7xl font-display font-bold tracking-tight leading-[1.05]">
-              CG・映像制作を、<br />思考の速度で。
+              <span className="block">CG・映像制作を、</span>
+              <span className="block relative h-[1.2em] overflow-hidden">
+                {/* Static fallback for SEO/AI crawlers: 思考の速度で。 */}
+                <span className="sr-only">思考の速度で。</span>
+                <AnimatePresence mode="wait">
+                  <motion.span
+                    key={phraseIdx}
+                    className="absolute inset-0 flex justify-center"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.3 }}
+                    aria-hidden="true"
+                  >
+                    {phrases[phraseIdx].split('').map((ch, i) => (
+                      <motion.span
+                        key={i}
+                        className="inline-block"
+                        initial={{ opacity: 0, y: 24, filter: 'blur(6px)' }}
+                        animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+                        exit={{ opacity: 0, y: -24, filter: 'blur(6px)' }}
+                        transition={{ duration: 0.45, delay: i * 0.035, ease: [0.22, 1, 0.36, 1] }}
+                      >
+                        {ch}
+                      </motion.span>
+                    ))}
+                  </motion.span>
+                </AnimatePresence>
+              </span>
             </h1>
             <p className="text-sm md:text-base text-black/70 leading-relaxed">
               企画からCG・編集まで。豊富なアイデアを、最速でカタチに。<br />

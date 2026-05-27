@@ -295,18 +295,26 @@ export default function App() {
                   return found ? String(row[found] ?? '').trim() : '';
                 };
                 (results.data as any[]).forEach(row => {
-                  const vimeoId = norm(row, 'A列: vimeoId') || norm(row, 'vimeoId');
+                  // Multi-form lookup: try with "X列:" prefix variants and plain key
+                  const lookup = (...keys: string[]) => {
+                    for (const k of keys) {
+                      const v = norm(row, k);
+                      if (v) return v;
+                    }
+                    return '';
+                  };
+                  const vimeoId = lookup('A列: vimeoId', 'A列:vimeoId', 'vimeoId');
                   if (!vimeoId) return;
-                  const titleOverride = norm(row, 'B列: title') || norm(row, 'title');
-                  const productionNote = norm(row, 'C列: production_note') || norm(row, 'production_note');
-                  const strategy = norm(row, 'D列: strategy') || norm(row, 'strategy');
-                  const evidenceUrl = norm(row, 'E列: evidence_url') || norm(row, 'evidence_url');
-                  const category = (norm(row, 'category') || 'OTHER').toUpperCase();
-                  const isSelected = /^true$/i.test(norm(row, 'is_selected'));
-                  const displayOrderStr = norm(row, 'display_order');
+                  const titleOverride = lookup('B列: title', 'B列:title', 'title');
+                  const productionNote = lookup('C列: production_note', 'C列:production_note', 'production_note');
+                  const strategy = lookup('D列: strategy', 'D列:strategy', 'strategy');
+                  const evidenceUrl = lookup('E列: evidence_url', 'E列:evidence_url', 'evidence_url');
+                  const category = (lookup('F列: category', 'F列:category', 'category') || 'OTHER').toUpperCase();
+                  const isSelected = /^true$/i.test(lookup('G列: is_selected', 'G列:is_selected', 'is_selected'));
+                  const displayOrderStr = lookup('H列: display_order', 'H列:display_order', 'display_order');
                   const displayOrder = displayOrderStr ? Number(displayOrderStr) : undefined;
-                  const clientName = norm(row, 'client_name');
-                  const publishedStr = norm(row, 'is_published');
+                  const clientName = lookup('I列: client_name', 'I列:client_name', 'client_name');
+                  const publishedStr = lookup('J列: is_published', 'J列:is_published', 'is_published');
                   const isPublished = publishedStr === '' ? true : /^true$/i.test(publishedStr);
 
                   map.set(vimeoId, {

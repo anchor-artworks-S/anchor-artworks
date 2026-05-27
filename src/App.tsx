@@ -636,12 +636,12 @@ export default function App() {
           {/* Sitemap */}
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-x-6 gap-y-8 mb-12">
             {[
-              { id: 'home', label: 'Home', tag: '', desc: 'はじまり' },
-              { id: 'works', label: 'Works', tag: '証拠', desc: '映像で語る、これまでの実績' },
-              { id: 'whatwedo', label: 'What We Do', tag: '依頼範囲', desc: '私たちが提供できる領域' },
-              { id: 'about', label: 'About', tag: '信頼', desc: 'チーム・代表・カルチャー' },
-              { id: 'journal', label: 'Journal', tag: '現在地', desc: 'いま考えていること' },
-              { id: 'contact', label: 'Contact', tag: '行動', desc: '相談・打ち合わせへ' },
+              { id: 'home', label: 'Home', desc: 'はじまり' },
+              { id: 'works', label: 'Works', desc: '映像で語る、これまでの実績' },
+              { id: 'whatwedo', label: 'What We Do', desc: '私たちが提供できる領域' },
+              { id: 'about', label: 'About', desc: 'チーム・代表・カルチャー' },
+              { id: 'journal', label: 'Journal', desc: 'いま考えていること' },
+              { id: 'contact', label: 'Contact', desc: '相談・打ち合わせへ' },
             ].map((item) => (
               <button
                 key={item.id}
@@ -651,10 +651,7 @@ export default function App() {
                 <div className="text-base md:text-lg font-display font-bold tracking-tight text-black group-hover:opacity-60 transition-opacity">
                   {item.label}
                 </div>
-                {item.tag && (
-                  <div className="text-[10px] font-bold tracking-[0.2em] uppercase text-black/50 mt-1">{item.tag}</div>
-                )}
-                <div className="text-[10px] text-black/55 mt-1.5 leading-relaxed">{item.desc}</div>
+                <div className="text-[11px] text-black/55 mt-2 leading-relaxed">{item.desc}</div>
               </button>
             ))}
           </div>
@@ -699,9 +696,8 @@ function HomePage({ works, isLoading, isLoadingJournal, journalPosts, onNavigate
           transition={{ duration: 0.8 }}
           className="flex flex-col items-center gap-6 max-w-2xl mx-auto"
         >
-          <img src="/logo.png" alt="Anchor Art Works" className="h-28 md:h-36 w-auto object-contain" />
-          <div className="space-y-4">
-            <h1 className="text-3xl md:text-5xl font-display font-bold tracking-tight leading-tight">
+          <div className="space-y-6">
+            <h1 className="text-4xl md:text-7xl font-display font-bold tracking-tight leading-[1.05]">
               CG・映像制作を、<br />思考の速度で。
             </h1>
             <p className="text-sm md:text-base text-black/70 leading-relaxed">
@@ -2168,16 +2164,75 @@ function JournalPage({ journalPosts, isLoadingJournal, onNavigateToContact }: {
             ))}
           </div>
         ) : (
-          <div className="text-center py-20 space-y-6">
-            <p className="text-base md:text-lg text-black/60">記事を準備中です。</p>
-            <a
-              href="https://note.com/anchor_art_works"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 px-6 py-3 border border-black/15 text-[11px] font-bold uppercase tracking-widest hover:bg-black hover:text-white transition-all"
-            >
-              note を見る <ChevronRight size={12} />
-            </a>
+          // Fallback: note / note PRO promo cards (when no RSS posts yet)
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            {[
+              {
+                type: 'note' as const,
+                desc: 'noteはクリエイターが文章や画像、音声、動画を投稿して、ユーザーがそのコンテンツを楽しんで応援できるメディアプラットフォームです。だれもが創作を楽しんで続けられるよう、安心できる雰囲気や、多様性を大切にしています。',
+                url: 'https://note.com/anchor_art_works',
+                image: 'https://images.unsplash.com/photo-1611162616475-46b635cb6868?q=80&w=1000',
+              },
+              {
+                type: 'note_pro' as const,
+                desc: '法人向け情報発信プラットフォーム。多くのひとが集まるnoteの街でメディアをかんたんにつくり、情報を届けることができます。届ける仕組みと充実したサポートで、企業がポジティブなユーザーとつながって関係を深めるお手伝いをします。',
+                url: 'https://note.jp/n/n4fe51c391a36',
+                image: 'https://images.unsplash.com/photo-1593642632559-0c6d3fc62b89?q=80&w=1000',
+              },
+              {
+                type: 'note' as const,
+                desc: 'noteはクリエイターが文章や画像、音声、動画を投稿して、ユーザーがそのコンテンツを楽しんで応援できるメディアプラットフォームです。だれもが創作を楽しんで続けられるよう、安心できる雰囲気や、多様性を大切にしています。',
+                url: 'https://note.com/anchor_art_works',
+                image: 'https://images.unsplash.com/photo-1611162616475-46b635cb6868?q=80&w=1000',
+              },
+              {
+                type: 'note_pro' as const,
+                desc: '法人向け情報発信プラットフォーム。多くのひとが集まるnoteの街でメディアをかんたんにつくり、情報を届けることができます。届ける仕組みと充実したサポートで、企業がポジティブなユーザーとつながって関係を深めるお手伝いをします。',
+                url: 'https://note.jp/n/n4fe51c391a36',
+                image: 'https://images.unsplash.com/photo-1593642632559-0c6d3fc62b89?q=80&w=1000',
+              },
+            ].map((card, idx) => (
+              <motion.a
+                key={idx}
+                href={card.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                initial={{ opacity: 0, y: 15 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: idx * 0.08 }}
+                className="group flex flex-col border border-black/8 hover:border-black/20 transition-colors"
+              >
+                <div className="aspect-[16/9] overflow-hidden bg-gray-100 relative">
+                  <div className="absolute top-4 left-4 z-10 bg-white px-3 py-1.5 shadow-sm">
+                    <span className="font-bold text-base leading-none flex items-baseline gap-0.5">
+                      <span className="text-black">no</span>
+                      <span className="text-emerald-500 text-lg leading-none">+</span>
+                      <span className="text-black">e</span>
+                      {card.type === 'note_pro' && (
+                        <span className="ml-1.5 text-[10px] text-black/70 font-bold tracking-wider">PRO</span>
+                      )}
+                    </span>
+                  </div>
+                  <img
+                    src={card.image}
+                    alt={card.type === 'note' ? 'note' : 'note PRO'}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                    referrerPolicy="no-referrer"
+                  />
+                </div>
+                <div className="p-6 space-y-4 flex-1 flex flex-col">
+                  <p className="text-[11px] text-black/65 leading-relaxed flex-1">
+                    {card.desc}
+                  </p>
+                  <div className="pt-2">
+                    <span className="inline-flex items-center justify-center px-6 py-2.5 border border-black/15 text-[10px] font-bold uppercase tracking-widest text-black group-hover:bg-black group-hover:text-white transition-all">
+                      {card.type === 'note' ? 'noteについて' : 'note proについて'}
+                    </span>
+                  </div>
+                </div>
+              </motion.a>
+            ))}
           </div>
         )}
       </section>

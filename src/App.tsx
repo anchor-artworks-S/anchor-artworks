@@ -1611,6 +1611,7 @@ function WorkModal({ work, onClose }: { work: Work; onClose: () => void }) {
                 className="absolute inset-0 w-full h-full"
                 allow="autoplay; fullscreen; picture-in-picture"
                 allowFullScreen
+                loading="lazy"
                 title={work.title}
               />
             ) : (

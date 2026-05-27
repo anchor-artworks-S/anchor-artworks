@@ -650,9 +650,15 @@ function HomePage({ works, isLoading, isLoadingJournal, journalPosts, onNavigate
           ) : (
             (() => {
               const selected = works.filter(w => w.isSelected);
-              // Sheet 行順で上位3本を表示（display_order 列は使わない）
+              // SELECTED WORKS の順序: H列 display_order の数値順
+              // 同じ数字 / 空欄は Sheet 行順でフォールバック
               const featured = selected.length > 0
-                ? [...selected].sort((a, b) => (a.sheetRowIndex ?? Infinity) - (b.sheetRowIndex ?? Infinity)).slice(0, 3)
+                ? [...selected].sort((a, b) => {
+                    const da = a.displayOrder ?? Infinity;
+                    const db = b.displayOrder ?? Infinity;
+                    if (da !== db) return da - db;
+                    return (a.sheetRowIndex ?? Infinity) - (b.sheetRowIndex ?? Infinity);
+                  }).slice(0, 3)
                 : works.slice(0, 3);
               return featured.map((work, idx) => (
               <motion.div

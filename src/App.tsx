@@ -1581,6 +1581,7 @@ function CTASection({ onNavigate }: { onNavigate: () => void }) {
 // WORK MODAL
 // ─────────────────────────────────────────
 function WorkModal({ work, onClose }: { work: Work; onClose: () => void }) {
+  const [iframeLoaded, setIframeLoaded] = useState(false);
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-8">
       <motion.div
@@ -1603,17 +1604,33 @@ function WorkModal({ work, onClose }: { work: Work; onClose: () => void }) {
           <X size={18} />
         </button>
         <div className="overflow-y-auto">
-          {/* Vimeo Player */}
+          {/* Vimeo Player with thumbnail placeholder */}
           <div className="relative aspect-video w-full bg-black">
             {work.vimeoId ? (
-              <iframe
-                src={`https://player.vimeo.com/video/${work.vimeoId}?title=0&byline=0&portrait=0&dnt=1`}
-                className="absolute inset-0 w-full h-full"
-                allow="autoplay; fullscreen; picture-in-picture"
-                allowFullScreen
-                loading="lazy"
-                title={work.title}
-              />
+              <>
+                {/* Thumbnail placeholder — visible until iframe loads */}
+                {work.thumbnail && (
+                  <img
+                    src={work.thumbnail}
+                    alt={work.title}
+                    className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-500 ${
+                      iframeLoaded ? 'opacity-0 pointer-events-none' : 'opacity-100'
+                    }`}
+                    referrerPolicy="no-referrer"
+                  />
+                )}
+                <iframe
+                  src={`https://player.vimeo.com/video/${work.vimeoId}?title=0&byline=0&portrait=0&dnt=1`}
+                  className={`absolute inset-0 w-full h-full transition-opacity duration-500 ${
+                    iframeLoaded ? 'opacity-100' : 'opacity-0'
+                  }`}
+                  allow="autoplay; fullscreen; picture-in-picture"
+                  allowFullScreen
+                  loading="lazy"
+                  title={work.title}
+                  onLoad={() => setIframeLoaded(true)}
+                />
+              </>
             ) : (
               <img src={work.thumbnail} alt={work.title} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
             )}

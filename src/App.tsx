@@ -2433,24 +2433,24 @@ function WhatWeDoPage({ onNavigateToContact }: { onNavigateToContact: () => void
       </section>
 
       {/* Industries */}
-      <section className="py-24 px-6 bg-black text-white">
+      <section className="py-24 px-6 bg-brand text-black">
         <div className="max-w-[1100px] mx-auto">
           <motion.div initial={{ opacity: 0, y: 15 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.6 }} className="text-center mb-12 space-y-3">
             <div className="flex items-center justify-center gap-4 max-w-md mx-auto">
-              <span className="text-[10px] font-bold tracking-[0.3em] uppercase text-white/40 whitespace-nowrap">INDUSTRIES</span>
-              <div className="h-px bg-brand flex-1" />
+              <span className="text-[10px] font-bold tracking-[0.3em] uppercase text-black/50 whitespace-nowrap">INDUSTRIES</span>
+              <div className="h-px bg-black/30 flex-1" />
             </div>
-            <h2 className="text-3xl md:text-5xl font-display font-bold tracking-tight text-brand">対応領域。</h2>
-            <p className="text-white/60 text-sm max-w-xl mx-auto leading-relaxed">業界横断のクリエイティブで、多様なブランドを支えてきました。</p>
+            <h2 className="text-3xl md:text-5xl font-display font-bold tracking-tight text-black">対応領域。</h2>
+            <p className="text-black/70 text-sm max-w-xl mx-auto leading-relaxed">業界横断のクリエイティブで、多様なブランドを支えてきました。</p>
           </motion.div>
           <div className="flex flex-wrap justify-center gap-3 md:gap-4 max-w-3xl mx-auto">
             {['エンターテインメント', 'ゲーム', '放送', '広告', 'テクノロジー', 'SaaS', '製造業', '教育', 'ヘルスケア', 'コンシューマー製品'].map((industry, idx) => (
-              <motion.span key={idx} initial={{ opacity: 0, scale: 0.9 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }} transition={{ duration: 0.4, delay: idx * 0.04 }} className="px-5 py-2.5 border border-white/20 text-xs md:text-sm font-bold tracking-wide text-white/80 hover:border-brand hover:text-brand transition-colors">
+              <motion.span key={idx} initial={{ opacity: 0, scale: 0.9 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }} transition={{ duration: 0.4, delay: idx * 0.04 }} className="px-5 py-2.5 border border-black/25 bg-white/30 text-xs md:text-sm font-bold tracking-wide text-black/80 hover:bg-black hover:text-white hover:border-black transition-colors">
                 {industry}
               </motion.span>
             ))}
           </div>
-          <motion.p initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} transition={{ duration: 0.5, delay: 0.4 }} className="text-center text-[11px] text-white/40 mt-10 leading-relaxed max-w-2xl mx-auto">
+          <motion.p initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} transition={{ duration: 0.5, delay: 0.4 }} className="text-center text-[11px] text-black/60 mt-10 leading-relaxed max-w-2xl mx-auto">
             特に、ゲームIP・eスポーツ・テレビ局・配信プラットフォーム・企業VP・テクノロジー製品のサービス紹介・SNS連動キャンペーンに強みを持ちます。
           </motion.p>
         </div>

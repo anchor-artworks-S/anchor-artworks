@@ -21,6 +21,9 @@ import {
   Menu,
   ChevronDown,
   Plus,
+  Mail,
+  Video,
+  BookOpen,
 } from "lucide-react";
 
 // --- Types ---
@@ -515,6 +518,7 @@ export default function App() {
 
   return (
     <div className="min-h-screen flex flex-col bg-white text-black font-sans selection:bg-black selection:text-white">
+      <CustomCursor />
       {/* Header */}
       <header className={`fixed top-0 w-full z-50 transition-all duration-300 ${isScrolled ? 'bg-black/95 backdrop-blur-md border-b border-white/5 h-20' : 'bg-black h-20'}`}>
         <div className="max-w-[1400px] mx-auto px-6 md:px-10 h-full flex items-center justify-between">
@@ -656,8 +660,45 @@ export default function App() {
             ))}
           </div>
 
+          {/* Social / Contact links */}
+          <div className="pt-8 border-t border-black/15 mb-6">
+            <div className="flex flex-wrap items-center justify-center md:justify-start gap-x-6 gap-y-3">
+              <span className="text-[10px] font-bold tracking-[0.3em] uppercase text-black/40">FOLLOW &amp; CONTACT</span>
+              <div className="flex items-center gap-4">
+                <a
+                  href="https://note.com/anchor_art_works"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-widest text-black/70 hover:text-black transition-colors"
+                  aria-label="note"
+                >
+                  <BookOpen size={14} />
+                  <span>note</span>
+                </a>
+                <a
+                  href="https://vimeo.com/user27201919"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-widest text-black/70 hover:text-black transition-colors"
+                  aria-label="Vimeo"
+                >
+                  <Video size={14} />
+                  <span>Vimeo</span>
+                </a>
+                <a
+                  href="mailto:info@anchor-japan.com"
+                  className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-widest text-black/70 hover:text-black transition-colors"
+                  aria-label="Email"
+                >
+                  <Mail size={14} />
+                  <span>Email</span>
+                </a>
+              </div>
+            </div>
+          </div>
+
           {/* Bottom row */}
-          <div className="pt-6 border-t border-black/15 flex flex-col md:flex-row justify-between items-center gap-3">
+          <div className="pt-4 flex flex-col md:flex-row justify-between items-center gap-3">
             <button
               onClick={() => setCurrentPage('privacy')}
               className="text-[10px] uppercase font-bold tracking-widest text-black/60 hover:text-black transition-colors"
@@ -989,33 +1030,9 @@ function WorksPage({ works, isLoading, onSelectWork, onNavigateToContact }: {
             </div>
           ) : (
             paginatedWorks.map((work, idx) => (
-              <motion.div
-                key={work.id}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: idx * 0.05 }}
-                className="group cursor-pointer"
-                onClick={() => onSelectWork(work)}
-              >
-                <div className="aspect-video overflow-hidden mb-3 bg-black/5">
-                  <img
-                    src={work.thumbnail}
-                    alt={work.title}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
-                    referrerPolicy="no-referrer"
-                    loading="lazy"
-                  />
-                </div>
-                <div className="text-center space-y-1 px-2">
-                  <p className="text-[11px] font-bold text-black/80 group-hover:text-black/50 transition-colors line-clamp-2">
-                    {work.title}
-                  </p>
-                  {work.clientName && (
-                    <p className="text-[10px] text-black/40">Client_{work.clientName}</p>
-                  )}
-                </div>
-              </motion.div>
+              <Fragment key={work.id}>
+                <WorkGridCard work={work} idx={idx} onClick={() => onSelectWork(work)} />
+              </Fragment>
             ))
           )}
         </div>
@@ -1104,6 +1121,45 @@ function AboutPage({ onNavigateToContact }: { onNavigateToContact: () => void })
             </p>
           </div>
         </motion.div>
+      </section>
+
+      {/* Mission / Vision */}
+      <section className="py-20 md:py-24 px-6 bg-white">
+        <div className="max-w-[900px] mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 15 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+            className="text-center mb-12 space-y-3"
+          >
+            <div className="flex items-center justify-center gap-4 max-w-md mx-auto">
+              <span className="text-[10px] font-bold tracking-[0.3em] uppercase text-black/40 whitespace-nowrap">MISSION & VISION</span>
+              <div className="h-px bg-brand flex-1" />
+            </div>
+            <h2 className="text-3xl md:text-5xl font-display font-bold tracking-tight">
+              私たちが目指すこと。
+            </h2>
+          </motion.div>
+          <div className="space-y-8 text-base md:text-lg text-black/75 leading-relaxed">
+            <motion.p
+              initial={{ opacity: 0, y: 15 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6, delay: 0.1 }}
+            >
+              Anchor Art Worksのミッションは、企業の本質的な価値を <span className="font-bold text-black">「伝わるカタチ」</span> に変換することです。映像制作業界では、コンセプト設計と実制作が分断されがちです。Anchor Art Worksは、戦略、デザイン、編集、モーショングラフィックス、SNS運用、マーケティングまでを社内一貫体制で担うことで、思考から完成までの距離を限りなく短縮します。
+            </motion.p>
+            <motion.p
+              initial={{ opacity: 0, y: 15 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+            >
+              私たちが目指すのは、単なる映像制作会社ではなく、ブランドの<span className="font-bold text-black">「伝え方」を再設計するクリエイティブパートナー</span>です。脳内の解像度を、そのままの速度で。思考が止まる前に、イメージは動き出す。この思想を、すべてのプロジェクトに通底させています。
+            </motion.p>
+          </div>
+        </div>
       </section>
 
       {/* CEO Section */}
@@ -1621,6 +1677,134 @@ function SelectedWorkCard({ work, idx, onClick }: SelectedWorkCardProps) {
         『{work.title}』ブランド映像
       </p>
       <p className="text-[10px] text-black/40">{work.clientName ? `Client_${work.clientName}` : 'Client_共同印刷 株式会社'}</p>
+    </motion.div>
+  );
+}
+
+// ─────────────────────────────────────────
+// CUSTOM CURSOR — desktop only, light implementation
+// ─────────────────────────────────────────
+function CustomCursor() {
+  const [pos, setPos] = useState({ x: -100, y: -100 });
+  const [isPointer, setIsPointer] = useState(false);
+  const [isVisible, setIsVisible] = useState(false);
+
+  useEffect(() => {
+    // Skip on touch devices
+    if (typeof window === 'undefined') return;
+    const isTouch = window.matchMedia('(pointer: coarse)').matches;
+    if (isTouch) return;
+
+    const onMove = (e: MouseEvent) => {
+      setPos({ x: e.clientX, y: e.clientY });
+      setIsVisible(true);
+      // Detect interactive element
+      const target = e.target as HTMLElement | null;
+      const interactive = target?.closest('a, button, [role="button"], input, textarea, select, label') !== null;
+      setIsPointer(interactive);
+    };
+    const onLeave = () => setIsVisible(false);
+
+    window.addEventListener('mousemove', onMove);
+    window.addEventListener('mouseleave', onLeave);
+    return () => {
+      window.removeEventListener('mousemove', onMove);
+      window.removeEventListener('mouseleave', onLeave);
+    };
+  }, []);
+
+  return (
+    <div
+      aria-hidden="true"
+      className={`hidden md:block fixed top-0 left-0 z-[200] pointer-events-none transition-[width,height,background-color,opacity] duration-200 ease-out mix-blend-difference rounded-full ${
+        isVisible ? 'opacity-100' : 'opacity-0'
+      } ${
+        isPointer ? 'w-10 h-10 bg-brand' : 'w-3 h-3 bg-white'
+      }`}
+      style={{
+        transform: `translate(${pos.x}px, ${pos.y}px) translate(-50%, -50%)`,
+      }}
+    />
+  );
+}
+
+// ─────────────────────────────────────────
+// WORKS GRID CARD — compact card with Netflix-style hover preview
+// ─────────────────────────────────────────
+interface WorkGridCardProps {
+  work: Work;
+  idx: number;
+  onClick: () => void;
+}
+
+function WorkGridCard({ work, idx, onClick }: WorkGridCardProps) {
+  const [isHovered, setIsHovered] = useState(false);
+  const [showPreview, setShowPreview] = useState(false);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const handleEnter = () => {
+    setIsHovered(true);
+    if (timerRef.current) clearTimeout(timerRef.current);
+    timerRef.current = setTimeout(() => setShowPreview(true), 800);
+  };
+  const handleLeave = () => {
+    setIsHovered(false);
+    setShowPreview(false);
+    if (timerRef.current) {
+      clearTimeout(timerRef.current);
+      timerRef.current = null;
+    }
+  };
+  useEffect(() => () => {
+    if (timerRef.current) clearTimeout(timerRef.current);
+  }, []);
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true }}
+      transition={{ delay: idx * 0.05 }}
+      className="group cursor-pointer"
+      onClick={onClick}
+      onMouseEnter={handleEnter}
+      onMouseLeave={handleLeave}
+    >
+      <div className="aspect-video overflow-hidden mb-3 bg-black relative">
+        <img
+          src={work.thumbnail}
+          alt={work.title}
+          className={`absolute inset-0 w-full h-full object-cover transition-all duration-500 group-hover:scale-105 ${
+            showPreview ? 'opacity-0' : 'opacity-100'
+          }`}
+          referrerPolicy="no-referrer"
+          loading="lazy"
+        />
+        {showPreview && work.vimeoId && (
+          <iframe
+            src={`https://player.vimeo.com/video/${work.vimeoId}?autoplay=1&loop=1&muted=1&background=1&dnt=1`}
+            className="absolute inset-0 w-full h-full"
+            allow="autoplay; fullscreen; picture-in-picture"
+            loading="lazy"
+            title={work.title}
+          />
+        )}
+        <div className={`absolute inset-0 bg-black/40 flex items-center justify-center transition-opacity duration-300 pointer-events-none ${
+          isHovered && !showPreview ? 'opacity-100' : 'opacity-0'
+        }`}>
+          <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-white/95 flex items-center justify-center shadow-lg">
+            <Play size={16} className="fill-black text-black ml-0.5" />
+          </div>
+        </div>
+      </div>
+      <div className="text-center space-y-1 px-2">
+        <p className="text-[11px] font-bold text-black/80 group-hover:text-black/50 transition-colors line-clamp-2">
+          {work.title}
+        </p>
+        {work.clientName && (
+          <p className="text-[10px] text-black/40">Client_{work.clientName}</p>
+        )}
+      </div>
     </motion.div>
   );
 }

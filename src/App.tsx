@@ -731,9 +731,9 @@ function HomePage({ works, isLoading, isLoadingJournal, journalPosts, onNavigate
   // Kinetic typography phrases (loop)
   const phrases = [
     '思考の速度で。',
-    '最後のひと押しで。',
-    '納得のいくカタチで。',
-    '「やりたい」のすぐ後で。',
+    '最後の磨きで。',
+    '納得のカタチへ。',
+    'ひらめきの隣で。',
   ];
   const [phraseIdx, setPhraseIdx] = useState(0);
   useEffect(() => {
@@ -789,7 +789,7 @@ function HomePage({ works, isLoading, isLoadingJournal, journalPosts, onNavigate
           <div className="space-y-5">
             <h1 className="text-4xl md:text-6xl font-display font-bold tracking-tighter leading-[1.05]">
               <span className="block">CG・映像制作を、</span>
-              <span className="block relative h-[1.2em] overflow-hidden">
+              <span className="block relative h-[1.2em] overflow-y-hidden">
                 {/* Static fallback for SEO/AI crawlers: 思考の速度で。 */}
                 <span className="sr-only">思考の速度で。</span>
                 <AnimatePresence mode="wait">

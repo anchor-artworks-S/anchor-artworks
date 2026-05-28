@@ -7,8 +7,8 @@
 
 import { useState, useEffect, useRef, Fragment } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { GoogleGenAI } from "@google/genai";
 import Papa from "papaparse";
+import { buildSystemPrompt } from "./aiPrompt";
 import {
   ExternalLink,
   X,
@@ -1637,23 +1637,17 @@ function ContactPage({ works, onNavigateToPrivacy }: { works: Work[]; onNavigate
 
 function ChatConcierge({ works, initialPrompt }: { works: Work[]; initialPrompt?: string }) {
   const [messages, setMessages] = useState<Message[]>([
-    { role: 'assistant', content: 'こんにちは。Anchor Art WorksのAIコンシェルジュです。代表の勝田が提唱する「デザイン思考」と、プロデューサーの目が管理する「放送品質」を軸に、貴社の課題に最適なアプローチをご提案します。どのような課題をお持ちですか？' }
+    { role: 'assistant', content: 'こんにちは。Anchor Art Works のAIコンシェルジュです。CG・映像制作からポッドキャスト企画、VTuber MV まで、「思考の速度」で貴社の課題に最適なアプローチをご提案します。どのような課題をお持ちですか？' }
   ]);
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
-  const aiRef = useRef<GoogleGenAI | null>(null);
   const sentInitialRef = useRef<string>('');
-
-  useEffect(() => {
-    aiRef.current = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || '' });
-  }, []);
 
   // Auto-send when initialPrompt is provided (once per prompt value)
   useEffect(() => {
-    if (initialPrompt && initialPrompt !== sentInitialRef.current && aiRef.current) {
+    if (initialPrompt && initialPrompt !== sentInitialRef.current) {
       sentInitialRef.current = initialPrompt;
-      // small delay so AI client is ready
       const t = setTimeout(() => {
         handleSend(initialPrompt);
       }, 100);
@@ -1677,34 +1671,35 @@ function ChatConcierge({ works, initialPrompt }: { works: Work[]; initialPrompt?
     setIsTyping(true);
 
     try {
-      if (!aiRef.current) throw new Error("AI not initialized");
-      const systemPrompt = `You are the AI Concierge for Anchor Art Works (株式会社Anchor Art Works).
-Your mission is to provide professional consultation about the company's services, team, and philosophy.
-[Company]: 株式会社Anchor Art Works, CEO: 勝田 康, Tokyo Meguro
-[Instructions]: Professional, polite Japanese (Keigo). Concise, evidence-based suggestions.
-[Works Context]: ${works.map(w => `- ${w.title}: ${w.m07_solution}`).join('\n')}`;
+      const systemPrompt = buildSystemPrompt(works.map(w => w.title));
 
-      const history = messages.map(msg => ({
-        role: msg.role === 'user' ? 'user' : 'model',
-        parts: [{ text: msg.content }]
-      }));
-
-      const chat = aiRef.current.chats.create({
-        model: 'gemini-2.0-flash',
-        config: { systemInstruction: systemPrompt, temperature: 0.7 },
-        history: history as any
+      // Call Vercel Function (server-side). API key stays on the server.
+      const res = await fetch('/api/concierge', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          history: messages,
+          message: textToSend,
+          systemPrompt,
+        }),
       });
 
-      const response = await chat.sendMessage({ message: textToSend });
-      setMessages(prev => [...prev, { role: 'assistant', content: response.text || "申し訳ございません。応答の生成に失敗しました。" }]);
+      if (!res.ok) {
+        const errBody = await res.json().catch(() => ({}));
+        throw new Error(errBody.error || `HTTP ${res.status}`);
+      }
+
+      const data = await res.json();
+      setMessages(prev => [...prev, { role: 'assistant', content: data.text || "申し訳ございません。応答の生成に失敗しました。" }]);
     } catch (error) {
+      console.error('[AI Concierge] fetch error:', error);
       setMessages(prev => [...prev, { role: 'assistant', content: "現在、AIコンシェルジュが混み合っているようです。しばらくしてから再度お試しいただくか、お問い合わせフォームより直接お問い合わせください。" }]);
     } finally {
       setIsTyping(false);
     }
   };
 
-  const suggestions = ["強みについて教えて", "勝田 康の実績は？", "3DCG制作の相談ができる？", "Aisleフレームワークとは？"];
+  const suggestions = ["強みについて教えて", "代表 勝田の実績は？", "3DCG制作の相談ができる？", "ポッドキャストの相談は？"];
 
   return (
     <div className="flex flex-col h-full">

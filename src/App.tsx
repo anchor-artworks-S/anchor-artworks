@@ -1684,6 +1684,13 @@ function ChatConcierge({ works, initialPrompt }: { works: Work[]; initialPrompt?
         }),
       });
 
+      if (res.status === 429) {
+        const errBody = await res.json().catch(() => ({}));
+        const wait = errBody.retryAfterSec ? `${errBody.retryAfterSec}秒ほどお待ちください。` : 'しばらくお待ちください。';
+        setMessages(prev => [...prev, { role: 'assistant', content: `恐れ入ります、短時間でのご質問が集中しています。${wait}お急ぎの場合はお問い合わせフォームより直接ご相談ください。` }]);
+        return;
+      }
+
       if (!res.ok) {
         const errBody = await res.json().catch(() => ({}));
         throw new Error(errBody.error || `HTTP ${res.status}`);

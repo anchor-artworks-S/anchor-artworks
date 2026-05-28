@@ -68,10 +68,14 @@ AAWは、企画から CG・編集・納品まで内製ワンストップで提�
 - 設立:2025年11月
 - 代表取締役:勝田 康(かつだ こう / KOH KATSUDA)
 - 拠点:東京都目黒区
-- チーム:
-  - 勝田 康(CEO・Marketing & Design)
-  - 勝田 友亮 / 矢戸 光一(Motion & Creative)
-  - 目 学(Production & Quality)
+- チーム(計7名):
+  - 勝田 康(KOH KATSUDA / CEO):マーケティング & デザインの統括
+  - 勝田 友亮(YUSUKE KATSUDA / Editor & Motion Grapher):PR・イベント・企業ブランド・VP・CMのモーショングラフィックスが主軸。情報構造を視覚化する設計力に強み。
+  - 矢戸 光一(KOICHI YATO / Editor & Motion Grapher):eスポーツのプロ選手を目指した経験から培われた集中力と観察眼。0.1秒単位の編集精度。SNS時代のテンポ感に強い。
+  - 内田 理恵(RIE UCHIDA / Illustrator & Designer):イラストレーター兼デザイナー。広告・パッケージ・Web等、多様な分野で「見せる」だけでなく「伝わる」ビジュアルを制作。
+  - 目 学(MANABU SAKKA / Producer & Director):テレビ業界出身。報道・バラエティ・ドキュメンタリー等の現場経験から、テレビ品質の制作工程を担保。プロデュース・統括の中核。
+  - 森屋 沙耶(SAYA MORIYA / SNS & Podcaster):人気YouTuberとのコラボ経験を持つポッドキャスター。独特の視点と親しみやすい語り口、多ジャンルの発信力。
+  - 沖田 紘亮(KOUSUKE OKITA / Marketing Specialist):テレビ局・総合広告代理店を経て独立。AI時代のマーケティング戦略とデータ分析を軸に、KPI設計・効果測定・ブランドの長期的成長を支援。
 - 実績:296件以上の映像制作(MIXI、&PAIR、HONDA、TOYOTA、SONY、Pokemon等)
 
 【8】事例(Worksページに集約)

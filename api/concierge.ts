@@ -16,6 +16,47 @@ interface ConciergeRequest {
   systemPrompt: string;
 }
 
+// ────────────────────────────────────────
+// In-memory rate limit (best-effort, Vercel may reuse instances)
+// 完全ではないが、Vercel Functions の instance 再利用により大半のスパムは抑止できる
+// ────────────────────────────────────────
+const RATE_LIMIT_WINDOW_MS = 60_000; // 1分間のウィンドウ
+const RATE_LIMIT_MAX = 5; // 同一IPあたり1分間に最大5リクエスト
+const rateLimitStore = new Map<string, number[]>();
+
+function getClientIp(req: any): string {
+  const xff = req.headers['x-forwarded-for'];
+  if (typeof xff === 'string' && xff) return xff.split(',')[0].trim();
+  if (Array.isArray(xff) && xff.length > 0) return xff[0];
+  return (req.headers['x-real-ip'] as string) || 'unknown';
+}
+
+function checkRateLimit(ip: string): { allowed: boolean; retryAfterSec?: number } {
+  const now = Date.now();
+  const arr = rateLimitStore.get(ip) || [];
+  const recent = arr.filter((t) => now - t < RATE_LIMIT_WINDOW_MS);
+
+  if (recent.length >= RATE_LIMIT_MAX) {
+    const oldest = recent[0];
+    const retryAfterSec = Math.ceil((RATE_LIMIT_WINDOW_MS - (now - oldest)) / 1000);
+    return { allowed: false, retryAfterSec };
+  }
+
+  recent.push(now);
+  rateLimitStore.set(ip, recent);
+
+  // Occasional cleanup to avoid unbounded growth
+  if (rateLimitStore.size > 1000) {
+    for (const [k, v] of rateLimitStore.entries()) {
+      const filtered = v.filter((t) => now - t < RATE_LIMIT_WINDOW_MS);
+      if (filtered.length === 0) rateLimitStore.delete(k);
+      else rateLimitStore.set(k, filtered);
+    }
+  }
+
+  return { allowed: true };
+}
+
 // Vercel Functions(Node runtime) のリクエスト/レスポンス型は any でも動く
 // 厳密にやるなら @vercel/node を入れて VercelRequest/VercelResponse を使う
 export default async function handler(req: any, res: any) {
@@ -23,6 +64,18 @@ export default async function handler(req: any, res: any) {
   if (req.method !== 'POST') {
     res.setHeader('Allow', 'POST');
     return res.status(405).json({ error: 'Method not allowed' });
+  }
+
+  // Rate limit by client IP (5 requests / minute / IP)
+  const ip = getClientIp(req);
+  const rl = checkRateLimit(ip);
+  if (!rl.allowed) {
+    console.warn('[concierge] rate limit exceeded for', ip);
+    res.setHeader('Retry-After', String(rl.retryAfterSec ?? 60));
+    return res.status(429).json({
+      error: 'リクエストが多すぎます。しばらくお待ちください。',
+      retryAfterSec: rl.retryAfterSec,
+    });
   }
 
   // API key check

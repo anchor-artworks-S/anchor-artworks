@@ -7,7 +7,6 @@
 
 import { useState, useEffect, useRef, Fragment } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { GoogleGenAI } from "@google/genai";
 import Papa from "papaparse";
 import { buildSystemPrompt } from "./aiPrompt";
 import {
@@ -1643,22 +1642,12 @@ function ChatConcierge({ works, initialPrompt }: { works: Work[]; initialPrompt?
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
-  const aiRef = useRef<GoogleGenAI | null>(null);
   const sentInitialRef = useRef<string>('');
-
-  useEffect(() => {
-    const apiKey = import.meta.env.VITE_GEMINI_API_KEY || '';
-    if (!apiKey) {
-      console.warn('[AI Concierge] VITE_GEMINI_API_KEY が設定されていません。Vercel の環境変数を確認してください。');
-    }
-    aiRef.current = new GoogleGenAI({ apiKey });
-  }, []);
 
   // Auto-send when initialPrompt is provided (once per prompt value)
   useEffect(() => {
-    if (initialPrompt && initialPrompt !== sentInitialRef.current && aiRef.current) {
+    if (initialPrompt && initialPrompt !== sentInitialRef.current) {
       sentInitialRef.current = initialPrompt;
-      // small delay so AI client is ready
       const t = setTimeout(() => {
         handleSend(initialPrompt);
       }, 100);
@@ -1682,23 +1671,28 @@ function ChatConcierge({ works, initialPrompt }: { works: Work[]; initialPrompt?
     setIsTyping(true);
 
     try {
-      if (!aiRef.current) throw new Error("AI not initialized");
       const systemPrompt = buildSystemPrompt(works.map(w => w.title));
 
-      const history = messages.map(msg => ({
-        role: msg.role === 'user' ? 'user' : 'model',
-        parts: [{ text: msg.content }]
-      }));
-
-      const chat = aiRef.current.chats.create({
-        model: 'gemini-2.5-flash',
-        config: { systemInstruction: systemPrompt, temperature: 0.7 },
-        history: history as any
+      // Call Vercel Function (server-side). API key stays on the server.
+      const res = await fetch('/api/concierge', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          history: messages,
+          message: textToSend,
+          systemPrompt,
+        }),
       });
 
-      const response = await chat.sendMessage({ message: textToSend });
-      setMessages(prev => [...prev, { role: 'assistant', content: response.text || "申し訳ございません。応答の生成に失敗しました。" }]);
+      if (!res.ok) {
+        const errBody = await res.json().catch(() => ({}));
+        throw new Error(errBody.error || `HTTP ${res.status}`);
+      }
+
+      const data = await res.json();
+      setMessages(prev => [...prev, { role: 'assistant', content: data.text || "申し訳ございません。応答の生成に失敗しました。" }]);
     } catch (error) {
+      console.error('[AI Concierge] fetch error:', error);
       setMessages(prev => [...prev, { role: 'assistant', content: "現在、AIコンシェルジュが混み合っているようです。しばらくしてから再度お試しいただくか、お問い合わせフォームより直接お問い合わせください。" }]);
     } finally {
       setIsTyping(false);

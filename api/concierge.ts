@@ -27,6 +27,18 @@ export default async function handler(req: any, res: any) {
 
   // API key check
   const apiKey = process.env.GEMINI_API_KEY;
+
+  // Diagnostic log (no key contents — only metadata)
+  console.log('[concierge] env check', {
+    hasKey: !!apiKey,
+    length: apiKey?.length ?? 0,
+    trimmedLength: apiKey?.trim().length ?? 0,
+    runtime: process.env.VERCEL ? 'vercel' : 'local',
+    region: process.env.VERCEL_REGION ?? 'unknown',
+    // どのキー名がセットされているかも確認(タイポ検知)
+    envKeysPrefixedGEMINI: Object.keys(process.env).filter(k => k.toUpperCase().includes('GEMINI')),
+  });
+
   if (!apiKey) {
     console.error('[concierge] GEMINI_API_KEY is not configured');
     return res.status(500).json({ error: 'AI service is not configured' });

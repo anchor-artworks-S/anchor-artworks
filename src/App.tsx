@@ -1414,6 +1414,65 @@ function ContactPage({ works, onNavigateToPrivacy }: { works: Work[]; onNavigate
     setQuickInput('');
   };
 
+  // ── Contact form state ──
+  const [form, setForm] = useState({
+    inquiryType: '',
+    message: '',
+    company: '',
+    name: '',
+    kana: '',
+    phone: '',
+    email: '',
+    website: '',
+    agreed: false,
+  });
+  const [hp, setHp] = useState(''); // honeypot
+  const [submitting, setSubmitting] = useState(false);
+  const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle');
+  const [submitError, setSubmitError] = useState('');
+
+  const updateField = (key: string, value: string | boolean) =>
+    setForm(prev => ({ ...prev, [key]: value }));
+
+  const handleContactSubmit = async () => {
+    // client-side validation
+    const missing: string[] = [];
+    if (!form.message.trim()) missing.push('お問い合わせ内容');
+    if (!form.company.trim()) missing.push('会社名');
+    if (!form.name.trim()) missing.push('お名前');
+    if (!form.kana.trim()) missing.push('フリガナ');
+    if (!form.phone.trim()) missing.push('電話番号');
+    if (!form.email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) missing.push('メールアドレス');
+    if (!form.agreed) missing.push('プライバシーポリシーへの同意');
+    if (missing.length > 0) {
+      setSubmitError(`ご確認ください：${missing.join(' / ')}`);
+      setSubmitStatus('error');
+      return;
+    }
+
+    setSubmitting(true);
+    setSubmitStatus('idle');
+    setSubmitError('');
+    try {
+      const res = await fetch('/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...form, _hp: hp }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || `送信に失敗しました（${res.status}）`);
+      }
+      setSubmitStatus('success');
+      setForm({ inquiryType: '', message: '', company: '', name: '', kana: '', phone: '', email: '', website: '', agreed: false });
+    } catch (e: any) {
+      setSubmitError(e?.message || '送信に失敗しました。時間をおいて再度お試しください。');
+      setSubmitStatus('error');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   return (
     <div className="bg-white pb-0">
       {/* Header */}
@@ -1523,72 +1582,140 @@ function ContactPage({ works, onNavigateToPrivacy }: { works: Work[]; onNavigate
       {/* Form */}
       <section className="bg-gray-100 py-20 px-6">
         <div className="max-w-[700px] mx-auto space-y-16">
-          {/* Inquiry */}
-          <div className="space-y-8">
-            <h2 className="text-xl md:text-2xl font-display font-bold text-center">お問い合わせ内容</h2>
-            <div className="space-y-6">
-              <div className="space-y-2">
-                <label className="text-xs font-bold tracking-widest">お問い合わせ項目 *</label>
-                <div className="relative">
-                  <select className="w-full bg-white px-5 py-4 border-none shadow-sm focus:ring-2 focus:ring-brand outline-none appearance-none cursor-pointer text-sm">
-                    <option>選択してください</option>
-                    <option>映像制作のご相談</option>
-                    <option>デザインのご依頼</option>
-                    <option>企画・戦略の策定</option>
-                    <option>その他</option>
-                  </select>
-                  <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-black/30 pointer-events-none" size={18} />
+          {submitStatus === 'success' ? (
+            /* Success state */
+            <motion.div
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="text-center space-y-6 py-16"
+            >
+              <div className="w-16 h-16 bg-brand rounded-full flex items-center justify-center mx-auto">
+                <Mail size={28} className="text-black" />
+              </div>
+              <h2 className="text-2xl md:text-3xl font-display font-bold">送信しました。</h2>
+              <p className="text-black/70 text-sm md:text-base leading-relaxed max-w-md mx-auto">
+                お問い合わせありがとうございます。<br />
+                内容を確認のうえ、担当者より折り返しご連絡いたします。<br />
+                通常2〜3営業日以内にご返信します。
+              </p>
+              <button
+                onClick={() => setSubmitStatus('idle')}
+                className="text-[11px] font-bold uppercase tracking-[0.2em] text-black/50 hover:text-black underline transition-colors"
+              >
+                続けて問い合わせる
+              </button>
+            </motion.div>
+          ) : (
+            <>
+              {/* Inquiry */}
+              <div className="space-y-8">
+                <h2 className="text-xl md:text-2xl font-display font-bold text-center">お問い合わせ内容</h2>
+                <div className="space-y-6">
+                  <div className="space-y-2">
+                    <label className="text-xs font-bold tracking-widest">お問い合わせ項目</label>
+                    <div className="relative">
+                      <select
+                        value={form.inquiryType}
+                        onChange={(e) => updateField('inquiryType', e.target.value)}
+                        className="w-full bg-white px-5 py-4 border-none shadow-sm focus:ring-2 focus:ring-brand outline-none appearance-none cursor-pointer text-sm"
+                      >
+                        <option value="">選択してください</option>
+                        <option value="映像制作のご相談">映像制作のご相談</option>
+                        <option value="CG・デザインのご依頼">CG・デザインのご依頼</option>
+                        <option value="企画・戦略の策定">企画・戦略の策定</option>
+                        <option value="ポッドキャストのご相談">ポッドキャストのご相談</option>
+                        <option value="VTuber MV・ライブ演出">VTuber MV・ライブ演出</option>
+                        <option value="その他">その他</option>
+                      </select>
+                      <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-black/30 pointer-events-none" size={18} />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-xs font-bold tracking-widest">お問い合わせ内容 *</label>
+                    <textarea
+                      value={form.message}
+                      onChange={(e) => updateField('message', e.target.value)}
+                      className="w-full bg-white px-5 py-4 border-none shadow-sm focus:ring-2 focus:ring-brand outline-none h-48 resize-none text-sm"
+                      placeholder="例）動画撮影に関してご相談したい。"
+                    />
+                  </div>
                 </div>
               </div>
-              <div className="space-y-2">
-                <label className="text-xs font-bold tracking-widest">お問い合わせ内容 *</label>
-                <textarea
-                  className="w-full bg-white px-5 py-4 border-none shadow-sm focus:ring-2 focus:ring-brand outline-none h-48 resize-none text-sm"
-                  placeholder="例）動画撮影に関してご相談したい。"
-                />
-              </div>
-            </div>
-          </div>
 
-          {/* Customer info */}
-          <div className="space-y-8">
-            <h2 className="text-xl md:text-2xl font-display font-bold text-center">お客様情報</h2>
-            <div className="space-y-5">
-              {[
-                { label: "会社名 *", type: "text" },
-                { label: "お名前 *", type: "text" },
-                { label: "フリガナ *", type: "text" },
-                { label: "電話番号 *", type: "tel" },
-                { label: "メールアドレス *", type: "email" },
-                { label: "Web サイト URL", type: "url" },
-              ].map((field, idx) => (
-                <div key={idx} className="space-y-2">
-                  <label className="text-xs font-bold tracking-widest">{field.label}</label>
+              {/* Customer info */}
+              <div className="space-y-8">
+                <h2 className="text-xl md:text-2xl font-display font-bold text-center">お客様情報</h2>
+                <div className="space-y-5">
+                  {([
+                    { key: 'company', label: "会社名 *", type: "text", placeholder: "株式会社○○" },
+                    { key: 'name', label: "お名前 *", type: "text", placeholder: "山田 太郎" },
+                    { key: 'kana', label: "フリガナ *", type: "text", placeholder: "ヤマダ タロウ" },
+                    { key: 'phone', label: "電話番号 *", type: "tel", placeholder: "090-1234-5678" },
+                    { key: 'email', label: "メールアドレス *", type: "email", placeholder: "you@example.com" },
+                    { key: 'website', label: "Web サイト URL", type: "url", placeholder: "https://example.com" },
+                  ] as const).map((field) => (
+                    <div key={field.key} className="space-y-2">
+                      <label className="text-xs font-bold tracking-widest">{field.label}</label>
+                      <input
+                        type={field.type}
+                        value={form[field.key] as string}
+                        onChange={(e) => updateField(field.key, e.target.value)}
+                        placeholder={field.placeholder}
+                        className="w-full bg-white px-5 py-4 border-none shadow-sm focus:ring-2 focus:ring-brand outline-none text-sm"
+                      />
+                    </div>
+                  ))}
+                  {/* Honeypot (hidden from users, bots fill it) */}
                   <input
-                    type={field.type}
-                    placeholder="選択してください"
-                    className="w-full bg-white px-5 py-4 border-none shadow-sm focus:ring-2 focus:ring-brand outline-none text-sm"
+                    type="text"
+                    value={hp}
+                    onChange={(e) => setHp(e.target.value)}
+                    tabIndex={-1}
+                    autoComplete="off"
+                    aria-hidden="true"
+                    style={{ position: 'absolute', left: '-9999px', width: '1px', height: '1px', opacity: 0 }}
                   />
                 </div>
-              ))}
-            </div>
-          </div>
+              </div>
 
-          {/* Submit */}
-          <div className="space-y-6 text-center">
-            <label className="flex items-center justify-center gap-3 cursor-pointer">
-              <input type="checkbox" className="w-4 h-4 border-gray-300 text-black focus:ring-black cursor-pointer" />
-              <span className="text-[11px] font-bold tracking-widest text-black/60">
-                <button type="button" onClick={onNavigateToPrivacy} className="underline hover:text-black transition-colors">
-                  プライバシーポリシー
-                </button>に同意する
-              </span>
-            </label>
-            <button className="w-full md:w-auto px-14 py-4 bg-black text-white font-bold text-[11px] uppercase tracking-[0.2em] hover:opacity-90 transition-all flex items-center justify-center gap-3 mx-auto group">
-              <span>入力内容を確認する</span>
-              <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
-            </button>
-          </div>
+              {/* Submit */}
+              <div className="space-y-6 text-center">
+                {submitStatus === 'error' && (
+                  <p className="text-sm text-red-600 bg-red-50 px-4 py-3 rounded-lg">{submitError}</p>
+                )}
+                <label className="flex items-center justify-center gap-3 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={form.agreed}
+                    onChange={(e) => updateField('agreed', e.target.checked)}
+                    className="w-4 h-4 border-gray-300 text-black focus:ring-black cursor-pointer"
+                  />
+                  <span className="text-[11px] font-bold tracking-widest text-black/60">
+                    <button type="button" onClick={onNavigateToPrivacy} className="underline hover:text-black transition-colors">
+                      プライバシーポリシー
+                    </button>に同意する
+                  </span>
+                </label>
+                <button
+                  onClick={handleContactSubmit}
+                  disabled={submitting}
+                  className="w-full md:w-auto px-14 py-4 bg-black text-white font-bold text-[11px] uppercase tracking-[0.2em] hover:opacity-90 transition-all flex items-center justify-center gap-3 mx-auto group disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {submitting ? (
+                    <>
+                      <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                      <span>送信中...</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>この内容で送信する</span>
+                      <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
+                    </>
+                  )}
+                </button>
+              </div>
+            </>
+          )}
         </div>
       </section>
 

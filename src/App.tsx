@@ -728,155 +728,71 @@ function HomePage({ works, isLoading, isLoadingJournal, journalPosts, onNavigate
   onNavigateToContact: () => void;
   onSelectWork: (work: Work) => void;
 }) {
-  // Kinetic typography phrases (loop)
-  const phrases = [
-    '思考の速度で。',
-    '最後の磨きで。',
-    '納得のカタチへ。',
-    'ひらめきの隣で。',
-  ];
-  const [phraseIdx, setPhraseIdx] = useState(0);
-  useEffect(() => {
-    const id = setInterval(() => setPhraseIdx(i => (i + 1) % phrases.length), 3500);
-    return () => clearInterval(id);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
   return (
     <div className="bg-white">
-      {/* Hero */}
-      <section className="relative bg-brand min-h-[48vh] md:min-h-[62vh] flex flex-col items-center justify-center text-center px-6 pt-24 pb-12 overflow-hidden">
-        {/* Floating geometric shapes (背景) */}
-        <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
-          <motion.div
-            className="absolute w-[320px] h-[320px] rounded-full bg-white/35 blur-2xl"
-            style={{ left: '-8%', top: '8%' }}
-            animate={{ x: [0, 40, -20, 0], y: [0, -30, 15, 0], rotate: [0, 20, -10, 0] }}
-            transition={{ duration: 36, repeat: Infinity, ease: 'easeInOut' }}
-          />
-          <motion.div
-            className="absolute w-[280px] h-[280px] rounded-full bg-black/[0.06] blur-2xl"
-            style={{ right: '-6%', bottom: '5%' }}
-            animate={{ x: [0, -35, 15, 0], y: [0, 25, -10, 0], rotate: [0, -15, 10, 0] }}
-            transition={{ duration: 40, repeat: Infinity, ease: 'easeInOut' }}
-          />
-          <motion.div
-            className="absolute w-[180px] h-[180px] bg-white/40 blur-xl"
-            style={{ left: '12%', bottom: '15%', borderRadius: '30%' }}
-            animate={{ x: [0, 25, -15, 0], y: [0, -20, 10, 0], rotate: [0, 45, 90, 135, 180] }}
-            transition={{ duration: 48, repeat: Infinity, ease: 'linear' }}
-          />
-          <motion.div
-            className="absolute w-[150px] h-[150px] bg-white/25 blur-xl"
-            style={{ right: '18%', top: '12%' }}
-            animate={{ x: [0, -20, 10, 0], y: [0, 15, -8, 0], rotate: [0, 60, 120, 180] }}
-            transition={{ duration: 42, repeat: Infinity, ease: 'linear' }}
-          />
-          <motion.div
-            className="absolute w-[90px] h-[90px] rounded-full bg-brand blur-md"
-            style={{ left: '45%', top: '20%' }}
-            animate={{ x: [0, 15, -8, 0], y: [0, -12, 6, 0] }}
-            transition={{ duration: 28, repeat: Infinity, ease: 'easeInOut' }}
-          />
-        </div>
-
+      {/* Hero — compact brand band */}
+      <section className="bg-brand flex flex-col items-center justify-center text-center px-6 pt-24 pb-10">
         <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.8 }}
-          className="relative z-10 flex flex-col items-center gap-6 max-w-4xl mx-auto"
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.7 }}
+          className="max-w-4xl mx-auto space-y-4"
         >
-          <div className="space-y-5">
-            <h1 className="text-4xl md:text-6xl font-display font-bold tracking-tighter leading-[1.05]">
-              <span className="block">CG・映像制作を、</span>
-              <span className="block relative h-[1.2em] overflow-y-hidden">
-                {/* Static fallback for SEO/AI crawlers: 思考の速度で。 */}
-                <span className="sr-only">思考の速度で。</span>
-                <AnimatePresence mode="wait">
-                  <motion.span
-                    key={phraseIdx}
-                    className="absolute inset-0 flex justify-center whitespace-nowrap"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    transition={{ duration: 0.3 }}
-                    aria-hidden="true"
-                  >
-                    {phrases[phraseIdx].split('').map((ch, i) => (
-                      <motion.span
-                        key={i}
-                        className="inline-block"
-                        initial={{ opacity: 0, y: 24, filter: 'blur(6px)' }}
-                        animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
-                        exit={{ opacity: 0, y: -24, filter: 'blur(6px)' }}
-                        transition={{ duration: 0.45, delay: i * 0.035, ease: [0.22, 1, 0.36, 1] }}
-                      >
-                        {ch}
-                      </motion.span>
-                    ))}
-                  </motion.span>
-                </AnimatePresence>
-              </span>
-            </h1>
-            <p className="text-sm md:text-base text-black/70 leading-relaxed font-medium tracking-wide">
-              企画から納品まで。最速でカタチに。
-            </p>
-          </div>
+          <h1 className="text-4xl md:text-6xl font-display font-bold tracking-tighter leading-[1.05]">
+            CG・映像制作を、<br />思考の速度で。
+          </h1>
+          <p className="text-sm md:text-base text-black/70 leading-relaxed font-medium tracking-wide">
+            企画から納品まで。最速でカタチに。
+          </p>
         </motion.div>
       </section>
 
-      {/* SHOWREEL */}
-      <section className="bg-black text-white py-20 px-6">
-        <div className="max-w-[1400px] mx-auto">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6 }}
-            className="text-center mb-10 space-y-3"
-          >
-            <div className="flex items-center justify-center gap-4 max-w-md mx-auto">
-              <span className="text-[10px] font-bold tracking-[0.3em] uppercase text-white/40 whitespace-nowrap">SHOWREEL</span>
-              <div className="h-px bg-brand flex-1" />
-            </div>
-            <h2 className="text-3xl md:text-5xl font-display font-bold text-brand tracking-tight">
-              アイデアが、動き出す。
-            </h2>
-            <p className="text-white/60 text-sm md:text-base max-w-xl mx-auto leading-relaxed">
-              Anchor Art Worksのクリエイティブを、約60秒で。
-            </p>
-          </motion.div>
-          <motion.div
-            initial={{ opacity: 0, scale: 0.97 }}
-            whileInView={{ opacity: 1, scale: 1 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.8, ease: 'easeOut' }}
-            className="relative aspect-video w-full bg-black border border-white/10 overflow-hidden"
-          >
-            <iframe
-              src="https://player.vimeo.com/video/819715322?autoplay=1&loop=1&muted=1&background=1&title=0&byline=0&portrait=0&dnt=1"
-              className="absolute inset-0 w-full h-full"
-              allow="autoplay; fullscreen; picture-in-picture"
-              allowFullScreen
-              loading="lazy"
-              title="Anchor Art Works Showreel"
-            />
-          </motion.div>
-          <motion.div
-            initial={{ opacity: 0, y: 15 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5, delay: 0.2 }}
-            className="flex justify-center mt-10"
-          >
-            <button
-              onClick={onNavigateToWorks}
-              className="px-12 py-3.5 bg-brand text-black font-bold text-[11px] uppercase tracking-[0.2em] hover:bg-white transition-all flex items-center gap-3 group"
+      {/* SHOWREEL — full-width video with overlay text */}
+      <section className="relative w-full bg-black overflow-hidden">
+        <div className="relative w-full aspect-video">
+          {/* Background video (Vimeo) */}
+          <iframe
+            src="https://player.vimeo.com/video/819715322?autoplay=1&loop=1&muted=1&background=1&title=0&byline=0&portrait=0&dnt=1"
+            className="absolute inset-0 w-full h-full pointer-events-none"
+            allow="autoplay; fullscreen; picture-in-picture"
+            allowFullScreen
+            loading="eager"
+            title="Anchor Art Works Showreel"
+            aria-hidden="true"
+          />
+          {/* Dark gradient overlay for legibility */}
+          <div className="absolute inset-0 bg-gradient-to-b from-black/55 via-black/30 to-black/80 pointer-events-none" />
+          {/* Text overlay (DOM上に普通のテキストとして存在 = SEO/AI フレンドリー) */}
+          <div className="absolute inset-0 z-10 flex flex-col items-center justify-center text-center px-6">
+            <motion.div
+              initial={{ opacity: 0, y: 15 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.7 }}
+              className="space-y-4 max-w-2xl"
             >
-              <span>VIEW ALL WORKS</span>
-              <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
-            </button>
-          </motion.div>
+              <div className="flex items-center justify-center gap-4 max-w-xs mx-auto">
+                <div className="h-px bg-brand flex-1" />
+                <span className="text-[10px] md:text-xs font-bold tracking-[0.35em] uppercase text-white/80 whitespace-nowrap">SHOWREEL</span>
+                <div className="h-px bg-brand flex-1" />
+              </div>
+              <h2 className="text-3xl md:text-5xl lg:text-6xl font-display font-bold text-white tracking-tight drop-shadow-lg">
+                アイデアが、動き出す。
+              </h2>
+              <p className="text-white/85 text-sm md:text-base max-w-xl mx-auto leading-relaxed drop-shadow">
+                Anchor Art Worksのクリエイティブを、約60秒で。
+              </p>
+              <div className="pt-4">
+                <button
+                  onClick={onNavigateToWorks}
+                  className="px-10 md:px-12 py-3 md:py-3.5 bg-brand text-black font-bold text-[10px] md:text-[11px] uppercase tracking-[0.2em] hover:bg-white transition-all inline-flex items-center gap-3 group shadow-lg"
+                >
+                  <span>VIEW ALL WORKS</span>
+                  <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
+                </button>
+              </div>
+            </motion.div>
+          </div>
         </div>
       </section>
 

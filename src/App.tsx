@@ -730,18 +730,19 @@ function HomePage({ works, isLoading, isLoadingJournal, journalPosts, onNavigate
 }) {
   return (
     <div className="bg-white">
-      {/* Hero — compact brand band */}
-      <section className="bg-brand flex flex-col items-center justify-center text-center px-6 pt-24 pb-10">
+      {/* Hero — compact black band (映像が主役、ブランドピンクは下流に温存) */}
+      <section className="bg-black text-white flex flex-col items-center justify-center text-center px-6 pt-24 pb-10">
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7 }}
           className="max-w-4xl mx-auto space-y-4"
         >
-          <h1 className="text-4xl md:text-6xl font-display font-bold tracking-tighter leading-[1.05]">
-            CG・映像制作を、<br />思考の速度で。
+          <h1 className="text-4xl md:text-6xl font-display font-bold tracking-tighter leading-[1.05] text-white">
+            CG・映像制作を、<br />
+            <span className="text-brand">思考の速度で。</span>
           </h1>
-          <p className="text-sm md:text-base text-black/70 leading-relaxed font-medium tracking-wide">
+          <p className="text-sm md:text-base text-white/70 leading-relaxed font-medium tracking-wide">
             企画から納品まで。最速でカタチに。
           </p>
         </motion.div>

@@ -1884,7 +1884,7 @@ function SelectedWorkCard({ work, idx, onClick }: SelectedWorkCardProps) {
       <p className="text-[11px] font-bold text-black/70">
         『{work.title}』ブランド映像
       </p>
-      <p className="text-[10px] text-black/40">{work.clientName ? `Client_${work.clientName}` : 'Client_共同印刷 株式会社'}</p>
+      <p className="text-[10px] text-black/40">{work.clientName || '共同印刷 株式会社'}</p>
     </motion.div>
   );
 }
@@ -2045,7 +2045,7 @@ function WorkGridCard({ work, idx, onClick }: WorkGridCardProps) {
           {work.title}
         </p>
         {work.clientName && (
-          <p className="text-[10px] text-black/40">Client_{work.clientName}</p>
+          <p className="text-[10px] text-black/40">{work.clientName}</p>
         )}
       </div>
     </motion.div>
@@ -2253,7 +2253,7 @@ function WorkModal({ work, onClose }: { work: Work; onClose: () => void }) {
               <span className="px-2 py-0.5 bg-black text-[9px] text-white uppercase tracking-widest font-bold inline-block">{work.category || 'OTHER'}</span>
               <h2 className="text-2xl md:text-4xl font-display font-bold text-black tracking-tighter leading-tight">{work.title}</h2>
               {work.clientName && (
-                <p className="text-xs text-black/50 font-medium">Client_{work.clientName}</p>
+                <p className="text-xs text-black/50 font-medium">{work.clientName}</p>
               )}
             </div>
             {work.e_id_link && (
@@ -2269,13 +2269,13 @@ function WorkModal({ work, onClose }: { work: Work; onClose: () => void }) {
             <div className="md:col-span-8 space-y-10">
               {work.a01_intent && (
                 <section className="space-y-3">
-                  <span className="text-black/30 font-bold text-[9px] uppercase tracking-[0.4em] block">A-01: Intent</span>
+                  <span className="text-black/30 font-bold text-[10px] tracking-[0.3em] block">制作意図</span>
                   <p className="text-xl md:text-3xl font-display font-bold leading-tight tracking-tight">"{work.a01_intent}"</p>
                 </section>
               )}
               {work.m07_solution && (
                 <section className="space-y-4">
-                  <span className="text-black/30 font-bold text-[9px] uppercase tracking-[0.4em] block">M-07: Solution</span>
+                  <span className="text-black/30 font-bold text-[10px] tracking-[0.3em] block">解決アプローチ</span>
                   <p className="text-base text-black/60 leading-relaxed">{work.m07_solution}</p>
                 </section>
               )}

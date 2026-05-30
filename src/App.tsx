@@ -1228,9 +1228,10 @@ function AboutPage({ onNavigateToContact }: { onNavigateToContact: () => void })
               role: "Marketing Specialist",
               name: "沖田　紘亮",
               enName: "KOUSUKE OKITA",
+              photoSrc: "/okita.png",
               bio: "テレビ局、総合広告代理店を経て独立。AI時代のマーケティング戦略とデータ分析を基盤に、コンテンツの価値最大化を担うスペシャリスト。行動経済学や市場構造を踏まえた戦略設計により、ターゲットへの最適なリーチと継続的な成果創出を実現。映像制作の前段階となる課題設定からKPI設計、効果測定までを一貫して支援する。クリエイティブと数字を繋ぐ視点で、ブランドの長期的な成長を支える。"
             }
-          ].map((member, idx) => (
+          ].map((member: { role: string; name: string; enName: string; bio: string; photoSrc?: string }, idx) => (
             <motion.div
               key={idx}
               initial={{ opacity: 0, y: 15 }}
@@ -1239,8 +1240,18 @@ function AboutPage({ onNavigateToContact }: { onNavigateToContact: () => void })
               transition={{ delay: idx * 0.1 }}
               className="space-y-4"
             >
-              {/* Placeholder photo */}
-              <div className="aspect-square bg-white/10 w-full" />
+              {/* Photo (or placeholder) */}
+              {member.photoSrc ? (
+                <div className="aspect-square w-full overflow-hidden bg-white/10">
+                  <img
+                    src={member.photoSrc}
+                    alt={member.name}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+              ) : (
+                <div className="aspect-square bg-white/10 w-full" />
+              )}
               <div className="space-y-1">
                 <p className="text-[10px] text-white/30 font-bold uppercase tracking-widest">{member.role}</p>
                 <h3 className="text-2xl font-display font-bold">{member.name}</h3>
@@ -1288,7 +1299,7 @@ function AboutPage({ onNavigateToContact }: { onNavigateToContact: () => void })
             transition={{ duration: 35, ease: 'linear', repeat: Infinity }}
           >
             {[...clients, ...clients].map((client, idx) => (
-              <div key={idx} className="flex-shrink-0 flex items-center justify-center h-14 px-10 md:px-14">
+              <div key={idx} className="flex-shrink-0 flex items-center justify-center h-20 md:h-24 px-12 md:px-16">
                 <ClientLogo client={client} />
               </div>
             ))}
@@ -1307,12 +1318,12 @@ function ClientLogo({ client }: { client: { name: string; logoSrc: string } }) {
       <img
         src={client.logoSrc}
         alt={client.name}
-        className="h-10 w-auto object-contain"
+        className="h-14 md:h-16 w-auto object-contain"
         onError={() => setError(true)}
       />
     );
   }
-  return <span className="font-display font-bold text-base tracking-tight">{client.name}</span>;
+  return <span className="font-display font-bold text-lg md:text-xl tracking-tight">{client.name}</span>;
 }
 
 // ─────────────────────────────────────────

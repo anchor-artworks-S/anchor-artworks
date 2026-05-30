@@ -738,7 +738,8 @@ function HomePage({ works, isLoading, isLoadingJournal, journalPosts, onNavigate
           transition={{ duration: 0.7 }}
           className="max-w-4xl mx-auto space-y-4"
         >
-          <h1 className="text-4xl md:text-6xl font-display font-bold tracking-tighter leading-[1.05] text-white">
+          {/* ③ h1サイズを一段抑えて上品さUP (md:6xl → md:5xl lg:6xl) */}
+          <h1 className="text-4xl md:text-5xl lg:text-6xl font-display font-bold tracking-tighter leading-[1.1] text-white">
             CG・映像制作を、<br />
             <span className="text-brand">思考の速度で。</span>
           </h1>
@@ -761,8 +762,17 @@ function HomePage({ works, isLoading, isLoadingJournal, journalPosts, onNavigate
             title="Anchor Art Works Showreel"
             aria-hidden="true"
           />
-          {/* Dark gradient overlay for legibility */}
-          <div className="absolute inset-0 bg-gradient-to-b from-black/55 via-black/30 to-black/80 pointer-events-none" />
+          {/* ① Top fade: ヒーロー(黒)から動画への自然な繋ぎ */}
+          <div className="absolute top-0 inset-x-0 h-32 md:h-40 bg-gradient-to-b from-black to-transparent pointer-events-none z-[5]" />
+          {/* Base dark gradient for general legibility */}
+          <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/25 to-black/75 pointer-events-none" />
+          {/* ② Radial dark spotlight: テキスト周辺だけさらに暗くして可読性を鉄壁に */}
+          <div
+            className="absolute inset-0 pointer-events-none"
+            style={{
+              background: 'radial-gradient(ellipse at 50% 55%, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.25) 35%, rgba(0,0,0,0) 65%)',
+            }}
+          />
           {/* Text overlay (DOM上に普通のテキストとして存在 = SEO/AI フレンドリー) */}
           <div className="absolute inset-0 z-10 flex flex-col items-center justify-center text-center px-6">
             <motion.div

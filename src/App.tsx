@@ -2258,9 +2258,9 @@ function WorkModal({ work, onClose }: { work: Work; onClose: () => void }) {
             </div>
             {work.e_id_link && (
               <a href={work.e_id_link} target="_blank" rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 px-4 py-2 border border-black/15 text-[10px] font-bold uppercase tracking-widest text-black hover:bg-black hover:text-white transition-all whitespace-nowrap">
+                className="inline-flex items-center gap-2 px-4 py-2 border border-black/15 text-[11px] font-bold tracking-widest text-black hover:bg-black hover:text-white transition-all whitespace-nowrap">
                 <ExternalLink size={12} />
-                View Evidence
+                外部リンク
               </a>
             )}
           </div>
@@ -2270,13 +2270,13 @@ function WorkModal({ work, onClose }: { work: Work; onClose: () => void }) {
               {work.a01_intent && (
                 <section className="space-y-3">
                   <span className="text-black/30 font-bold text-[10px] tracking-[0.3em] block">制作意図</span>
-                  <p className="text-xl md:text-3xl font-display font-bold leading-tight tracking-tight">"{work.a01_intent}"</p>
+                  <p className="text-base text-black/70 leading-relaxed">{work.a01_intent}</p>
                 </section>
               )}
               {work.m07_solution && (
-                <section className="space-y-4">
+                <section className="space-y-3">
                   <span className="text-black/30 font-bold text-[10px] tracking-[0.3em] block">解決アプローチ</span>
-                  <p className="text-base text-black/60 leading-relaxed">{work.m07_solution}</p>
+                  <p className="text-base text-black/70 leading-relaxed">{work.m07_solution}</p>
                 </section>
               )}
               {work.m03_results && work.m03_results.length > 0 && (

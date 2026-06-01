@@ -24,7 +24,10 @@ import {
   Mail,
   Video,
   BookOpen,
+  Instagram,
+  Facebook,
 } from "lucide-react";
+import { Analytics } from "@vercel/analytics/react";
 
 // --- Types ---
 type Page = 'home' | 'works' | 'whatwedo' | 'about' | 'journal' | 'contact' | 'privacy';
@@ -518,6 +521,7 @@ export default function App() {
 
   return (
     <div className="min-h-screen flex flex-col bg-white text-black font-sans selection:bg-black selection:text-white">
+      <Analytics />
       <CustomCursor />
       <FloatingCTA onClick={() => setCurrentPage('contact')} hidden={currentPage === 'contact'} />
       {/* Header */}
@@ -665,7 +669,7 @@ export default function App() {
           <div className="pt-8 border-t border-white/15 mb-6">
             <div className="flex flex-wrap items-center justify-center md:justify-start gap-x-6 gap-y-3">
               <span className="text-[10px] font-bold tracking-[0.3em] uppercase text-brand">FOLLOW &amp; CONTACT</span>
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-4 flex-wrap justify-center md:justify-start">
                 <a
                   href="https://note.com/anchor_art_works"
                   target="_blank"
@@ -675,6 +679,38 @@ export default function App() {
                 >
                   <BookOpen size={14} />
                   <span>note</span>
+                </a>
+                <a
+                  href="https://www.instagram.com/anchorartworks1981/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-widest text-white/70 hover:text-brand transition-colors"
+                  aria-label="Instagram"
+                >
+                  <Instagram size={14} />
+                  <span>Instagram</span>
+                </a>
+                <a
+                  href="https://www.facebook.com/anchorjp1981/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-widest text-white/70 hover:text-brand transition-colors"
+                  aria-label="Facebook"
+                >
+                  <Facebook size={14} />
+                  <span>Facebook</span>
+                </a>
+                <a
+                  href="https://x.com/AnchorArtWorks"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-widest text-white/70 hover:text-brand transition-colors"
+                  aria-label="X (Twitter)"
+                >
+                  <svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor" aria-hidden="true">
+                    <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+                  </svg>
+                  <span>X</span>
                 </a>
                 <a
                   href="https://vimeo.com/user27201919"
@@ -687,7 +723,7 @@ export default function App() {
                   <span>Vimeo</span>
                 </a>
                 <a
-                  href="mailto:info@anchor-japan.com"
+                  href="mailto:info@anchor-artworks.com"
                   className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-widest text-white/70 hover:text-brand transition-colors"
                   aria-label="Email"
                 >
@@ -1197,18 +1233,21 @@ function AboutPage({ onNavigateToContact }: { onNavigateToContact: () => void })
               role: "Editor / Motion Grapher",
               name: "勝田　友亮",
               enName: "YUSUKE KATSUDA",
+              photoSrc: "/YUSUKEKATSUDA.jpg",
               bio: "1989年4月7日生まれ。PRムービー、イベント映像、企業ブランドムービー、VP、CMなどモーショングラフィックスを主軸に幅広く制作。複雑な情報構造を視覚的に整理し、直感的に伝わる動きへと再構築する設計力が強み。クライアントの要望に柔軟に応えるロジカル思考と、視覚的なリズムを両立した映像表現で、ブランドの世界観を多面的に支える。細部の質感までこだわった編集で、視聴者の記憶に残るシーンを生み出す。"
             },
             {
               role: "Editor / Motion Grapher",
               name: "矢戸　光一",
               enName: "KOICHI YATO",
+              photoSrc: "/KOICHIYATO.jpg",
               bio: "2003年1月1日生まれ。PRムービー、イベント映像、ゲーム関連コンテンツなどモーショングラフィックスを主軸に制作。eスポーツのプロ選手を目指していた経験から培われた、高い集中力と緻密な観察眼が武器。0.1秒単位での編集精度と、視聴者の注意を逃さないリズム設計に強みを持ち、次世代のクリエイティブを牽引する。SNS時代のテンポ感を熟知し、短尺から長尺まで幅広いフォーマットに対応する柔軟性も備える。"
             },
             {
               role: "Illustrator / Designer",
               name: "内田　理恵",
               enName: "RIE UCHIDA",
+              photoSrc: "/RIEUCHIDA.jpg",
               bio: "イラストとデザインの境界を行き来しながら、クライアントの世界観や想いを視覚的に表現する、イラストレーター兼デザイナー。オーダーやコンセプトに合わせた柔軟なイラスト表現を得意とし、エモーショナルなタッチからポップで親しみやすい表現まで、幅広く描き分けます。広告・パッケージ・Webなど、多様な分野で制作を行い、単に“見せる”だけでなく、見る人の感情や空気感まで伝わるクリエイションを大切にしています。一つひとつのプロジェクトに丁寧に向き合いながら、記憶に残るビジュアルを目指して制作しています。"
             },
             // 下段: ④ ⑤ ⑥
@@ -1216,19 +1255,21 @@ function AboutPage({ onNavigateToContact }: { onNavigateToContact: () => void })
               role: "Producer / Director",
               name: "目　学",
               enName: "MANABU SAKKA",
+              photoSrc: "/MANABUSAKKA.jpg",
               bio: "1983年10月2日生まれ。映像専門学校卒業後、テレビ業界に就職。報道・バラエティ・ドキュメンタリーなど多様な現場で経験を積み、その後広告業界へ転身。テレビ品質の制作工程と、広告に求められるスピード感を融合させたプロデュース力で、Anchor Art Worksの映像品質を担保する責任者を務める。スタッフィングから予算管理、クライアント折衝までを一貫して統括し、現場とブランドを橋渡しする中核ポジション。"
             },
             {
               role: "SNS / Podcaster",
               name: "森屋　沙耶",
               enName: "SAYA MORIYA",
+              photoSrc: "/SAYAMORIYA.jpg",
               bio: "某人気YouTuberとのコラボ経験を持つポッドキャスター。独特の視点と世界観を活かしたトークを得意とし、親しみやすさとテンポ感のある語り口でリスナーを引き込む。明るく自然体なキャラクターと、少し低めで落ち着きのある声質が特徴。長時間でも心地よく聴けるトーンで、日常の何気ない話題からカルチャー、ライフスタイル、社会的なテーマまで幅広く発信している。リスナーとの距離感を大切にしながら、“誰かの日常に自然と馴染む言葉”を届けることをテーマに活動。耳だけで楽しめる空気感や温度感を意識したトークで、多くの共感を集めている。"
             },
             {
               role: "Marketing Specialist",
               name: "沖田　紘亮",
               enName: "KOUSUKE OKITA",
-              photoSrc: "/okita.png",
+              photoSrc: "/KOUSUKEOKITA.jpg",
               bio: "テレビ局、総合広告代理店を経て独立。AI時代のマーケティング戦略とデータ分析を基盤に、コンテンツの価値最大化を担うスペシャリスト。行動経済学や市場構造を踏まえた戦略設計により、ターゲットへの最適なリーチと継続的な成果創出を実現。映像制作の前段階となる課題設定からKPI設計、効果測定までを一貫して支援する。クリエイティブと数字を繋ぐ視点で、ブランドの長期的な成長を支える。"
             }
           ].map((member: { role: string; name: string; enName: string; bio: string; photoSrc?: string }, idx) => (
@@ -2794,7 +2835,7 @@ function PrivacyPolicyPage() {
               { title: "第2条（個人情報の収集方法）", content: "当社は，ユーザーが利用登録をする際に氏名，生年月日，住所，電話番号，メールアドレスなどの個人情報をお尋ねすることがあります。また，ユーザーと提携先などとの間でなされたユーザーの個人情報を含む取引記録や決済に関する情報を提携先などから収集することがあります。" },
               { title: "第3条（個人情報を収集・利用する目的）", content: "当社が個人情報を収集・利用する目的は，サービスの提供・運営，お問い合わせへの回答，重要なお知らせの連絡，利用規約に違反したユーザーの特定，および上記の利用目的に付随する目的のためです。" },
               { title: "第9条（プライバシーポリシーの変更）", content: "本ポリシーの内容は，法令その他本ポリシーに別段の定めのある事項を除いて，ユーザーに通知することなく，変更することができるものとします。変更後のプライバシーポリシーは，本ウェブサイトに掲載したときから効力を生じるものとします。" },
-              { title: "第13条（お問い合わせ窓口）", content: "本ポリシーに関するお問い合わせ先：株式会社Anchor Art Works、〒153-0053 東京都目黒区五本木2丁目44番2号、代表取締役：勝田 康、Email: info@anchor-japan.com" },
+              { title: "第13条（お問い合わせ窓口）", content: "本ポリシーに関するお問い合わせ先：株式会社Anchor Art Works、〒153-0053 東京都目黒区五本木2丁目44番2号、代表取締役：勝田 康、Email: info@anchor-artworks.com" },
             ].map((item) => (
               <section key={item.title} className="space-y-3">
                 <h2 className="text-base font-display font-bold border-b border-black/10 pb-2">{item.title}</h2>

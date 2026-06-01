@@ -533,7 +533,7 @@ export default function App() {
             className="hover:opacity-80 transition-opacity"
             aria-label="Anchor Art Works"
           >
-            <img src="/aaw_logo_full.png" alt="Anchor Art Works" className="h-12 w-auto object-contain" />
+            <img src="/wh_logomark.png" alt="Anchor Art Works" className="h-12 w-auto object-contain" />
           </button>
 
           {/* Desktop Nav */}
@@ -905,6 +905,7 @@ function HomePage({ works, isLoading, isLoadingJournal, journalPosts, onNavigate
             className="mb-10"
           >
             <div className="flex items-center justify-center gap-4 max-w-md mx-auto">
+              <div className="h-px bg-black/30 flex-1" />
               <span className="text-[10px] font-bold tracking-[0.3em] uppercase text-black/40 whitespace-nowrap">WE DELIVER</span>
               <div className="h-px bg-black/30 flex-1" />
             </div>
@@ -1015,7 +1016,8 @@ function WorksPage({ works, isLoading, onSelectWork, onNavigateToContact }: {
         >
           <div className="text-center">
             <h1 className="text-6xl md:text-8xl font-display font-bold tracking-tighter leading-[0.95]">WORKS</h1>
-            <div className="flex items-center gap-4 mt-5">
+            <div className="flex items-center justify-center gap-4 max-w-md mx-auto mt-5">
+              <div className="h-2 bg-brand flex-1" />
               <span className="text-[10px] font-bold tracking-[0.3em] uppercase text-black/50 whitespace-nowrap">OUR LIBRARY</span>
               <div className="h-2 bg-brand flex-1" />
             </div>
@@ -1138,7 +1140,8 @@ function AboutPage({ onNavigateToContact }: { onNavigateToContact: () => void })
         >
           <div className="text-center">
             <h1 className="text-6xl md:text-8xl font-display font-bold tracking-tighter leading-[0.95]">ABOUT.</h1>
-            <div className="flex items-center gap-4 mt-5">
+            <div className="flex items-center justify-center gap-4 max-w-md mx-auto mt-5">
+              <div className="h-2 bg-brand flex-1" />
               <span className="text-[10px] font-bold tracking-[0.3em] uppercase text-black/50 whitespace-nowrap">WHO WE ARE</span>
               <div className="h-2 bg-brand flex-1" />
             </div>
@@ -1170,6 +1173,7 @@ function AboutPage({ onNavigateToContact }: { onNavigateToContact: () => void })
             className="text-center mb-12 space-y-3"
           >
             <div className="flex items-center justify-center gap-4 max-w-md mx-auto">
+              <div className="h-px bg-brand flex-1" />
               <span className="text-[10px] font-bold tracking-[0.3em] uppercase text-black/40 whitespace-nowrap">MISSION & VISION</span>
               <div className="h-px bg-brand flex-1" />
             </div>
@@ -1464,7 +1468,8 @@ function ContactPage({ works, onNavigateToPrivacy }: { works: Work[]; onNavigate
         >
           <div className="text-center">
             <h1 className="text-6xl md:text-8xl font-display font-bold tracking-tighter leading-[0.95]">CONTACT.</h1>
-            <div className="flex items-center gap-4 mt-5">
+            <div className="flex items-center justify-center gap-4 max-w-md mx-auto mt-5">
+              <div className="h-2 bg-brand flex-1" />
               <span className="text-[10px] font-bold tracking-[0.3em] uppercase text-black/50 whitespace-nowrap">GET IN TOUCH</span>
               <div className="h-2 bg-brand flex-1" />
             </div>
@@ -2146,6 +2151,7 @@ function FAQSection() {
         className="text-center mb-12 space-y-3"
       >
         <div className="flex items-center justify-center gap-4 max-w-md mx-auto">
+          <div className="h-px bg-brand flex-1" />
           <span className="text-[10px] font-bold tracking-[0.3em] uppercase text-black/40 whitespace-nowrap">FAQ</span>
           <div className="h-px bg-brand flex-1" />
         </div>
@@ -2217,7 +2223,7 @@ function CTASection({ onNavigate }: { onNavigate: () => void }) {
         <div className="max-w-2xl mx-auto space-y-8">
           <div className="space-y-2">
             <p className="text-black/40 font-bold tracking-[0.3em] text-[11px] uppercase">PLEASE CONSULT</p>
-            <img src="/logo.png" alt="Anchor Art Works" className="h-16 md:h-24 w-auto mx-auto object-contain" />
+            <img src="/wh_logomark.png" alt="Anchor Art Works" className="h-16 md:h-24 w-auto mx-auto object-contain" />
           </div>
           <div className="space-y-3">
             <h2 className="text-3xl md:text-5xl font-display font-bold tracking-tight text-black leading-tight">
@@ -2381,8 +2387,9 @@ function WhatWeDoPage({ onNavigateToContact }: { onNavigateToContact: () => void
           className="max-w-4xl mx-auto space-y-10"
         >
           <div className="text-center">
-            <h1 className="text-6xl md:text-8xl font-display font-bold tracking-tighter leading-[0.95]">WHAT<br />WE DO.</h1>
-            <div className="flex items-center gap-4 mt-5">
+            <h1 className="text-5xl md:text-7xl lg:text-8xl font-display font-bold tracking-tighter leading-[0.95]">WHAT WE DO.</h1>
+            <div className="flex items-center justify-center gap-4 max-w-md mx-auto mt-5">
+              <div className="h-2 bg-brand flex-1" />
               <span className="text-[10px] font-bold tracking-[0.3em] uppercase text-black/50 whitespace-nowrap">SCOPE OF WORK</span>
               <div className="h-2 bg-brand flex-1" />
             </div>
@@ -2409,6 +2416,7 @@ function WhatWeDoPage({ onNavigateToContact }: { onNavigateToContact: () => void
           className="text-center mb-16 space-y-3"
         >
           <div className="flex items-center justify-center gap-4 max-w-md mx-auto">
+            <div className="h-px bg-brand flex-1" />
             <span className="text-[10px] font-bold tracking-[0.3em] uppercase text-black/40 whitespace-nowrap">SERVICES</span>
             <div className="h-px bg-brand flex-1" />
           </div>
@@ -2485,6 +2493,7 @@ function WhatWeDoPage({ onNavigateToContact }: { onNavigateToContact: () => void
             className="text-center mb-16 space-y-3"
           >
             <div className="flex items-center justify-center gap-4 max-w-md mx-auto">
+              <div className="h-px bg-brand flex-1" />
               <span className="text-[10px] font-bold tracking-[0.3em] uppercase text-black/40 whitespace-nowrap">PROCESS</span>
               <div className="h-px bg-brand flex-1" />
             </div>
@@ -2537,7 +2546,8 @@ function WhatWeDoPage({ onNavigateToContact }: { onNavigateToContact: () => void
             className="text-center mb-14 space-y-3"
           >
             <div className="flex items-center justify-center gap-4 max-w-md mx-auto">
-              <div className="flex items-center gap-2">
+              <div className="h-px bg-brand flex-1" />
+              <div className="flex items-center gap-2 whitespace-nowrap">
                 <span className="relative flex h-2 w-2">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand opacity-75"></span>
                   <span className="relative inline-flex rounded-full h-2 w-2 bg-brand"></span>
@@ -2620,6 +2630,7 @@ function WhatWeDoPage({ onNavigateToContact }: { onNavigateToContact: () => void
         <div className="max-w-[1100px] mx-auto">
           <motion.div initial={{ opacity: 0, y: 15 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.6 }} className="text-center mb-12 space-y-3">
             <div className="flex items-center justify-center gap-4 max-w-md mx-auto">
+              <div className="h-px bg-black/30 flex-1" />
               <span className="text-[10px] font-bold tracking-[0.3em] uppercase text-black/50 whitespace-nowrap">INDUSTRIES</span>
               <div className="h-px bg-black/30 flex-1" />
             </div>
@@ -2667,7 +2678,8 @@ function JournalPage({ journalPosts, isLoadingJournal, onNavigateToContact }: {
         >
           <div className="text-center">
             <h1 className="text-6xl md:text-8xl font-display font-bold tracking-tighter leading-[0.95]">JOURNAL</h1>
-            <div className="flex items-center gap-4 mt-5">
+            <div className="flex items-center justify-center gap-4 max-w-md mx-auto mt-5">
+              <div className="h-2 bg-brand flex-1" />
               <span className="text-[10px] font-bold tracking-[0.3em] uppercase text-black/50 whitespace-nowrap">CURRENT THOUGHTS</span>
               <div className="h-2 bg-brand flex-1" />
             </div>

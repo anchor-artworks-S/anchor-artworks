@@ -212,6 +212,25 @@ export default function App() {
   const [currentPage, _setCurrentPage] = useState<Page>(() =>
     typeof window !== 'undefined' ? pathToPage(window.location.pathname) : 'home'
   );
+  const [emailToast, setEmailToast] = useState(false);
+
+  const handleCopyEmail = async () => {
+    try {
+      await navigator.clipboard.writeText('info@anchor-artworks.com');
+    } catch {
+      // older browsers fallback
+      const ta = document.createElement('textarea');
+      ta.value = 'info@anchor-artworks.com';
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      try { document.execCommand('copy'); } catch {}
+      document.body.removeChild(ta);
+    }
+    setEmailToast(true);
+    setTimeout(() => setEmailToast(false), 2500);
+  };
 
   // Wrapper: update state AND URL (via History API, no page reload)
   const setCurrentPage = (page: Page) => {
@@ -524,6 +543,23 @@ export default function App() {
       <Analytics />
       <CustomCursor />
       <FloatingCTA onClick={() => setCurrentPage('contact')} hidden={currentPage === 'contact'} />
+      {/* Email-copied toast */}
+      <AnimatePresence>
+        {emailToast && (
+          <motion.div
+            initial={{ opacity: 0, y: 20, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 10, scale: 0.95 }}
+            transition={{ duration: 0.25, ease: 'easeOut' }}
+            className="fixed bottom-8 left-1/2 -translate-x-1/2 z-[100] bg-brand text-black px-6 py-3 rounded-full shadow-2xl text-xs font-bold tracking-widest uppercase whitespace-nowrap flex items-center gap-2"
+            role="status"
+            aria-live="polite"
+          >
+            <Mail size={14} />
+            <span>メールアドレスをコピーしました</span>
+          </motion.div>
+        )}
+      </AnimatePresence>
       {/* Header */}
       <header className={`fixed top-0 w-full z-50 transition-all duration-300 ${isScrolled ? 'bg-black/95 backdrop-blur-md border-b border-white/5 h-20' : 'bg-black h-20'}`}>
         <div className="max-w-[1400px] mx-auto px-6 md:px-10 h-full flex items-center justify-between">
@@ -722,14 +758,25 @@ export default function App() {
                   <Video size={14} />
                   <span>Vimeo</span>
                 </a>
-                <a
-                  href="mailto:info@anchor-artworks.com"
+                <button
+                  type="button"
+                  onClick={handleCopyEmail}
                   className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-widest text-white/70 hover:text-brand transition-colors"
-                  aria-label="Email"
+                  aria-label="メールアドレスをコピー: info@anchor-artworks.com"
+                  title="クリックでメールアドレスをコピー"
                 >
                   <Mail size={14} />
                   <span>Email</span>
-                </a>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setCurrentPage('contact')}
+                  className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-widest text-white/70 hover:text-brand transition-colors"
+                  aria-label="お問い合わせフォームへ"
+                >
+                  <Send size={13} />
+                  <span>Form</span>
+                </button>
               </div>
             </div>
           </div>

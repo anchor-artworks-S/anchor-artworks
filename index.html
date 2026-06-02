@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="ja">
+<html lang="ja" class="no-js">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -100,6 +100,12 @@
     </script>
   </head>
   <body>
+    <!-- ヒトの目に瞬間表示されないよう、JSが効くブラウザでは初期コンテンツを非表示にする
+         JSを実行しないクローラー(GPTBot 等)はCSSを評価せずDOMテキストを読み取るため、内容は問題なく取得される -->
+    <style>
+      html:not(.no-js) #root > article { visibility: hidden; }
+    </style>
+    <script>document.documentElement.classList.remove('no-js')</script>
     <div id="root">
       <!-- 静的コンテンツ（AI/SEOクローラー向け Progressive Enhancement レイヤー）
            React がマウントすると上書きされます。

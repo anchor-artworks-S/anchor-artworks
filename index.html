@@ -103,7 +103,10 @@
     <!-- ヒトの目に瞬間表示されないよう、JSが効くブラウザでは初期コンテンツを非表示にする
          JSを実行しないクローラー(GPTBot 等)はCSSを評価せずDOMテキストを読み取るため、内容は問題なく取得される -->
     <style>
-      html:not(.no-js) #root > article { visibility: hidden; }
+      /* JS有効ブラウザ: 静的HTMLを完全非表示 + 背景を黒(サイトヘッダーと同色)に */
+      html:not(.no-js) { background-color: #000; }
+      html:not(.no-js) body { background-color: #000; }
+      html:not(.no-js) #root > article { display: none; }
     </style>
     <script>document.documentElement.classList.remove('no-js')</script>
     <div id="root">

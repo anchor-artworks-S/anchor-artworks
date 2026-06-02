@@ -250,6 +250,22 @@ export default function App() {
     return () => window.removeEventListener('popstate', onPopState);
   }, []);
 
+  // Update document.title per page (SPA-friendly, AI/SEO信号にも有効)
+  useEffect(() => {
+    const SITE_NAME = 'Anchor Art Works';
+    const TAGLINE = 'CG・映像制作を、思考の速度で。';
+    const titles: Record<Page, string> = {
+      home: `${SITE_NAME} | ${TAGLINE}`,
+      works: `WORKS — 実績 | ${SITE_NAME}`,
+      whatwedo: `WHAT WE DO — 提供領域 | ${SITE_NAME}`,
+      about: `ABOUT — チーム・代表・カルチャー | ${SITE_NAME}`,
+      journal: `JOURNAL — いま考えていること | ${SITE_NAME}`,
+      contact: `CONTACT — お問い合わせ | ${SITE_NAME}`,
+      privacy: `プライバシーポリシー | ${SITE_NAME}`,
+    };
+    document.title = titles[currentPage] || `${SITE_NAME} | ${TAGLINE}`;
+  }, [currentPage]);
+
   const [selectedWork, setSelectedWork] = useState<Work | null>(null);
   const [works, setWorks] = useState<Work[]>(FALLBACK_WORKS_DATA);
   const [journalPosts, setJournalPosts] = useState<NotePost[]>([]);

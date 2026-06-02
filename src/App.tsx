@@ -24,7 +24,10 @@ import {
   Mail,
   Video,
   BookOpen,
+  Instagram,
+  Facebook,
 } from "lucide-react";
+import { Analytics } from "@vercel/analytics/react";
 
 // --- Types ---
 type Page = 'home' | 'works' | 'whatwedo' | 'about' | 'journal' | 'contact' | 'privacy';
@@ -209,6 +212,25 @@ export default function App() {
   const [currentPage, _setCurrentPage] = useState<Page>(() =>
     typeof window !== 'undefined' ? pathToPage(window.location.pathname) : 'home'
   );
+  const [emailToast, setEmailToast] = useState(false);
+
+  const handleCopyEmail = async () => {
+    try {
+      await navigator.clipboard.writeText('info@anchor-artworks.com');
+    } catch {
+      // older browsers fallback
+      const ta = document.createElement('textarea');
+      ta.value = 'info@anchor-artworks.com';
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      try { document.execCommand('copy'); } catch {}
+      document.body.removeChild(ta);
+    }
+    setEmailToast(true);
+    setTimeout(() => setEmailToast(false), 2500);
+  };
 
   // Wrapper: update state AND URL (via History API, no page reload)
   const setCurrentPage = (page: Page) => {
@@ -227,6 +249,22 @@ export default function App() {
     window.addEventListener('popstate', onPopState);
     return () => window.removeEventListener('popstate', onPopState);
   }, []);
+
+  // Update document.title per page (SPA-friendly, AI/SEO信号にも有効)
+  useEffect(() => {
+    const SITE_NAME = 'Anchor Art Works';
+    const TAGLINE = 'CG・映像制作を、思考の速度で。';
+    const titles: Record<Page, string> = {
+      home: `${SITE_NAME} | ${TAGLINE}`,
+      works: `WORKS — 実績 | ${SITE_NAME}`,
+      whatwedo: `WHAT WE DO — 提供領域 | ${SITE_NAME}`,
+      about: `ABOUT — チーム・代表・カルチャー | ${SITE_NAME}`,
+      journal: `JOURNAL — いま考えていること | ${SITE_NAME}`,
+      contact: `CONTACT — お問い合わせ | ${SITE_NAME}`,
+      privacy: `プライバシーポリシー | ${SITE_NAME}`,
+    };
+    document.title = titles[currentPage] || `${SITE_NAME} | ${TAGLINE}`;
+  }, [currentPage]);
 
   const [selectedWork, setSelectedWork] = useState<Work | null>(null);
   const [works, setWorks] = useState<Work[]>(FALLBACK_WORKS_DATA);
@@ -518,8 +556,26 @@ export default function App() {
 
   return (
     <div className="min-h-screen flex flex-col bg-white text-black font-sans selection:bg-black selection:text-white">
+      <Analytics />
       <CustomCursor />
       <FloatingCTA onClick={() => setCurrentPage('contact')} hidden={currentPage === 'contact'} />
+      {/* Email-copied toast */}
+      <AnimatePresence>
+        {emailToast && (
+          <motion.div
+            initial={{ opacity: 0, y: 20, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 10, scale: 0.95 }}
+            transition={{ duration: 0.25, ease: 'easeOut' }}
+            className="fixed bottom-8 left-1/2 -translate-x-1/2 z-[100] bg-brand text-black px-6 py-3 rounded-full shadow-2xl text-xs font-bold tracking-widest uppercase whitespace-nowrap flex items-center gap-2"
+            role="status"
+            aria-live="polite"
+          >
+            <Mail size={14} />
+            <span>メールアドレスをコピーしました</span>
+          </motion.div>
+        )}
+      </AnimatePresence>
       {/* Header */}
       <header className={`fixed top-0 w-full z-50 transition-all duration-300 ${isScrolled ? 'bg-black/95 backdrop-blur-md border-b border-white/5 h-20' : 'bg-black h-20'}`}>
         <div className="max-w-[1400px] mx-auto px-6 md:px-10 h-full flex items-center justify-between">
@@ -529,7 +585,7 @@ export default function App() {
             className="hover:opacity-80 transition-opacity"
             aria-label="Anchor Art Works"
           >
-            <img src="/aaw_logo_full.png" alt="Anchor Art Works" className="h-12 w-auto object-contain" />
+            <img src="/wh_logomark.png" alt="Anchor Art Works" className="h-12 w-auto object-contain" />
           </button>
 
           {/* Desktop Nav */}
@@ -665,7 +721,7 @@ export default function App() {
           <div className="pt-8 border-t border-white/15 mb-6">
             <div className="flex flex-wrap items-center justify-center md:justify-start gap-x-6 gap-y-3">
               <span className="text-[10px] font-bold tracking-[0.3em] uppercase text-brand">FOLLOW &amp; CONTACT</span>
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-4 flex-wrap justify-center md:justify-start">
                 <a
                   href="https://note.com/anchor_art_works"
                   target="_blank"
@@ -677,6 +733,38 @@ export default function App() {
                   <span>note</span>
                 </a>
                 <a
+                  href="https://www.instagram.com/anchorartworks1981/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-widest text-white/70 hover:text-brand transition-colors"
+                  aria-label="Instagram"
+                >
+                  <Instagram size={14} />
+                  <span>Instagram</span>
+                </a>
+                <a
+                  href="https://www.facebook.com/anchorjp1981/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-widest text-white/70 hover:text-brand transition-colors"
+                  aria-label="Facebook"
+                >
+                  <Facebook size={14} />
+                  <span>Facebook</span>
+                </a>
+                <a
+                  href="https://x.com/AnchorArtWorks"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-widest text-white/70 hover:text-brand transition-colors"
+                  aria-label="X (Twitter)"
+                >
+                  <svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor" aria-hidden="true">
+                    <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+                  </svg>
+                  <span>X</span>
+                </a>
+                <a
                   href="https://vimeo.com/user27201919"
                   target="_blank"
                   rel="noopener noreferrer"
@@ -686,14 +774,25 @@ export default function App() {
                   <Video size={14} />
                   <span>Vimeo</span>
                 </a>
-                <a
-                  href="mailto:info@anchor-japan.com"
+                <button
+                  type="button"
+                  onClick={handleCopyEmail}
                   className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-widest text-white/70 hover:text-brand transition-colors"
-                  aria-label="Email"
+                  aria-label="メールアドレスをコピー: info@anchor-artworks.com"
+                  title="クリックでメールアドレスをコピー"
                 >
                   <Mail size={14} />
                   <span>Email</span>
-                </a>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setCurrentPage('contact')}
+                  className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-widest text-white/70 hover:text-brand transition-colors"
+                  aria-label="お問い合わせフォームへ"
+                >
+                  <Send size={13} />
+                  <span>Form</span>
+                </button>
               </div>
             </div>
           </div>
@@ -728,155 +827,82 @@ function HomePage({ works, isLoading, isLoadingJournal, journalPosts, onNavigate
   onNavigateToContact: () => void;
   onSelectWork: (work: Work) => void;
 }) {
-  // Kinetic typography phrases (loop)
-  const phrases = [
-    '思考の速度で。',
-    '最後の磨きで。',
-    '納得のカタチへ。',
-    'ひらめきの隣で。',
-  ];
-  const [phraseIdx, setPhraseIdx] = useState(0);
-  useEffect(() => {
-    const id = setInterval(() => setPhraseIdx(i => (i + 1) % phrases.length), 3500);
-    return () => clearInterval(id);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
   return (
     <div className="bg-white">
-      {/* Hero */}
-      <section className="relative bg-brand min-h-[48vh] md:min-h-[62vh] flex flex-col items-center justify-center text-center px-6 pt-24 pb-12 overflow-hidden">
-        {/* Floating geometric shapes (背景) */}
-        <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
-          <motion.div
-            className="absolute w-[320px] h-[320px] rounded-full bg-white/35 blur-2xl"
-            style={{ left: '-8%', top: '8%' }}
-            animate={{ x: [0, 40, -20, 0], y: [0, -30, 15, 0], rotate: [0, 20, -10, 0] }}
-            transition={{ duration: 36, repeat: Infinity, ease: 'easeInOut' }}
-          />
-          <motion.div
-            className="absolute w-[280px] h-[280px] rounded-full bg-black/[0.06] blur-2xl"
-            style={{ right: '-6%', bottom: '5%' }}
-            animate={{ x: [0, -35, 15, 0], y: [0, 25, -10, 0], rotate: [0, -15, 10, 0] }}
-            transition={{ duration: 40, repeat: Infinity, ease: 'easeInOut' }}
-          />
-          <motion.div
-            className="absolute w-[180px] h-[180px] bg-white/40 blur-xl"
-            style={{ left: '12%', bottom: '15%', borderRadius: '30%' }}
-            animate={{ x: [0, 25, -15, 0], y: [0, -20, 10, 0], rotate: [0, 45, 90, 135, 180] }}
-            transition={{ duration: 48, repeat: Infinity, ease: 'linear' }}
-          />
-          <motion.div
-            className="absolute w-[150px] h-[150px] bg-white/25 blur-xl"
-            style={{ right: '18%', top: '12%' }}
-            animate={{ x: [0, -20, 10, 0], y: [0, 15, -8, 0], rotate: [0, 60, 120, 180] }}
-            transition={{ duration: 42, repeat: Infinity, ease: 'linear' }}
-          />
-          <motion.div
-            className="absolute w-[90px] h-[90px] rounded-full bg-brand blur-md"
-            style={{ left: '45%', top: '20%' }}
-            animate={{ x: [0, 15, -8, 0], y: [0, -12, 6, 0] }}
-            transition={{ duration: 28, repeat: Infinity, ease: 'easeInOut' }}
-          />
-        </div>
-
+      {/* Hero — compact black band (映像が主役、ブランドピンクは下流に温存) */}
+      <section className="bg-black text-white flex flex-col items-center justify-center text-center px-6 pt-24 pb-10">
         <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.8 }}
-          className="relative z-10 flex flex-col items-center gap-6 max-w-4xl mx-auto"
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.7 }}
+          className="max-w-4xl mx-auto space-y-4"
         >
-          <div className="space-y-5">
-            <h1 className="text-4xl md:text-6xl font-display font-bold tracking-tighter leading-[1.05]">
-              <span className="block">CG・映像制作を、</span>
-              <span className="block relative h-[1.2em] overflow-y-hidden">
-                {/* Static fallback for SEO/AI crawlers: 思考の速度で。 */}
-                <span className="sr-only">思考の速度で。</span>
-                <AnimatePresence mode="wait">
-                  <motion.span
-                    key={phraseIdx}
-                    className="absolute inset-0 flex justify-center whitespace-nowrap"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    transition={{ duration: 0.3 }}
-                    aria-hidden="true"
-                  >
-                    {phrases[phraseIdx].split('').map((ch, i) => (
-                      <motion.span
-                        key={i}
-                        className="inline-block"
-                        initial={{ opacity: 0, y: 24, filter: 'blur(6px)' }}
-                        animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
-                        exit={{ opacity: 0, y: -24, filter: 'blur(6px)' }}
-                        transition={{ duration: 0.45, delay: i * 0.035, ease: [0.22, 1, 0.36, 1] }}
-                      >
-                        {ch}
-                      </motion.span>
-                    ))}
-                  </motion.span>
-                </AnimatePresence>
-              </span>
-            </h1>
-            <p className="text-sm md:text-base text-black/70 leading-relaxed font-medium tracking-wide">
-              企画から納品まで。最速でカタチに。
-            </p>
-          </div>
+          {/* ③ h1サイズを一段抑えて上品さUP (md:6xl → md:5xl lg:6xl) */}
+          <h1 className="text-4xl md:text-5xl lg:text-6xl font-display font-bold tracking-tighter leading-[1.1] text-white">
+            CG・映像制作を、<br />
+            <span className="text-brand">思考の速度で。</span>
+          </h1>
+          <p className="text-sm md:text-base text-white/70 leading-relaxed font-medium tracking-wide">
+            企画から納品まで。最速でカタチに。
+          </p>
         </motion.div>
       </section>
 
-      {/* SHOWREEL */}
-      <section className="bg-black text-white py-20 px-6">
-        <div className="max-w-[1400px] mx-auto">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6 }}
-            className="text-center mb-10 space-y-3"
-          >
-            <div className="flex items-center justify-center gap-4 max-w-md mx-auto">
-              <span className="text-[10px] font-bold tracking-[0.3em] uppercase text-white/40 whitespace-nowrap">SHOWREEL</span>
-              <div className="h-px bg-brand flex-1" />
-            </div>
-            <h2 className="text-3xl md:text-5xl font-display font-bold text-brand tracking-tight">
-              アイデアが、動き出す。
-            </h2>
-            <p className="text-white/60 text-sm md:text-base max-w-xl mx-auto leading-relaxed">
-              Anchor Art Worksのクリエイティブを、約60秒で。
-            </p>
-          </motion.div>
-          <motion.div
-            initial={{ opacity: 0, scale: 0.97 }}
-            whileInView={{ opacity: 1, scale: 1 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.8, ease: 'easeOut' }}
-            className="relative aspect-video w-full bg-black border border-white/10 overflow-hidden"
-          >
-            <iframe
-              src="https://player.vimeo.com/video/819715322?autoplay=1&loop=1&muted=1&background=1&title=0&byline=0&portrait=0&dnt=1"
-              className="absolute inset-0 w-full h-full"
-              allow="autoplay; fullscreen; picture-in-picture"
-              allowFullScreen
-              loading="lazy"
-              title="Anchor Art Works Showreel"
-            />
-          </motion.div>
-          <motion.div
-            initial={{ opacity: 0, y: 15 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5, delay: 0.2 }}
-            className="flex justify-center mt-10"
-          >
-            <button
-              onClick={onNavigateToWorks}
-              className="px-12 py-3.5 bg-brand text-black font-bold text-[11px] uppercase tracking-[0.2em] hover:bg-white transition-all flex items-center gap-3 group"
+      {/* SHOWREEL — full-width video with overlay text */}
+      <section className="relative w-full bg-black overflow-hidden">
+        <div className="relative w-full aspect-video">
+          {/* Background video (Vimeo) */}
+          <iframe
+            src="https://player.vimeo.com/video/819715322?autoplay=1&loop=1&muted=1&background=1&title=0&byline=0&portrait=0&dnt=1"
+            className="absolute inset-0 w-full h-full pointer-events-none"
+            allow="autoplay; fullscreen; picture-in-picture"
+            allowFullScreen
+            loading="eager"
+            title="Anchor Art Works Showreel"
+            aria-hidden="true"
+          />
+          {/* ① Top fade: ヒーロー(黒)から動画への自然な繋ぎ */}
+          <div className="absolute top-0 inset-x-0 h-32 md:h-40 bg-gradient-to-b from-black to-transparent pointer-events-none z-[5]" />
+          {/* Base dark gradient for general legibility */}
+          <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/25 to-black/75 pointer-events-none" />
+          {/* ② Radial dark spotlight: テキスト周辺だけさらに暗くして可読性を鉄壁に */}
+          <div
+            className="absolute inset-0 pointer-events-none"
+            style={{
+              background: 'radial-gradient(ellipse at 50% 55%, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.25) 35%, rgba(0,0,0,0) 65%)',
+            }}
+          />
+          {/* Text overlay (DOM上に普通のテキストとして存在 = SEO/AI フレンドリー) */}
+          <div className="absolute inset-0 z-10 flex flex-col items-center justify-center text-center px-6">
+            <motion.div
+              initial={{ opacity: 0, y: 15 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.7 }}
+              className="space-y-4 max-w-2xl"
             >
-              <span>VIEW ALL WORKS</span>
-              <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
-            </button>
-          </motion.div>
+              <div className="flex items-center justify-center gap-4 max-w-xs mx-auto">
+                <div className="h-px bg-brand flex-1" />
+                <span className="text-[10px] md:text-xs font-bold tracking-[0.35em] uppercase text-white/80 whitespace-nowrap">SHOWREEL</span>
+                <div className="h-px bg-brand flex-1" />
+              </div>
+              <h2 className="text-3xl md:text-5xl lg:text-6xl font-display font-bold text-white tracking-tight drop-shadow-lg">
+                アイデアが、動き出す。
+              </h2>
+              <p className="text-white/85 text-sm md:text-base max-w-xl mx-auto leading-relaxed drop-shadow">
+                Anchor Art Worksのクリエイティブを、約60秒で。
+              </p>
+              <div className="pt-4">
+                <button
+                  onClick={onNavigateToWorks}
+                  className="px-10 md:px-12 py-3 md:py-3.5 bg-brand text-black font-bold text-[10px] md:text-[11px] uppercase tracking-[0.2em] hover:bg-white transition-all inline-flex items-center gap-3 group shadow-lg"
+                >
+                  <span>VIEW ALL WORKS</span>
+                  <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
+                </button>
+              </div>
+            </motion.div>
+          </div>
         </div>
       </section>
 
@@ -942,6 +968,7 @@ function HomePage({ works, isLoading, isLoadingJournal, journalPosts, onNavigate
             className="mb-10"
           >
             <div className="flex items-center justify-center gap-4 max-w-md mx-auto">
+              <div className="h-px bg-black/30 flex-1" />
               <span className="text-[10px] font-bold tracking-[0.3em] uppercase text-black/40 whitespace-nowrap">WE DELIVER</span>
               <div className="h-px bg-black/30 flex-1" />
             </div>
@@ -1052,7 +1079,8 @@ function WorksPage({ works, isLoading, onSelectWork, onNavigateToContact }: {
         >
           <div className="text-center">
             <h1 className="text-6xl md:text-8xl font-display font-bold tracking-tighter leading-[0.95]">WORKS</h1>
-            <div className="flex items-center gap-4 mt-5">
+            <div className="flex items-center justify-center gap-4 max-w-md mx-auto mt-5">
+              <div className="h-2 bg-brand flex-1" />
               <span className="text-[10px] font-bold tracking-[0.3em] uppercase text-black/50 whitespace-nowrap">OUR LIBRARY</span>
               <div className="h-2 bg-brand flex-1" />
             </div>
@@ -1175,7 +1203,8 @@ function AboutPage({ onNavigateToContact }: { onNavigateToContact: () => void })
         >
           <div className="text-center">
             <h1 className="text-6xl md:text-8xl font-display font-bold tracking-tighter leading-[0.95]">ABOUT.</h1>
-            <div className="flex items-center gap-4 mt-5">
+            <div className="flex items-center justify-center gap-4 max-w-md mx-auto mt-5">
+              <div className="h-2 bg-brand flex-1" />
               <span className="text-[10px] font-bold tracking-[0.3em] uppercase text-black/50 whitespace-nowrap">WHO WE ARE</span>
               <div className="h-2 bg-brand flex-1" />
             </div>
@@ -1207,6 +1236,7 @@ function AboutPage({ onNavigateToContact }: { onNavigateToContact: () => void })
             className="text-center mb-12 space-y-3"
           >
             <div className="flex items-center justify-center gap-4 max-w-md mx-auto">
+              <div className="h-px bg-brand flex-1" />
               <span className="text-[10px] font-bold tracking-[0.3em] uppercase text-black/40 whitespace-nowrap">MISSION & VISION</span>
               <div className="h-px bg-brand flex-1" />
             </div>
@@ -1270,18 +1300,21 @@ function AboutPage({ onNavigateToContact }: { onNavigateToContact: () => void })
               role: "Editor / Motion Grapher",
               name: "勝田　友亮",
               enName: "YUSUKE KATSUDA",
+              photoSrc: "/YUSUKEKATSUDA.jpg",
               bio: "1989年4月7日生まれ。PRムービー、イベント映像、企業ブランドムービー、VP、CMなどモーショングラフィックスを主軸に幅広く制作。複雑な情報構造を視覚的に整理し、直感的に伝わる動きへと再構築する設計力が強み。クライアントの要望に柔軟に応えるロジカル思考と、視覚的なリズムを両立した映像表現で、ブランドの世界観を多面的に支える。細部の質感までこだわった編集で、視聴者の記憶に残るシーンを生み出す。"
             },
             {
               role: "Editor / Motion Grapher",
               name: "矢戸　光一",
               enName: "KOICHI YATO",
+              photoSrc: "/KOICHIYATO.jpg",
               bio: "2003年1月1日生まれ。PRムービー、イベント映像、ゲーム関連コンテンツなどモーショングラフィックスを主軸に制作。eスポーツのプロ選手を目指していた経験から培われた、高い集中力と緻密な観察眼が武器。0.1秒単位での編集精度と、視聴者の注意を逃さないリズム設計に強みを持ち、次世代のクリエイティブを牽引する。SNS時代のテンポ感を熟知し、短尺から長尺まで幅広いフォーマットに対応する柔軟性も備える。"
             },
             {
               role: "Illustrator / Designer",
               name: "内田　理恵",
               enName: "RIE UCHIDA",
+              photoSrc: "/RIEUCHIDA.jpg",
               bio: "イラストとデザインの境界を行き来しながら、クライアントの世界観や想いを視覚的に表現する、イラストレーター兼デザイナー。オーダーやコンセプトに合わせた柔軟なイラスト表現を得意とし、エモーショナルなタッチからポップで親しみやすい表現まで、幅広く描き分けます。広告・パッケージ・Webなど、多様な分野で制作を行い、単に“見せる”だけでなく、見る人の感情や空気感まで伝わるクリエイションを大切にしています。一つひとつのプロジェクトに丁寧に向き合いながら、記憶に残るビジュアルを目指して制作しています。"
             },
             // 下段: ④ ⑤ ⑥
@@ -1289,21 +1322,24 @@ function AboutPage({ onNavigateToContact }: { onNavigateToContact: () => void })
               role: "Producer / Director",
               name: "目　学",
               enName: "MANABU SAKKA",
+              photoSrc: "/MANABUSAKKA.jpg",
               bio: "1983年10月2日生まれ。映像専門学校卒業後、テレビ業界に就職。報道・バラエティ・ドキュメンタリーなど多様な現場で経験を積み、その後広告業界へ転身。テレビ品質の制作工程と、広告に求められるスピード感を融合させたプロデュース力で、Anchor Art Worksの映像品質を担保する責任者を務める。スタッフィングから予算管理、クライアント折衝までを一貫して統括し、現場とブランドを橋渡しする中核ポジション。"
             },
             {
               role: "SNS / Podcaster",
               name: "森屋　沙耶",
               enName: "SAYA MORIYA",
+              photoSrc: "/SAYAMORIYA.jpg",
               bio: "某人気YouTuberとのコラボ経験を持つポッドキャスター。独特の視点と世界観を活かしたトークを得意とし、親しみやすさとテンポ感のある語り口でリスナーを引き込む。明るく自然体なキャラクターと、少し低めで落ち着きのある声質が特徴。長時間でも心地よく聴けるトーンで、日常の何気ない話題からカルチャー、ライフスタイル、社会的なテーマまで幅広く発信している。リスナーとの距離感を大切にしながら、“誰かの日常に自然と馴染む言葉”を届けることをテーマに活動。耳だけで楽しめる空気感や温度感を意識したトークで、多くの共感を集めている。"
             },
             {
               role: "Marketing Specialist",
               name: "沖田　紘亮",
               enName: "KOUSUKE OKITA",
+              photoSrc: "/KOUSUKEOKITA.jpg",
               bio: "テレビ局、総合広告代理店を経て独立。AI時代のマーケティング戦略とデータ分析を基盤に、コンテンツの価値最大化を担うスペシャリスト。行動経済学や市場構造を踏まえた戦略設計により、ターゲットへの最適なリーチと継続的な成果創出を実現。映像制作の前段階となる課題設定からKPI設計、効果測定までを一貫して支援する。クリエイティブと数字を繋ぐ視点で、ブランドの長期的な成長を支える。"
             }
-          ].map((member, idx) => (
+          ].map((member: { role: string; name: string; enName: string; bio: string; photoSrc?: string }, idx) => (
             <motion.div
               key={idx}
               initial={{ opacity: 0, y: 15 }}
@@ -1312,8 +1348,18 @@ function AboutPage({ onNavigateToContact }: { onNavigateToContact: () => void })
               transition={{ delay: idx * 0.1 }}
               className="space-y-4"
             >
-              {/* Placeholder photo */}
-              <div className="aspect-square bg-white/10 w-full" />
+              {/* Photo (or placeholder) */}
+              {member.photoSrc ? (
+                <div className="aspect-square w-full overflow-hidden bg-white/10">
+                  <img
+                    src={member.photoSrc}
+                    alt={member.name}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+              ) : (
+                <div className="aspect-square bg-white/10 w-full" />
+              )}
               <div className="space-y-1">
                 <p className="text-[10px] text-white/30 font-bold uppercase tracking-widest">{member.role}</p>
                 <h3 className="text-2xl font-display font-bold">{member.name}</h3>
@@ -1361,7 +1407,7 @@ function AboutPage({ onNavigateToContact }: { onNavigateToContact: () => void })
             transition={{ duration: 35, ease: 'linear', repeat: Infinity }}
           >
             {[...clients, ...clients].map((client, idx) => (
-              <div key={idx} className="flex-shrink-0 flex items-center justify-center h-14 px-10 md:px-14">
+              <div key={idx} className="flex-shrink-0 flex items-center justify-center h-20 md:h-24 px-12 md:px-16">
                 <ClientLogo client={client} />
               </div>
             ))}
@@ -1380,12 +1426,12 @@ function ClientLogo({ client }: { client: { name: string; logoSrc: string } }) {
       <img
         src={client.logoSrc}
         alt={client.name}
-        className="h-10 w-auto object-contain"
+        className="h-14 md:h-16 w-auto object-contain"
         onError={() => setError(true)}
       />
     );
   }
-  return <span className="font-display font-bold text-base tracking-tight">{client.name}</span>;
+  return <span className="font-display font-bold text-lg md:text-xl tracking-tight">{client.name}</span>;
 }
 
 // ─────────────────────────────────────────
@@ -1414,6 +1460,65 @@ function ContactPage({ works, onNavigateToPrivacy }: { works: Work[]; onNavigate
     setQuickInput('');
   };
 
+  // ── Contact form state ──
+  const [form, setForm] = useState({
+    inquiryType: '',
+    message: '',
+    company: '',
+    name: '',
+    kana: '',
+    phone: '',
+    email: '',
+    website: '',
+    agreed: false,
+  });
+  const [hp, setHp] = useState(''); // honeypot
+  const [submitting, setSubmitting] = useState(false);
+  const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle');
+  const [submitError, setSubmitError] = useState('');
+
+  const updateField = (key: string, value: string | boolean) =>
+    setForm(prev => ({ ...prev, [key]: value }));
+
+  const handleContactSubmit = async () => {
+    // client-side validation
+    const missing: string[] = [];
+    if (!form.message.trim()) missing.push('お問い合わせ内容');
+    if (!form.company.trim()) missing.push('会社名');
+    if (!form.name.trim()) missing.push('お名前');
+    if (!form.kana.trim()) missing.push('フリガナ');
+    if (!form.phone.trim()) missing.push('電話番号');
+    if (!form.email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) missing.push('メールアドレス');
+    if (!form.agreed) missing.push('プライバシーポリシーへの同意');
+    if (missing.length > 0) {
+      setSubmitError(`ご確認ください：${missing.join(' / ')}`);
+      setSubmitStatus('error');
+      return;
+    }
+
+    setSubmitting(true);
+    setSubmitStatus('idle');
+    setSubmitError('');
+    try {
+      const res = await fetch('/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...form, _hp: hp }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || `送信に失敗しました（${res.status}）`);
+      }
+      setSubmitStatus('success');
+      setForm({ inquiryType: '', message: '', company: '', name: '', kana: '', phone: '', email: '', website: '', agreed: false });
+    } catch (e: any) {
+      setSubmitError(e?.message || '送信に失敗しました。時間をおいて再度お試しください。');
+      setSubmitStatus('error');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   return (
     <div className="bg-white pb-0">
       {/* Header */}
@@ -1426,7 +1531,8 @@ function ContactPage({ works, onNavigateToPrivacy }: { works: Work[]; onNavigate
         >
           <div className="text-center">
             <h1 className="text-6xl md:text-8xl font-display font-bold tracking-tighter leading-[0.95]">CONTACT.</h1>
-            <div className="flex items-center gap-4 mt-5">
+            <div className="flex items-center justify-center gap-4 max-w-md mx-auto mt-5">
+              <div className="h-2 bg-brand flex-1" />
               <span className="text-[10px] font-bold tracking-[0.3em] uppercase text-black/50 whitespace-nowrap">GET IN TOUCH</span>
               <div className="h-2 bg-brand flex-1" />
             </div>
@@ -1523,72 +1629,140 @@ function ContactPage({ works, onNavigateToPrivacy }: { works: Work[]; onNavigate
       {/* Form */}
       <section className="bg-gray-100 py-20 px-6">
         <div className="max-w-[700px] mx-auto space-y-16">
-          {/* Inquiry */}
-          <div className="space-y-8">
-            <h2 className="text-xl md:text-2xl font-display font-bold text-center">お問い合わせ内容</h2>
-            <div className="space-y-6">
-              <div className="space-y-2">
-                <label className="text-xs font-bold tracking-widest">お問い合わせ項目 *</label>
-                <div className="relative">
-                  <select className="w-full bg-white px-5 py-4 border-none shadow-sm focus:ring-2 focus:ring-brand outline-none appearance-none cursor-pointer text-sm">
-                    <option>選択してください</option>
-                    <option>映像制作のご相談</option>
-                    <option>デザインのご依頼</option>
-                    <option>企画・戦略の策定</option>
-                    <option>その他</option>
-                  </select>
-                  <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-black/30 pointer-events-none" size={18} />
+          {submitStatus === 'success' ? (
+            /* Success state */
+            <motion.div
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="text-center space-y-6 py-16"
+            >
+              <div className="w-16 h-16 bg-brand rounded-full flex items-center justify-center mx-auto">
+                <Mail size={28} className="text-black" />
+              </div>
+              <h2 className="text-2xl md:text-3xl font-display font-bold">送信しました。</h2>
+              <p className="text-black/70 text-sm md:text-base leading-relaxed max-w-md mx-auto">
+                お問い合わせありがとうございます。<br />
+                内容を確認のうえ、担当者より折り返しご連絡いたします。<br />
+                通常2〜3営業日以内にご返信します。
+              </p>
+              <button
+                onClick={() => setSubmitStatus('idle')}
+                className="text-[11px] font-bold uppercase tracking-[0.2em] text-black/50 hover:text-black underline transition-colors"
+              >
+                続けて問い合わせる
+              </button>
+            </motion.div>
+          ) : (
+            <>
+              {/* Inquiry */}
+              <div className="space-y-8">
+                <h2 className="text-xl md:text-2xl font-display font-bold text-center">お問い合わせ内容</h2>
+                <div className="space-y-6">
+                  <div className="space-y-2">
+                    <label className="text-xs font-bold tracking-widest">お問い合わせ項目</label>
+                    <div className="relative">
+                      <select
+                        value={form.inquiryType}
+                        onChange={(e) => updateField('inquiryType', e.target.value)}
+                        className="w-full bg-white px-5 py-4 border-none shadow-sm focus:ring-2 focus:ring-brand outline-none appearance-none cursor-pointer text-sm"
+                      >
+                        <option value="">選択してください</option>
+                        <option value="映像制作のご相談">映像制作のご相談</option>
+                        <option value="CG・デザインのご依頼">CG・デザインのご依頼</option>
+                        <option value="企画・戦略の策定">企画・戦略の策定</option>
+                        <option value="ポッドキャストのご相談">ポッドキャストのご相談</option>
+                        <option value="VTuber MV・ライブ演出">VTuber MV・ライブ演出</option>
+                        <option value="その他">その他</option>
+                      </select>
+                      <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-black/30 pointer-events-none" size={18} />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-xs font-bold tracking-widest">お問い合わせ内容 *</label>
+                    <textarea
+                      value={form.message}
+                      onChange={(e) => updateField('message', e.target.value)}
+                      className="w-full bg-white px-5 py-4 border-none shadow-sm focus:ring-2 focus:ring-brand outline-none h-48 resize-none text-sm"
+                      placeholder="例）動画撮影に関してご相談したい。"
+                    />
+                  </div>
                 </div>
               </div>
-              <div className="space-y-2">
-                <label className="text-xs font-bold tracking-widest">お問い合わせ内容 *</label>
-                <textarea
-                  className="w-full bg-white px-5 py-4 border-none shadow-sm focus:ring-2 focus:ring-brand outline-none h-48 resize-none text-sm"
-                  placeholder="例）動画撮影に関してご相談したい。"
-                />
-              </div>
-            </div>
-          </div>
 
-          {/* Customer info */}
-          <div className="space-y-8">
-            <h2 className="text-xl md:text-2xl font-display font-bold text-center">お客様情報</h2>
-            <div className="space-y-5">
-              {[
-                { label: "会社名 *", type: "text" },
-                { label: "お名前 *", type: "text" },
-                { label: "フリガナ *", type: "text" },
-                { label: "電話番号 *", type: "tel" },
-                { label: "メールアドレス *", type: "email" },
-                { label: "Web サイト URL", type: "url" },
-              ].map((field, idx) => (
-                <div key={idx} className="space-y-2">
-                  <label className="text-xs font-bold tracking-widest">{field.label}</label>
+              {/* Customer info */}
+              <div className="space-y-8">
+                <h2 className="text-xl md:text-2xl font-display font-bold text-center">お客様情報</h2>
+                <div className="space-y-5">
+                  {([
+                    { key: 'company', label: "会社名 *", type: "text", placeholder: "株式会社○○" },
+                    { key: 'name', label: "お名前 *", type: "text", placeholder: "山田 太郎" },
+                    { key: 'kana', label: "フリガナ *", type: "text", placeholder: "ヤマダ タロウ" },
+                    { key: 'phone', label: "電話番号 *", type: "tel", placeholder: "090-1234-5678" },
+                    { key: 'email', label: "メールアドレス *", type: "email", placeholder: "you@example.com" },
+                    { key: 'website', label: "Web サイト URL", type: "url", placeholder: "https://example.com" },
+                  ] as const).map((field) => (
+                    <div key={field.key} className="space-y-2">
+                      <label className="text-xs font-bold tracking-widest">{field.label}</label>
+                      <input
+                        type={field.type}
+                        value={form[field.key] as string}
+                        onChange={(e) => updateField(field.key, e.target.value)}
+                        placeholder={field.placeholder}
+                        className="w-full bg-white px-5 py-4 border-none shadow-sm focus:ring-2 focus:ring-brand outline-none text-sm"
+                      />
+                    </div>
+                  ))}
+                  {/* Honeypot (hidden from users, bots fill it) */}
                   <input
-                    type={field.type}
-                    placeholder="選択してください"
-                    className="w-full bg-white px-5 py-4 border-none shadow-sm focus:ring-2 focus:ring-brand outline-none text-sm"
+                    type="text"
+                    value={hp}
+                    onChange={(e) => setHp(e.target.value)}
+                    tabIndex={-1}
+                    autoComplete="off"
+                    aria-hidden="true"
+                    style={{ position: 'absolute', left: '-9999px', width: '1px', height: '1px', opacity: 0 }}
                   />
                 </div>
-              ))}
-            </div>
-          </div>
+              </div>
 
-          {/* Submit */}
-          <div className="space-y-6 text-center">
-            <label className="flex items-center justify-center gap-3 cursor-pointer">
-              <input type="checkbox" className="w-4 h-4 border-gray-300 text-black focus:ring-black cursor-pointer" />
-              <span className="text-[11px] font-bold tracking-widest text-black/60">
-                <button type="button" onClick={onNavigateToPrivacy} className="underline hover:text-black transition-colors">
-                  プライバシーポリシー
-                </button>に同意する
-              </span>
-            </label>
-            <button className="w-full md:w-auto px-14 py-4 bg-black text-white font-bold text-[11px] uppercase tracking-[0.2em] hover:opacity-90 transition-all flex items-center justify-center gap-3 mx-auto group">
-              <span>入力内容を確認する</span>
-              <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
-            </button>
-          </div>
+              {/* Submit */}
+              <div className="space-y-6 text-center">
+                {submitStatus === 'error' && (
+                  <p className="text-sm text-red-600 bg-red-50 px-4 py-3 rounded-lg">{submitError}</p>
+                )}
+                <label className="flex items-center justify-center gap-3 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={form.agreed}
+                    onChange={(e) => updateField('agreed', e.target.checked)}
+                    className="w-4 h-4 border-gray-300 text-black focus:ring-black cursor-pointer"
+                  />
+                  <span className="text-[11px] font-bold tracking-widest text-black/60">
+                    <button type="button" onClick={onNavigateToPrivacy} className="underline hover:text-black transition-colors">
+                      プライバシーポリシー
+                    </button>に同意する
+                  </span>
+                </label>
+                <button
+                  onClick={handleContactSubmit}
+                  disabled={submitting}
+                  className="w-full md:w-auto px-14 py-4 bg-black text-white font-bold text-[11px] uppercase tracking-[0.2em] hover:opacity-90 transition-all flex items-center justify-center gap-3 mx-auto group disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {submitting ? (
+                    <>
+                      <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                      <span>送信中...</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>この内容で送信する</span>
+                      <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
+                    </>
+                  )}
+                </button>
+              </div>
+            </>
+          )}
         </div>
       </section>
 
@@ -1683,6 +1857,13 @@ function ChatConcierge({ works, initialPrompt }: { works: Work[]; initialPrompt?
           systemPrompt,
         }),
       });
+
+      if (res.status === 429) {
+        const errBody = await res.json().catch(() => ({}));
+        const wait = errBody.retryAfterSec ? `${errBody.retryAfterSec}秒ほどお待ちください。` : 'しばらくお待ちください。';
+        setMessages(prev => [...prev, { role: 'assistant', content: `恐れ入ります、短時間でのご質問が集中しています。${wait}お急ぎの場合はお問い合わせフォームより直接ご相談ください。` }]);
+        return;
+      }
 
       if (!res.ok) {
         const errBody = await res.json().catch(() => ({}));
@@ -1823,7 +2004,7 @@ function SelectedWorkCard({ work, idx, onClick }: SelectedWorkCardProps) {
       <p className="text-[11px] font-bold text-black/70">
         『{work.title}』ブランド映像
       </p>
-      <p className="text-[10px] text-black/40">{work.clientName ? `Client_${work.clientName}` : 'Client_共同印刷 株式会社'}</p>
+      <p className="text-[10px] text-black/40">{work.clientName || '共同印刷 株式会社'}</p>
     </motion.div>
   );
 }
@@ -1984,7 +2165,7 @@ function WorkGridCard({ work, idx, onClick }: WorkGridCardProps) {
           {work.title}
         </p>
         {work.clientName && (
-          <p className="text-[10px] text-black/40">Client_{work.clientName}</p>
+          <p className="text-[10px] text-black/40">{work.clientName}</p>
         )}
       </div>
     </motion.div>
@@ -2033,6 +2214,7 @@ function FAQSection() {
         className="text-center mb-12 space-y-3"
       >
         <div className="flex items-center justify-center gap-4 max-w-md mx-auto">
+          <div className="h-px bg-brand flex-1" />
           <span className="text-[10px] font-bold tracking-[0.3em] uppercase text-black/40 whitespace-nowrap">FAQ</span>
           <div className="h-px bg-brand flex-1" />
         </div>
@@ -2104,7 +2286,7 @@ function CTASection({ onNavigate }: { onNavigate: () => void }) {
         <div className="max-w-2xl mx-auto space-y-8">
           <div className="space-y-2">
             <p className="text-black/40 font-bold tracking-[0.3em] text-[11px] uppercase">PLEASE CONSULT</p>
-            <img src="/logo.png" alt="Anchor Art Works" className="h-16 md:h-24 w-auto mx-auto object-contain" />
+            <img src="/wh_logomark.png" alt="Anchor Art Works" className="h-16 md:h-24 w-auto mx-auto object-contain" />
           </div>
           <div className="space-y-3">
             <h2 className="text-3xl md:text-5xl font-display font-bold tracking-tight text-black leading-tight">
@@ -2192,14 +2374,14 @@ function WorkModal({ work, onClose }: { work: Work; onClose: () => void }) {
               <span className="px-2 py-0.5 bg-black text-[9px] text-white uppercase tracking-widest font-bold inline-block">{work.category || 'OTHER'}</span>
               <h2 className="text-2xl md:text-4xl font-display font-bold text-black tracking-tighter leading-tight">{work.title}</h2>
               {work.clientName && (
-                <p className="text-xs text-black/50 font-medium">Client_{work.clientName}</p>
+                <p className="text-xs text-black/50 font-medium">{work.clientName}</p>
               )}
             </div>
             {work.e_id_link && (
               <a href={work.e_id_link} target="_blank" rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 px-4 py-2 border border-black/15 text-[10px] font-bold uppercase tracking-widest text-black hover:bg-black hover:text-white transition-all whitespace-nowrap">
+                className="inline-flex items-center gap-2 px-4 py-2 border border-black/15 text-[11px] font-bold tracking-widest text-black hover:bg-black hover:text-white transition-all whitespace-nowrap">
                 <ExternalLink size={12} />
-                View Evidence
+                外部リンク
               </a>
             )}
           </div>
@@ -2208,14 +2390,14 @@ function WorkModal({ work, onClose }: { work: Work; onClose: () => void }) {
             <div className="md:col-span-8 space-y-10">
               {work.a01_intent && (
                 <section className="space-y-3">
-                  <span className="text-black/30 font-bold text-[9px] uppercase tracking-[0.4em] block">A-01: Intent</span>
-                  <p className="text-xl md:text-3xl font-display font-bold leading-tight tracking-tight">"{work.a01_intent}"</p>
+                  <span className="text-black/30 font-bold text-[10px] tracking-[0.3em] block">制作意図</span>
+                  <p className="text-base text-black/70 leading-relaxed">{work.a01_intent}</p>
                 </section>
               )}
               {work.m07_solution && (
-                <section className="space-y-4">
-                  <span className="text-black/30 font-bold text-[9px] uppercase tracking-[0.4em] block">M-07: Solution</span>
-                  <p className="text-base text-black/60 leading-relaxed">{work.m07_solution}</p>
+                <section className="space-y-3">
+                  <span className="text-black/30 font-bold text-[10px] tracking-[0.3em] block">解決アプローチ</span>
+                  <p className="text-base text-black/70 leading-relaxed">{work.m07_solution}</p>
                 </section>
               )}
               {work.m03_results && work.m03_results.length > 0 && (
@@ -2268,8 +2450,9 @@ function WhatWeDoPage({ onNavigateToContact }: { onNavigateToContact: () => void
           className="max-w-4xl mx-auto space-y-10"
         >
           <div className="text-center">
-            <h1 className="text-6xl md:text-8xl font-display font-bold tracking-tighter leading-[0.95]">WHAT<br />WE DO.</h1>
-            <div className="flex items-center gap-4 mt-5">
+            <h1 className="text-5xl md:text-7xl lg:text-8xl font-display font-bold tracking-tighter leading-[0.95]">WHAT WE DO.</h1>
+            <div className="flex items-center justify-center gap-4 max-w-md mx-auto mt-5">
+              <div className="h-2 bg-brand flex-1" />
               <span className="text-[10px] font-bold tracking-[0.3em] uppercase text-black/50 whitespace-nowrap">SCOPE OF WORK</span>
               <div className="h-2 bg-brand flex-1" />
             </div>
@@ -2296,6 +2479,7 @@ function WhatWeDoPage({ onNavigateToContact }: { onNavigateToContact: () => void
           className="text-center mb-16 space-y-3"
         >
           <div className="flex items-center justify-center gap-4 max-w-md mx-auto">
+            <div className="h-px bg-brand flex-1" />
             <span className="text-[10px] font-bold tracking-[0.3em] uppercase text-black/40 whitespace-nowrap">SERVICES</span>
             <div className="h-px bg-brand flex-1" />
           </div>
@@ -2372,6 +2556,7 @@ function WhatWeDoPage({ onNavigateToContact }: { onNavigateToContact: () => void
             className="text-center mb-16 space-y-3"
           >
             <div className="flex items-center justify-center gap-4 max-w-md mx-auto">
+              <div className="h-px bg-brand flex-1" />
               <span className="text-[10px] font-bold tracking-[0.3em] uppercase text-black/40 whitespace-nowrap">PROCESS</span>
               <div className="h-px bg-brand flex-1" />
             </div>
@@ -2424,7 +2609,8 @@ function WhatWeDoPage({ onNavigateToContact }: { onNavigateToContact: () => void
             className="text-center mb-14 space-y-3"
           >
             <div className="flex items-center justify-center gap-4 max-w-md mx-auto">
-              <div className="flex items-center gap-2">
+              <div className="h-px bg-brand flex-1" />
+              <div className="flex items-center gap-2 whitespace-nowrap">
                 <span className="relative flex h-2 w-2">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand opacity-75"></span>
                   <span className="relative inline-flex rounded-full h-2 w-2 bg-brand"></span>
@@ -2507,6 +2693,7 @@ function WhatWeDoPage({ onNavigateToContact }: { onNavigateToContact: () => void
         <div className="max-w-[1100px] mx-auto">
           <motion.div initial={{ opacity: 0, y: 15 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.6 }} className="text-center mb-12 space-y-3">
             <div className="flex items-center justify-center gap-4 max-w-md mx-auto">
+              <div className="h-px bg-black/30 flex-1" />
               <span className="text-[10px] font-bold tracking-[0.3em] uppercase text-black/50 whitespace-nowrap">INDUSTRIES</span>
               <div className="h-px bg-black/30 flex-1" />
             </div>
@@ -2554,7 +2741,8 @@ function JournalPage({ journalPosts, isLoadingJournal, onNavigateToContact }: {
         >
           <div className="text-center">
             <h1 className="text-6xl md:text-8xl font-display font-bold tracking-tighter leading-[0.95]">JOURNAL</h1>
-            <div className="flex items-center gap-4 mt-5">
+            <div className="flex items-center justify-center gap-4 max-w-md mx-auto mt-5">
+              <div className="h-2 bg-brand flex-1" />
               <span className="text-[10px] font-bold tracking-[0.3em] uppercase text-black/50 whitespace-nowrap">CURRENT THOUGHTS</span>
               <div className="h-2 bg-brand flex-1" />
             </div>
@@ -2722,7 +2910,7 @@ function PrivacyPolicyPage() {
               { title: "第2条（個人情報の収集方法）", content: "当社は，ユーザーが利用登録をする際に氏名，生年月日，住所，電話番号，メールアドレスなどの個人情報をお尋ねすることがあります。また，ユーザーと提携先などとの間でなされたユーザーの個人情報を含む取引記録や決済に関する情報を提携先などから収集することがあります。" },
               { title: "第3条（個人情報を収集・利用する目的）", content: "当社が個人情報を収集・利用する目的は，サービスの提供・運営，お問い合わせへの回答，重要なお知らせの連絡，利用規約に違反したユーザーの特定，および上記の利用目的に付随する目的のためです。" },
               { title: "第9条（プライバシーポリシーの変更）", content: "本ポリシーの内容は，法令その他本ポリシーに別段の定めのある事項を除いて，ユーザーに通知することなく，変更することができるものとします。変更後のプライバシーポリシーは，本ウェブサイトに掲載したときから効力を生じるものとします。" },
-              { title: "第13条（お問い合わせ窓口）", content: "本ポリシーに関するお問い合わせ先：株式会社Anchor Art Works、〒153-0053 東京都目黒区五本木2丁目44番2号、代表取締役：勝田 康、Email: info@anchor-japan.com" },
+              { title: "第13条（お問い合わせ窓口）", content: "本ポリシーに関するお問い合わせ先：株式会社Anchor Art Works、〒153-0053 東京都目黒区五本木2丁目44番2号、代表取締役：勝田 康、Email: info@anchor-artworks.com" },
             ].map((item) => (
               <section key={item.title} className="space-y-3">
                 <h2 className="text-base font-display font-bold border-b border-black/10 pb-2">{item.title}</h2>

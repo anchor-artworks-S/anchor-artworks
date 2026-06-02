@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="1200" height="630">
+  <!-- Background -->
+  <rect width="1200" height="630" fill="#000000"/>
+
+  <!-- Left brand accent bar -->
+  <rect x="0" y="0" width="14" height="630" fill="#edc8d7"/>
+
+  <!-- Subtle radial gradient for depth -->
+  <defs>
+    <radialGradient id="glow" cx="50%" cy="50%" r="60%">
+      <stop offset="0%" stop-color="#edc8d7" stop-opacity="0.08"/>
+      <stop offset="100%" stop-color="#edc8d7" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#glow)"/>
+
+  <!-- Top label -->
+  <g transform="translate(600, 110)">
+    <line x1="-130" y1="0" x2="-30" y2="0" stroke="#edc8d7" stroke-width="1.5"/>
+    <text x="0" y="5" text-anchor="middle" fill="#ffffff" font-family="'Helvetica Neue', Arial, sans-serif" font-size="14" font-weight="700" letter-spacing="6">ANCHOR ART WORKS</text>
+    <line x1="30" y1="0" x2="130" y2="0" stroke="#edc8d7" stroke-width="1.5"/>
+  </g>
+
+  <!-- Main tagline (Japanese) -->
+  <g font-family="'Hiragino Sans', 'Yu Gothic', 'Meiryo', sans-serif" font-weight="900" letter-spacing="-1">
+    <text x="600" y="290" text-anchor="middle" fill="#ffffff" font-size="78">CG・映像制作を、</text>
+    <text x="600" y="385" text-anchor="middle" fill="#edc8d7" font-size="78">思考の速度で。</text>
+  </g>
+
+  <!-- Sub copy -->
+  <text x="600" y="460" text-anchor="middle" fill="rgba(255,255,255,0.65)" font-family="'Hiragino Sans', 'Yu Gothic', 'Meiryo', sans-serif" font-size="22" letter-spacing="2">企画から納品まで。最速でカタチに。</text>
+
+  <!-- Bottom domain -->
+  <g transform="translate(600, 560)">
+    <text x="0" y="0" text-anchor="middle" fill="rgba(255,255,255,0.4)" font-family="'Helvetica Neue', Arial, sans-serif" font-size="14" font-weight="700" letter-spacing="4">ANCHOR-ARTWORKS.COM</text>
+  </g>
+</svg>

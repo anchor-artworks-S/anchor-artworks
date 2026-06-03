@@ -585,7 +585,7 @@ export default function App() {
             className="hover:opacity-80 transition-opacity"
             aria-label="Anchor Art Works"
           >
-            <img src="/wh_logomark.png" alt="Anchor Art Works" className="h-9 md:h-12 w-auto object-contain" />
+            <img src="/wh_logomark.png" alt="Anchor Art Works" className="h-7 md:h-10 w-auto object-contain" />
           </button>
 
           {/* Desktop Nav */}

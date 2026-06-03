@@ -507,6 +507,25 @@ export default function App() {
     };
 
     // Fetch dynamic posts from note RSS
+    // URL正規化: クエリパラメータ・末尾スラッシュ・httpの違いを吸収
+    // Sheet の URL (?app_launch=false 等付き) と RSS の URL (素のもの) を一致させる
+    const normalizeNoteUrl = (url: string): string => {
+      try {
+        const u = new URL(url);
+        return `${u.origin}${u.pathname.replace(/\/$/, '')}`;
+      } catch {
+        return url;
+      }
+    };
+
+    // サムネ取得を強化: thumbnail / enclosure が空でも description HTML から <img> を抽出
+    const extractImage = (item: any): string => {
+      if (item.thumbnail) return item.thumbnail;
+      if (item.enclosure?.link) return item.enclosure.link;
+      const match = (item.description || '').match(/<img[^>]+src=["']([^"']+)["']/);
+      return match ? match[1] : '';
+    };
+
     const fetchNoteRss = async (): Promise<NotePost[]> => {
       try {
         const response = await fetch(`https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(NOTE_RSS_URL)}`);
@@ -519,7 +538,7 @@ export default function App() {
           excerpt: (item.description || '').replace(/<[^>]*>?/gm, '').substring(0, 100) + "...",
           url: item.link,
           tags: item.categories || [],
-          image: item.thumbnail || item.enclosure?.link,
+          image: extractImage(item),
         }));
       } catch (e) {
         console.warn("Note RSS fetch failed:", e);
@@ -530,9 +549,9 @@ export default function App() {
     const loadNotePosts = async () => {
       setIsLoadingJournal(true);
       const [pins, rss] = await Promise.all([fetchNotePins(), fetchNoteRss()]);
-      // Combine: pins first, then RSS posts (excluding URLs already in pins)
-      const pinUrls = new Set(pins.map(p => p.url));
-      const remaining = rss.filter(p => !pinUrls.has(p.url));
+      // Combine: pins first, then RSS posts (excluding URLs already in pins, with URL normalization)
+      const pinUrls = new Set(pins.map(p => normalizeNoteUrl(p.url)));
+      const remaining = rss.filter(p => !pinUrls.has(normalizeNoteUrl(p.url)));
       const combined = [...pins, ...remaining].slice(0, MAX_POSTS);
       setJournalPosts(combined);
       setIsLoadingJournal(false);

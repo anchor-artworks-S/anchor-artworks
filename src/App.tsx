@@ -2537,7 +2537,7 @@ function WhatWeDoPage({ onNavigateToContact }: { onNavigateToContact: () => void
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.5, delay: idx * 0.08 }}
-              className="p-6 border border-black/10 hover:border-black/30 transition-colors space-y-3"
+              className="p-6 border border-black/30 space-y-3"
             >
               <h3 className="text-base md:text-lg font-display font-bold tracking-tight">{s.title}</h3>
               <p className="text-xs text-black/65 leading-relaxed">{s.desc}</p>
@@ -2680,7 +2680,7 @@ function WhatWeDoPage({ onNavigateToContact }: { onNavigateToContact: () => void
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.5, delay: idx * 0.08 }}
-                className="bg-white/5 border border-white/10 p-5 space-y-4 hover:border-brand/40 transition-colors"
+                className="bg-white/5 border border-brand/40 p-5 space-y-4"
               >
                 <div className="flex items-center justify-between">
                   <span className="font-display font-bold text-2xl text-brand">{w.step}</span>
@@ -2739,7 +2739,7 @@ function WhatWeDoPage({ onNavigateToContact }: { onNavigateToContact: () => void
           </motion.div>
           <div className="flex flex-wrap justify-center gap-3 md:gap-4 max-w-3xl mx-auto">
             {['エンターテインメント', 'ゲーム', '放送', '広告', 'テクノロジー', 'SaaS', '製造業', '教育', 'ヘルスケア', 'コンシューマー製品'].map((industry, idx) => (
-              <motion.span key={idx} initial={{ opacity: 0, scale: 0.9 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }} transition={{ duration: 0.4, delay: idx * 0.04 }} className="px-5 py-2.5 border border-black/25 bg-white/30 text-xs md:text-sm font-bold tracking-wide text-black/80 hover:bg-black hover:text-white hover:border-black transition-colors">
+              <motion.span key={idx} initial={{ opacity: 0, scale: 0.9 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }} transition={{ duration: 0.4, delay: idx * 0.04 }} className="px-5 py-2.5 border border-black bg-black text-xs md:text-sm font-bold tracking-wide text-white">
                 {industry}
               </motion.span>
             ))}

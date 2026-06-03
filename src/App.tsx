@@ -585,7 +585,7 @@ export default function App() {
             className="hover:opacity-80 transition-opacity"
             aria-label="Anchor Art Works"
           >
-            <img src="/wh_logomark.png" alt="Anchor Art Works" className="h-12 w-auto object-contain" />
+            <img src="/wh_logomark.png" alt="Anchor Art Works" className="h-9 md:h-12 w-auto object-contain" />
           </button>
 
           {/* Desktop Nav */}
@@ -1093,14 +1093,11 @@ function WorksPage({ works, isLoading, onSelectWork, onNavigateToContact }: {
         </motion.div>
       </section>
 
-      {/* Category Filter */}
+      {/* Category Filter — シンプル中央配置 (セクションヘッダーとは差別化) */}
       <section className="mb-12 px-6 max-w-[1200px] mx-auto">
-        <div className="flex flex-col sm:flex-row items-center gap-6">
-          <div className="flex items-center gap-3">
-            <span className="text-sm font-bold tracking-[0.15em] font-display">CATEGORY</span>
-            <div className="w-12 h-px bg-black/20" />
-          </div>
-          <div className="flex flex-wrap gap-2">
+        <div className="text-center space-y-4">
+          <p className="text-[10px] font-bold tracking-[0.3em] uppercase text-black/40">CATEGORY</p>
+          <div className="flex flex-wrap gap-2 justify-center">
             {categories.map((cat) => (
               <button
                 key={cat}

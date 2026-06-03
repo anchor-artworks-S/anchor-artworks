@@ -526,13 +526,25 @@ export default function App() {
       return match ? match[1] : '';
     };
 
+    // og:image を Vercel Functions 経由で取得 (note RSS が img を返さない場合のフォールバック)
+    const fetchOgImage = async (url: string): Promise<string> => {
+      try {
+        const res = await fetch(`/api/note-og?url=${encodeURIComponent(url)}`);
+        if (!res.ok) return '';
+        const data = await res.json();
+        return data.ogImage || '';
+      } catch {
+        return '';
+      }
+    };
+
     const fetchNoteRss = async (): Promise<NotePost[]> => {
       try {
         const response = await fetch(`https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(NOTE_RSS_URL)}`);
         if (!response.ok) return [];
         const data = await response.json();
         if (!data.items || data.items.length === 0) return [];
-        return data.items.map((item: any) => ({
+        const items: NotePost[] = data.items.map((item: any) => ({
           title: item.title,
           date: new Date(item.pubDate).toLocaleDateString('ja-JP').replace(/\//g, '.'),
           excerpt: (item.description || '').replace(/<[^>]*>?/gm, '').substring(0, 100) + "...",
@@ -540,6 +552,15 @@ export default function App() {
           tags: item.categories || [],
           image: extractImage(item),
         }));
+        // サムネが取れていない記事だけ、og:image を並列フェッチで補完
+        await Promise.all(
+          items.map(async (item) => {
+            if (!item.image && item.url) {
+              item.image = await fetchOgImage(item.url);
+            }
+          })
+        );
+        return items;
       } catch (e) {
         console.warn("Note RSS fetch failed:", e);
         return [];

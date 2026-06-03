@@ -74,7 +74,7 @@ interface Message {
 }
 
 // --- Constants ---
-const NOTE_RSS_URL = "https://note.com/anchor_art_works/rss";
+// note RSS URL は api/note-rss.ts 内に移動 (サーバーサイドで取得・キャッシュ)
 
 const NOTE_POSTS: NotePost[] = [
   {
@@ -540,7 +540,9 @@ export default function App() {
 
     const fetchNoteRss = async (): Promise<NotePost[]> => {
       try {
-        const response = await fetch(`https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(NOTE_RSS_URL)}`);
+        // 旧: rss2json.com (キャッシュ30分〜数時間で反映遅延あり)
+        // 新: /api/note-rss (Vercel Functions 経由、Cache-Control s-maxage=300 で最大5分遅延)
+        const response = await fetch('/api/note-rss');
         if (!response.ok) return [];
         const data = await response.json();
         if (!data.items || data.items.length === 0) return [];

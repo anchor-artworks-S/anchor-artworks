@@ -433,12 +433,10 @@ export default function App() {
       // 5. Filter out is_published === false
       merged = merged.filter(w => w.isPublished !== false);
 
-      // 6. Sort: CATEGORY_ORDER → Sheet row index (掲載順) → uploadedAt desc (fallback)
+      // 6. Sort: Sheet 行順を最優先（カテゴリ問わず Sheet で上の行が ALL の上に出る）→ uploadedAt desc (fallback)
+      // 旧仕様: CATEGORY_ORDER で先に並べていたため、ALL で GAME→EVENT→PR... と固定順になっていた
+      // 新仕様: ALL は Sheet 並び順そのまま、カテゴリフィルタ時はその中で Sheet 順
       merged.sort((a, b) => {
-        const ca = CATEGORY_ORDER.indexOf(a.category || 'OTHER');
-        const cb = CATEGORY_ORDER.indexOf(b.category || 'OTHER');
-        if (ca !== cb) return (ca === -1 ? 999 : ca) - (cb === -1 ? 999 : cb);
-        // Within category: Sheet 行順を最優先（小さい行Indexが先）
         const ra = a.sheetRowIndex ?? Infinity;
         const rb = b.sheetRowIndex ?? Infinity;
         if (ra !== rb) return ra - rb;
